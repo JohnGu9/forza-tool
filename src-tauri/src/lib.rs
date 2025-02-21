@@ -170,34 +170,6 @@ async fn listen_data(
         }
     };
 
-    let forward_socket = match forward {
-        Some(forward_address) => {
-            let socket = UdpSocket::bind("0.0.0.0:0").await;
-            match socket {
-                Err(e) => {
-                    on_event
-                        .send(ListenEvent::Error {
-                            reason: format!("Forward Socket Open Failed ({:?})", e),
-                        })
-                        .unwrap();
-                    return;
-                }
-                Ok(socket) => match socket.connect(&forward_address).await {
-                    Err(e) => {
-                        on_event
-                            .send(ListenEvent::Error {
-                                reason: format!("Forward Socket Connect Failed ({:?})", e),
-                            })
-                            .unwrap();
-                        return;
-                    }
-                    Ok(_) => Some(socket),
-                },
-            }
-        }
-        None => None,
-    };
-
     println!("Start listening {}", url);
     on_event.send(ListenEvent::Opened {}).unwrap();
 
@@ -219,14 +191,13 @@ async fn listen_data(
         match udp_message {
             Ok((amt, _)) => {
                 on_event.send(to_data(&buf[..amt])).unwrap();
-                if let Some(forward) = &forward_socket {
-                    match forward.send(&buf[..amt]).await {
-                        Ok(_) => todo!(),
-                        Err(e) => on_event
+                if let Some(forward) = &forward {
+                    if let Err(e) = socket.send_to(&buf[..amt], &forward).await {
+                        on_event
                             .send(ListenEvent::MessageError {
-                                reason: format!("Forward Message Failed ({:?})", e),
+                                reason: format!("Forward Failed ({:?})", e),
                             })
-                            .unwrap(),
+                            .unwrap();
                     }
                 }
             }

@@ -78,42 +78,37 @@ export default function App() {
     return { messageData, messageDataAnalysis, tick };
   }, [messageData, messageDataAnalysis, tick]);
 
-  const lastListenAddress = React.useRef<ListenAddress>(["", "", false, "", "", listenAddress[5] + 1]);
   React.useEffect(() => {
-    if (listenAddress.some((value, index) => value !== lastListenAddress.current[index])) {
-      lastListenAddress.current = listenAddress;
-      setSocketStats(SocketStats.opening);
-      const [address, port, forwardSwitch, forwardAddress, forwardPort] = listenAddress;
-      const forward = forwardSwitch ? `${forwardAddress}:${forwardPort}` : null;
-      listenData(`${address}:${port}`, forward, (event) => {
-        switch (event.event) {
-          case "error":
-            setSocketStats(SocketStats.error);
-            addErrorMessage(`[${new Date().toTimeString()}] ${event.data.reason}`);
-            break;
-          case "messageError":
-            addErrorMessage(`[${new Date().toTimeString()}] ${event.data.reason}`);
-            break;
-          case "data":
-            if (isNeedToReset(messageData, event.data)) { // car changed
-              messageData.clear();
-              resetMessageDataAnalysis(messageDataAnalysis, capacity);
-            }
-            messageData.push(event.data);
-            analyzeMessageData(messageData, messageDataAnalysis);
-            break;
-          case "opened":
-            setSocketStats(SocketStats.opened);
-            break;
-          case "closed":
-            setSocketStats(SocketStats.closed);
-            break;
-        }
-        updateTick();
-      });
-    }
-
-  }, [addErrorMessage, errorCollection, listenAddress, messageData, messageDataAnalysis, updateTick]);
+    setSocketStats(SocketStats.opening);
+    const [address, port, forwardSwitch, forwardAddress, forwardPort] = listenAddress;
+    const forward = forwardSwitch ? `${forwardAddress}:${forwardPort}` : null;
+    listenData(`${address}:${port}`, forward, (event) => {
+      switch (event.event) {
+        case "error":
+          setSocketStats(SocketStats.error);
+          addErrorMessage(`[${new Date().toTimeString()}] ${event.data.reason}`);
+          break;
+        case "messageError":
+          addErrorMessage(`[${new Date().toTimeString()}] ${event.data.reason}`);
+          break;
+        case "data":
+          if (isNeedToReset(messageData, event.data)) { // car changed
+            messageData.clear();
+            resetMessageDataAnalysis(messageDataAnalysis, capacity);
+          }
+          messageData.push(event.data);
+          analyzeMessageData(messageData, messageDataAnalysis);
+          break;
+        case "opened":
+          setSocketStats(SocketStats.opened);
+          break;
+        case "closed":
+          setSocketStats(SocketStats.closed);
+          break;
+      }
+      updateTick();
+    });
+  }, [addErrorMessage, listenAddress, messageData, messageDataAnalysis, updateTick]);
 
   return (
     <ReactAppContext.Provider value={appContext}>
