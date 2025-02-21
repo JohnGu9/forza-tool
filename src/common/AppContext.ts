@@ -2,7 +2,14 @@ import React from "react";
 import CircularBuffer from "./CircularBuffer";
 import { MessageData, MessageDataAnalysis } from "./MessageData";
 
-export type ListenAddress = [string, string, number];
+export type ListenAddress = [
+    string/* address */,
+    string/* port */,
+    boolean/* forward switch */,
+    string/* forward address */,
+    string/* forward port */,
+    number/* stamp, for manually renew socket on the same address:port */,
+];
 
 export enum UnitSystem {
     International,

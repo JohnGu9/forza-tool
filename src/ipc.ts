@@ -39,6 +39,6 @@ export type ListenDataEvent =
         data: MessageData;
     };
 
-export async function listenData(url: string, onMessage: (event: ListenDataEvent) => unknown) {
-    return await listen<ListenDataEvent>("listen_data", { url }, onMessage);
+export async function listenData(url: string, forward: string | null, onMessage: (event: ListenDataEvent) => unknown) {
+    return await listen<ListenDataEvent>("listen_data", { url, forward }, onMessage);
 }

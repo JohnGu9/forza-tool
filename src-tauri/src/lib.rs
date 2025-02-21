@@ -142,7 +142,12 @@ static END_SIGNAL: LazyLock<(
 });
 
 #[tauri::command]
-async fn listen_data(_: AppHandle, url: String, on_event: Channel<ListenEvent>) {
+async fn listen_data(
+    _: AppHandle,
+    url: String,
+    forward: Option<String>,
+    on_event: Channel<ListenEvent>,
+) {
     let end_signal_lock = {
         let (mut new_tx, new_rx) = oneshot::channel();
         let mut tx = END_SIGNAL.0.lock().await;
@@ -165,6 +170,34 @@ async fn listen_data(_: AppHandle, url: String, on_event: Channel<ListenEvent>) 
         }
     };
 
+    let forward_socket = match forward {
+        Some(forward_address) => {
+            let socket = UdpSocket::bind("0.0.0.0:0").await;
+            match socket {
+                Err(e) => {
+                    on_event
+                        .send(ListenEvent::Error {
+                            reason: format!("Forward Socket Open Failed ({:?})", e),
+                        })
+                        .unwrap();
+                    return;
+                }
+                Ok(socket) => match socket.connect(&forward_address).await {
+                    Err(e) => {
+                        on_event
+                            .send(ListenEvent::Error {
+                                reason: format!("Forward Socket Connect Failed ({:?})", e),
+                            })
+                            .unwrap();
+                        return;
+                    }
+                    Ok(_) => Some(socket),
+                },
+            }
+        }
+        None => None,
+    };
+
     println!("Start listening {}", url);
     on_event.send(ListenEvent::Opened {}).unwrap();
 
@@ -184,7 +217,19 @@ async fn listen_data(_: AppHandle, url: String, on_event: Channel<ListenEvent>) 
             }
         };
         match udp_message {
-            Ok((amt, _)) => on_event.send(to_data(&buf[..amt])).unwrap(),
+            Ok((amt, _)) => {
+                on_event.send(to_data(&buf[..amt])).unwrap();
+                if let Some(forward) = &forward_socket {
+                    match forward.send(&buf[..amt]).await {
+                        Ok(_) => todo!(),
+                        Err(e) => on_event
+                            .send(ListenEvent::MessageError {
+                                reason: format!("Forward Message Failed ({:?})", e),
+                            })
+                            .unwrap(),
+                    }
+                }
+            }
             Err(e) => {
                 on_event
                     .send(ListenEvent::Error {

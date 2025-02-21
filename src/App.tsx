@@ -8,10 +8,11 @@ import { listenData } from './ipc';
 import ErrorMessage from './pages/ErrorMessage';
 import { analyzeMessageData, dummyMessageData, MessageData, MessageDataAnalysis, newMessageDataAnalysis, resetMessageDataAnalysis } from './common/MessageData';
 import CircularBuffer from './common/CircularBuffer';
-import { FadeThrough } from 'material-design-transform';
-import { AppContext, ReactAppContext, ReactStreamAppContext, StreamAppContext, UnitSystem } from './common/AppContext';
+import { SharedAxis, SharedAxisTransform } from 'material-design-transform';
+import { AppContext, ListenAddress, ReactAppContext, ReactStreamAppContext, StreamAppContext, UnitSystem } from './common/AppContext';
 import Detail from './pages/Detail';
 import SpeedMeter from './pages/SpeedMeter';
+import Network from './pages/Network';
 
 const capacity = 256;
 
@@ -24,22 +25,34 @@ export default function App() {
   const openErrorMessage = React.useCallback(() => setOpenErrorMessage(true), []);
   const closeErrorMessage = React.useCallback(() => setOpenErrorMessage(false), []);
 
+  const [isOpenNetwork, setOpenNetwork] = React.useState(false);
+  const openNetwork = React.useCallback(() => setOpenNetwork(true), []);
+  const closeNetwork = React.useCallback(() => setOpenNetwork(false), []);
+
   const [page, setPage] = React.useState(Page.Engine);
 
   const [enableDarkTheme, setEnableDarkTheme] = React.useState(undefined as undefined | boolean);
   const [unitSystem, setUnitSystem] = React.useState(UnitSystem.International);
 
-  const [listenAddress, _setListenAddress] = React.useState<[string, string, number/* stamp, for manually renew socket on the same address:port */]>(() => {
+  const [listenAddress, _setListenAddress] = React.useState<ListenAddress>(() => {
     const address = localStorage.getItem("address") ?? "127.0.0.1";
     const port = localStorage.getItem("port") ?? "5300";
-    return [address, port, 0];
+    const forwardSwitch = localStorage.getItem("forward-switch") === "true";
+    const forwardAddress = localStorage.getItem("forward-address") ?? "127.0.0.1";
+    const forwardPort = localStorage.getItem("forward-port") ?? "5400";
+    return [address, port, forwardSwitch, forwardAddress, forwardPort, 0];
   });
-  const setListenAddress = React.useCallback(([newAddress, newPort, newStamp]: [string, string, number]) => {
-    const [address, port, stamp] = listenAddress;
-    if (newAddress !== address || newPort !== port || newStamp !== stamp) {
-      _setListenAddress([newAddress, newPort, newStamp]);
-      localStorage.setItem("address", newAddress);
-      localStorage.setItem("port", newPort);
+  const setListenAddress = React.useCallback((newValue: ListenAddress) => {
+    for (const [index, value] of newValue.entries()) {
+      if (listenAddress[index] !== value) {
+        _setListenAddress(newValue);
+        localStorage.setItem("address", newValue[0]);
+        localStorage.setItem("port", newValue[1]);
+        localStorage.setItem("forward-switch", newValue[2] ? "true" : "false");
+        localStorage.setItem("forward-address", newValue[3]);
+        localStorage.setItem("forward-port", newValue[4]);
+        break;
+      }
     }
   }, [listenAddress]);
 
@@ -65,23 +78,21 @@ export default function App() {
     return { messageData, messageDataAnalysis, tick };
   }, [messageData, messageDataAnalysis, tick]);
 
-  const lastListenAddress = React.useRef(["", "", 0]);
+  const lastListenAddress = React.useRef<ListenAddress>(["", "", false, "", "", listenAddress[5] + 1]);
   React.useEffect(() => {
-    // Patch: for react stupidly call useEffect twice
-    // check the value whether changed or not
-    if (lastListenAddress.current[0] !== listenAddress[0] ||
-      lastListenAddress.current[1] !== listenAddress[1] ||
-      lastListenAddress.current[2] !== listenAddress[2]) {
+    if (listenAddress.some((value, index) => value !== lastListenAddress.current[index])) {
       lastListenAddress.current = listenAddress;
       setSocketStats(SocketStats.opening);
-      listenData(`${listenAddress[0]}:${listenAddress[1]}`, (event) => {
+      const [address, port, forwardSwitch, forwardAddress, forwardPort] = listenAddress;
+      const forward = forwardSwitch ? `${forwardAddress}:${forwardPort}` : null;
+      listenData(`${address}:${port}`, forward, (event) => {
         switch (event.event) {
           case "error":
             setSocketStats(SocketStats.error);
-            addErrorMessage(`[${new Date().toDateString()}] ${event.data.reason}`);
+            addErrorMessage(`[${new Date().toTimeString()}] ${event.data.reason}`);
             break;
           case "messageError":
-            addErrorMessage(`[${new Date().toDateString()}] ${event.data.reason}`);
+            addErrorMessage(`[${new Date().toTimeString()}] ${event.data.reason}`);
             break;
           case "data":
             if (isNeedToReset(messageData, event.data)) { // car changed
@@ -110,10 +121,7 @@ export default function App() {
         <div className="rmcw-drawer fill-parent">
           <NavigationDrawer opened style={{ position: "absolute", display: "flex", flexDirection: "column" }}>
             <List style={{ padding: 0, flexGrow: 1 }}>
-              <div className="flex-row" style={{ justifyContent: "space-between", alignItems: "end", padding: 16 }}>
-                <Typography.Headline.Large tag='div'>Forza</Typography.Headline.Large>
-                <Typography.Body.Small tag='div'>Socket: {socketStats}</Typography.Body.Small>
-              </div>
+              <Typography.Headline.Large tag='div' style={{ padding: 16 }}>Forza</Typography.Headline.Large>
               <Divider />
               {Object.values(Page).map(value =>
                 <ListItem key={value} type='button' onClick={() => setPage(value)}
@@ -121,6 +129,8 @@ export default function App() {
             </List>
             <List style={{ padding: 0 }}>
               <LapTime messageData={messageData} />
+              <ListItem type='button' trailingSupportingText={`Socket: ${socketStats}`}
+                onClick={openNetwork}>Network</ListItem>
               <ListItem type='button' trailingSupportingText={(slotName) => <Icon slot={slotName}>error</Icon>}
                 onClick={openErrorMessage}>Error Message</ListItem>
               <ListItem type='button' trailingSupportingText={(slotName) => <Icon slot={slotName}>settings</Icon>}
@@ -129,8 +139,9 @@ export default function App() {
           </NavigationDrawer>
           <NavigationDrawerPadding opened style={{ height: "100%" }}>
             <ReactStreamAppContext.Provider value={streamAppContext}>
-              <FadeThrough className="fill-parent" keyId={page}
-                onPointerEnterCapture={undefined}
+              <SharedAxis className="fill-parent" keyId={page}
+                transform={SharedAxisTransform.fromLeftToRight}
+                onPointerEnterCapture={undefined}// ts type file is massing up, ignore the two useless argument
                 onPointerLeaveCapture={undefined}>
                 {(() => {
                   switch (page) {
@@ -144,10 +155,11 @@ export default function App() {
                       return <SpeedMeter />;
                   }
                 })()}
-              </FadeThrough>
+              </SharedAxis>
             </ReactStreamAppContext.Provider>
           </NavigationDrawerPadding>
         </div>
+        <Network opened={isOpenNetwork} close={closeNetwork} />
         <ErrorMessage opened={isOpenErrorMessage} close={closeErrorMessage} errorCollection={errorCollection} />
         <Settings opened={isOpenSettings} close={closeSettings} />
       </Theme>
