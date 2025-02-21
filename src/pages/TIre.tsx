@@ -63,13 +63,11 @@ function SimpleCard({ title, tireInfo, tirePosition }: { title: string, tireInfo
   return <Card className="flex-column" style={{ flexGrow: "1", height: "100%", justifyContent: "space-evenly", alignItems: "center", padding: 16 }}>
     <div ref={ref} style={{ flexGrow: "1", width: "100%" }}>
       <LineChart width={size.width} height={size.height} data={data}
-        margin={{ top: 5, right: 0, left: -60, bottom: -10 }}>
-        <CartesianGrid strokeDasharray="3 3" horizontalCoordinatesGenerator={props => {
-          const x = (props.height - (props.offset.bottom ?? 0) - (props.offset.top ?? 0)) / 2 + (props.offset.top ?? 0);
-          return [x];
-        }} />
+        margin={{ top: 5, right: 0, left: -30, bottom: -10 }}>
+        <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="index" type="number" tick={false} />
-        <YAxis tick={false} domain={([dataMin, dataMax]) => { const absMax = Math.max(Math.abs(dataMin), Math.abs(dataMax)) + 0.2; return [-absMax, absMax]; }} />
+        <YAxis domain={([dataMin, dataMax]) => { const absMax = Math.max(Math.abs(dataMin), Math.abs(dataMax)) + 0.2; return [-absMax, absMax]; }}
+          ticks={[-1, 0, 1]} />
         <Tooltip />
         <Line type="monotone" dataKey="value" stroke="#82ca9d" />
       </LineChart>

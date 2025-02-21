@@ -1,7 +1,7 @@
 import { Area, AreaChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis } from "recharts";
 import useResize from "../hooks/resize";
 import React from "react";
-import { Card, CircularProgress, LinearProgress, Ripple, Typography } from "rmcw/dist/components3";
+import { Card, LinearProgress, Ripple, Typography } from "rmcw/dist/components3";
 import { dummyMessageData, MessageData, MessageDataAnalysis } from "../common/MessageData";
 import CircularBuffer from "../common/CircularBuffer";
 import { ReactAppContext, ReactStreamAppContext, UnitSystem } from "../common/AppContext";
@@ -15,7 +15,7 @@ export default function Engine() {
   const { unitSystem, setUnitSystem } = React.useContext(ReactAppContext);
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const lastMessageData = messageData.isEmpty() ? dummyMessageData : messageData.getLastUnsafe();
-  const powerLevel = messageDataAnalysis.maxPower === 0 ? 0 : lastMessageData.power / messageDataAnalysis.maxPower;
+  const powerLevel = messageDataAnalysis.maxPower === 0 ? 0 : Math.max(lastMessageData.power / messageDataAnalysis.maxPower, 0);
   const [showPowerCurve, setShowPowerCurve] = React.useState(true);
   const changeUnitSystem = React.useCallback(() => {
     switch (unitSystem) {
@@ -38,23 +38,19 @@ export default function Engine() {
       <SimpleCard title="Power" content={wsTo(lastMessageData.power, unitSystem).toFixed(1)}
         tooltip={`unit: ${getPowerUnit(unitSystem)}`}
         onClick={changeUnitSystem} />
-      <Card style={{ width: 150, height: "100%" }}>
-        <Ripple className="fill-parent flex-column" style={{ justifyContent: "space-evenly", alignItems: "center", borderRadius: "var(--_container-shape, 12px)" }}
-          onClick={() => setShowPowerCurve(!showPowerCurve)}>
-          <Typography.Headline.Small tag='span' title="Current Power / Max Power">{`${(powerLevel * 100).toFixed(0)}%`}</Typography.Headline.Small>
-          <CircularProgress value={powerLevel} />
-        </Ripple>
-      </Card>
+      <SimpleCard title="PowerLevel" content={`${(powerLevel * 100).toFixed(0)}%`}
+        tooltip="Current Power / Max Power"
+        onClick={() => setShowPowerCurve(!showPowerCurve)} />
     </div>
     <div ref={ref} style={{ flexGrow: "1", width: "100%" }}>
       {showPowerCurve ?
         <PowerCurveChart size={size} messageDataAnalysis={messageDataAnalysis} lastMessageData={lastMessageData} /> :
         <PowerLevelChart size={size} messageDataAnalysis={messageDataAnalysis} messageData={messageData} />}
     </div>
-    <SimpleRow title="Clutch" value={lastMessageData.clutch} />
-    <SimpleRow title="Accelerator" value={lastMessageData.accelerator} />
-    <SimpleRow title="Brake" value={lastMessageData.brake} />
-    <SimpleRow title="Handbrake" value={lastMessageData.handbrake} />
+    <SimpleRow title="Clutch" value={lastMessageData.clutch / 255} />
+    <SimpleRow title="Accelerator" value={lastMessageData.accelerator / 255} />
+    <SimpleRow title="Brake" value={lastMessageData.brake / 255} />
+    <SimpleRow title="Handbrake" value={lastMessageData.handbrake / 255} />
     <div style={{ height: 8 }} />
   </div>;
 }
@@ -78,9 +74,8 @@ function PowerCurveChart({ size, messageDataAnalysis, lastMessageData }: { size:
     </defs>
     <XAxis dataKey="rpm" type="number" domain={['dataMin', 'dataMax']}
       ticks={getTicks(lastMessageData.engineMaxRpm, lastMessageData.engineIdleRpm, 1000)} />
-    <YAxis yAxisId={0} type="number" domain={[0, 'dataMax + 20']} hide />
-    <YAxis yAxisId={1} type="number" domain={[0, 'dataMax + 20']}
-      ticks={getTicks(messageDataAnalysis.maxPower, 0, 50)} />
+    <YAxis yAxisId={0} type="number" domain={[0, 'dataMax + 20']} allowDataOverflow={false} hide />
+    <YAxis yAxisId={1} type="number" domain={[0, 'dataMax + 20']} allowDataOverflow={false} />
     <CartesianGrid strokeDasharray="3 3" horizontalCoordinatesGenerator={() => []} />
     <Tooltip />
     <Legend />
@@ -91,7 +86,7 @@ function PowerCurveChart({ size, messageDataAnalysis, lastMessageData }: { size:
 
 function PowerLevelChart({ size, messageDataAnalysis, messageData }: { size: { height: number; width: number; }; messageDataAnalysis: MessageDataAnalysis; messageData: CircularBuffer<MessageData>; }) {
   const data = messageData.map((data, index) => {
-    return { index, powerLevel: data.power / messageDataAnalysis.maxPower * 100 };
+    return { index, powerLevel: Math.max(data.power / messageDataAnalysis.maxPower, 0) * 100 };
   });
   return <AreaChart width={size.width} height={size.height} data={data}
     margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
@@ -102,8 +97,8 @@ function PowerLevelChart({ size, messageDataAnalysis, messageData }: { size: { h
       </linearGradient>
     </defs>
     <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
-    <YAxis yAxisId={1} type="number" domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} />
-    <CartesianGrid strokeDasharray="3 3" horizontalCoordinatesGenerator={() => []} />
+    <YAxis yAxisId={1} type="number" domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} allowDataOverflow={false} />
+    <CartesianGrid strokeDasharray="3 3" />
     <Tooltip />
     <Legend />
     <Area yAxisId={1} type="monotone" dataKey="powerLevel" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" unit="%" />
@@ -112,10 +107,10 @@ function PowerLevelChart({ size, messageDataAnalysis, messageData }: { size: { h
 
 function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
   const data: { rpm: number; torque: number; power: number; }[] = [];
-  for (const [rpm, { power, torque }] of messageAnalysis.powerCurve.entries()) {
-    data.push({ rpm, power: wsTo(power, unit), torque: nmTo(torque, unit) });
+  for (const [rpm, { power, torque }] of Object.entries(messageAnalysis.powerCurve)) {
+    data.push({ rpm: parseInt(rpm), power: wsTo(power, unit), torque: nmTo(torque, unit) });
   }
-  return data;
+  return data.sort((a, b) => a.rpm - b.rpm);
 }
 
 function getTicks(max: number, min: number, gap: number) {
@@ -132,7 +127,7 @@ function SimpleCard({ title, content, tooltip, onClick }: { title: string, conte
   return <Card style={{ width: 150, height: "100%" }}>
     <Ripple className="fill-parent flex-column" style={{ justifyContent: "space-evenly", alignItems: "center", borderRadius: "var(--_container-shape, 12px)" }}
       onClick={onClick}>
-      <Typography.Headline.Small tag='span' title={tooltip}>{title}</Typography.Headline.Small>
+      <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
       <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
     </Ripple>
   </Card>;
@@ -150,18 +145,18 @@ function SimpleRow({ title, value }: { title: string; value: number; }) {
 function wsTo(value: number/* unit: w/h */, unit: UnitSystem) {
   switch (unit) {
     case UnitSystem.International:
-      return value / 1000;// unit: kw/h
+      return Math.max(0, value) / 1000;// unit: kw/h
     case UnitSystem.Imperial:
-      return value / 745.699872;// unit: hp
+      return Math.max(0, value) / 745.699872;// unit: hp
   }
 }
 
 function nmTo(value: number/* unit: N/m */, unit: UnitSystem) {
   switch (unit) {
     case UnitSystem.International:
-      return value;// unit: N/m
+      return Math.max(0, value);// unit: N/m
     case UnitSystem.Imperial:
-      return value * 0.73756;// unit: lb/ft
+      return Math.max(0, value) * 0.73756;// unit: lb/ft
   }
 }
 

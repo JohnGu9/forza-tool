@@ -6,13 +6,14 @@ import React from 'react';
 import Tire from './pages/TIre';
 import { listenData } from './ipc';
 import ErrorMessage from './pages/ErrorMessage';
-import { analyzeMessageData, dummyMessageData, MessageData, MessageDataAnalysis, newMessageDataAnalysis, resetMessageDataAnalysis } from './common/MessageData';
+import { analyzeMessageData, dummyMessageData, MessageData, MessageDataAnalysis, newMessageDataAnalysis, parseMessageData, resetMessageDataAnalysis } from './common/MessageData';
 import CircularBuffer from './common/CircularBuffer';
 import { SharedAxis, SharedAxisTransform } from 'material-design-transform';
 import { AppContext, ListenAddress, ReactAppContext, ReactStreamAppContext, StreamAppContext, UnitSystem } from './common/AppContext';
 import Detail from './pages/Detail';
 import SpeedMeter from './pages/SpeedMeter';
 import Network from './pages/Network';
+import { listen } from '@tauri-apps/api/event';
 
 const capacity = 256;
 
@@ -65,8 +66,13 @@ export default function App() {
     return [...current.slice(Math.max(current.length - 20, 0))];
   }), []);
 
-  const [tick, _setTick] = React.useState(false); // CircularBuffer data updated flag
-  const updateTick = React.useCallback(() => _setTick(value => !value), []);
+  const [tick, _setTick] = React.useState(0); // CircularBuffer data updated flag
+  const updateTick = React.useCallback(() => _setTick(value => {
+    if (++value === Number.MAX_SAFE_INTEGER) {
+      return Number.MIN_SAFE_INTEGER;
+    }
+    return value;
+  }), []);
 
   const [socketStats, setSocketStats] = React.useState(SocketStats.closed);
 
@@ -82,6 +88,23 @@ export default function App() {
     setSocketStats(SocketStats.opening);
     const [address, port, forwardSwitch, forwardAddress, forwardPort] = listenAddress;
     const forward = forwardSwitch ? `${forwardAddress}:${forwardPort}` : null;
+    const onData = (event: { event: 'data'; data: { data: number[]; }; }) => {
+      try {
+        const data = parseMessageData(event.data.data);
+        // log(`${JSON.stringify(data)}`);
+        if (isNeedToReset(messageData, data)) { // car changed
+          messageData.clear();
+          resetMessageDataAnalysis(messageDataAnalysis, capacity);
+        }
+        messageData.push(data);
+        analyzeMessageData(messageData, messageDataAnalysis);
+        // log(`${messageData.map(data => data.timestampMs).slice(-6)}`);
+      } catch (error) {
+        addErrorMessage(`[${new Date().toTimeString()}] ${error}`);
+      }
+      updateTick();
+    };
+    const unlisten = listen<{ event: 'data'; data: { data: number[]; }; }>("on-data", event => onData(event.payload));
     listenData(`${address}:${port}`, forward, (event) => {
       switch (event.event) {
         case "error":
@@ -92,12 +115,7 @@ export default function App() {
           addErrorMessage(`[${new Date().toTimeString()}] ${event.data.reason}`);
           break;
         case "data":
-          if (isNeedToReset(messageData, event.data)) { // car changed
-            messageData.clear();
-            resetMessageDataAnalysis(messageDataAnalysis, capacity);
-          }
-          messageData.push(event.data);
-          analyzeMessageData(messageData, messageDataAnalysis);
+          // onData(event);
           break;
         case "opened":
           setSocketStats(SocketStats.opened);
@@ -107,6 +125,7 @@ export default function App() {
           break;
       }
       updateTick();
+      return () => { (async () => { (await unlisten)(); })(); };
     });
   }, [addErrorMessage, listenAddress, messageData, messageDataAnalysis, updateTick]);
 
