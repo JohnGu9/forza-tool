@@ -2,7 +2,7 @@ import React from "react";
 import { Card, Ripple, Typography } from "rmcw/dist/components3";
 import useResize from "../hooks/resize";
 import { Area, AreaChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis } from "recharts";
-import { ReactStreamAppContext } from "../common/AppContext";
+import { ReactAppContext, ReactStreamAppContext, UnitSystem } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
 import { MessageData, MessageDataAnalysis } from "../common/MessageData";
 
@@ -12,24 +12,22 @@ export default function SpeedMeter() {
   const ref = React.useRef<HTMLDivElement>(null);
   const size = useResize(ref);
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
-  const [speedRatio, setSpeedRatio] = React.useState(SpeedRatio.KMH);
-  const changeSpeedRatio = React.useCallback(() => {
-    setSpeedRatio(v => {
-      switch (v) {
-        case SpeedRatio.KMH:
-          return SpeedRatio.MPH;
-        case SpeedRatio.MPH:
-          return SpeedRatio.KMH;
-      }
-    });
-  }, []);
-  const data = toData(messageData, messageDataAnalysis, speedRatio);
+  const { unitSystem, setUnitSystem } = React.useContext(ReactAppContext);
+  const changeUnitSystem = React.useCallback(() => {
+    switch (unitSystem) {
+      case UnitSystem.International:
+        return setUnitSystem(UnitSystem.Imperial);
+      case UnitSystem.Imperial:
+        return setUnitSystem(UnitSystem.International);
+    }
+  }, [setUnitSystem, unitSystem]);
+  const data = toData(messageData, messageDataAnalysis, unitSystem);
   const lastData = data.length === 0 ? { index: 0, speed: 0, velocity: 0 } : data[0];
   return <div className="fill-parent flex-column" style={{ padding: "16px 32px" }}>
     <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-between" }}>
-      <SimpleCard title="Speed" content={lastData.speed.toFixed(1)} tooltip={`car speed meter value; unit: ${toSpeedUnit(speedRatio)}`} onClick={changeSpeedRatio} />
-      <SimpleCard title="Velocity" content={lastData.velocity.toFixed(1)} tooltip={`velocity = (position delta) / (time delta); unit: ${toSpeedUnit(speedRatio)}`} onClick={changeSpeedRatio} />
-      <SimpleCard title="Delta" content={`${((lastData.velocity / lastData.speed) * 100).toFixed(1)} %`} tooltip="velocity / speed" onClick={changeSpeedRatio} />
+      <SimpleCard title="Speed" content={lastData.speed.toFixed(1)} tooltip={`car speed meter value; unit: ${getSpeedUnit(unitSystem)}`} onClick={changeUnitSystem} />
+      <SimpleCard title="Velocity" content={lastData.velocity.toFixed(1)} tooltip={`velocity = (position delta) / (time delta); unit: ${getSpeedUnit(unitSystem)}`} onClick={changeUnitSystem} />
+      <SimpleCard title="Delta" content={`${((lastData.velocity / lastData.speed) * 100).toFixed(1)} %`} tooltip="velocity / speed" onClick={changeUnitSystem} />
     </div>
     <div ref={ref} style={{ flexGrow: "1", width: "100%" }}>
       <AreaChart width={size.width} height={size.height} data={data}
@@ -65,24 +63,28 @@ function SimpleCard({ title, tooltip, content, onClick }: { title: string, toolt
   </Card>;
 }
 
-function toData(messageData: CircularBuffer<MessageData>, messageDataAnalysis: MessageDataAnalysis, speedRatio: SpeedRatio) {
+function toData(messageData: CircularBuffer<MessageData>, messageDataAnalysis: MessageDataAnalysis, unit: UnitSystem) {
   const delta = messageData.getElementCount() - messageDataAnalysis.speed.getElementCount();
   const placeholder = new Array(delta);
   placeholder.fill(0);
   const velocity = [...placeholder, ...messageDataAnalysis.speed];
   return messageData.map((data, index) => {
-    return { index, speed: data.speed * speedRatio, velocity: velocity[index] * speedRatio };
+    return { index, speed: msTo(data.speed, unit), velocity: msTo(velocity[index], unit) };
   });
 }
 
-enum SpeedRatio { // from `m/s` to
-  KMH = 3.6,
-  MPH = 2.23694,
-};
+function msTo(value: number/* unit: m/s */, unit: UnitSystem) {
+  switch (unit) {
+    case UnitSystem.Imperial:
+      return value * 2.23694;
+    default:
+      return value * 3.6;
+  }
+}
 
-function toSpeedUnit(speedRatio: SpeedRatio) {
-  switch (speedRatio) {
-    case SpeedRatio.MPH:
+function getSpeedUnit(unit: UnitSystem) {
+  switch (unit) {
+    case UnitSystem.Imperial:
       return "MPH";
     default:
       return "KMH";

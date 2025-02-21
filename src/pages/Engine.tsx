@@ -4,7 +4,7 @@ import React from "react";
 import { Card, CircularProgress, LinearProgress, Ripple, Typography } from "rmcw/dist/components3";
 import { dummyMessageData, MessageData, MessageDataAnalysis } from "../common/MessageData";
 import CircularBuffer from "../common/CircularBuffer";
-import { ReactStreamAppContext } from "../common/AppContext";
+import { ReactAppContext, ReactStreamAppContext, UnitSystem } from "../common/AppContext";
 
 const columnHeight = 150;
 const chartsPadding = 32;
@@ -12,18 +12,33 @@ const chartsPadding = 32;
 export default function Engine() {
   const ref = React.useRef<HTMLDivElement>(null);
   const size = useResize(ref);
+  const { unitSystem, setUnitSystem } = React.useContext(ReactAppContext);
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const lastMessageData = messageData.isEmpty() ? dummyMessageData : messageData.getLastUnsafe();
   const powerLevel = messageDataAnalysis.maxPower === 0 ? 0 : lastMessageData.power / messageDataAnalysis.maxPower;
   const [showPowerCurve, setShowPowerCurve] = React.useState(true);
+  const changeUnitSystem = React.useCallback(() => {
+    switch (unitSystem) {
+      case UnitSystem.International:
+        return setUnitSystem(UnitSystem.Imperial);
+      case UnitSystem.Imperial:
+        return setUnitSystem(UnitSystem.International);
+    }
+  }, [setUnitSystem, unitSystem]);
   return <div className="fill-parent flex-column">
     <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-between", alignItems: "center", padding: "16px 32px" }}>
-      <SimpleCard title="RPM" content={`${lastMessageData.currentEngineRpm}`} />
+      <SimpleCard title="RPM" content={lastMessageData.currentEngineRpm.toFixed(0)}
+        tooltip="unit: REV/MIN"
+        onClick={changeUnitSystem} />
       *
-      <SimpleCard title="Torque" content={`${lastMessageData.torque}`} />
+      <SimpleCard title="Torque" content={nmTo(lastMessageData.torque, unitSystem).toFixed(1)}
+        tooltip={`unit: ${getTorqueUnit(unitSystem)}`}
+        onClick={changeUnitSystem} />
       =
-      <SimpleCard title="Power" content={`${lastMessageData.power}`} />
-      <Card style={{ width: 150, height: 120 }}>
+      <SimpleCard title="Power" content={wsTo(lastMessageData.power, unitSystem).toFixed(1)}
+        tooltip={`unit: ${getPowerUnit(unitSystem)}`}
+        onClick={changeUnitSystem} />
+      <Card style={{ width: 150, height: "100%" }}>
         <Ripple className="fill-parent flex-column" style={{ justifyContent: "space-evenly", alignItems: "center", borderRadius: "var(--_container-shape, 12px)" }}
           onClick={() => setShowPowerCurve(!showPowerCurve)}>
           <Typography.Headline.Small tag='span' title="Current Power / Max Power">{`${(powerLevel * 100).toFixed(0)}%`}</Typography.Headline.Small>
@@ -45,8 +60,9 @@ export default function Engine() {
 }
 
 function PowerCurveChart({ size, messageDataAnalysis, lastMessageData }: { size: { height: number; width: number; }; messageDataAnalysis: MessageDataAnalysis; lastMessageData: MessageData; }) {
+  const { unitSystem } = React.useContext(ReactAppContext);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const data = React.useMemo(() => toData(messageDataAnalysis), [messageDataAnalysis, messageDataAnalysis.stamp]);
+  const data = React.useMemo(() => toData(messageDataAnalysis, unitSystem), [unitSystem, messageDataAnalysis.stamp]);
 
   return <AreaChart width={size.width} height={size.height} data={data}
     margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
@@ -94,10 +110,10 @@ function PowerLevelChart({ size, messageDataAnalysis, messageData }: { size: { h
   </AreaChart>;
 }
 
-function toData(messageAnalysis: MessageDataAnalysis) {
+function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
   const data: { rpm: number; torque: number; power: number; }[] = [];
   for (const [rpm, { power, torque }] of messageAnalysis.powerCurve.entries()) {
-    data.push({ rpm, power, torque });
+    data.push({ rpm, power: wsTo(power, unit), torque: nmTo(torque, unit) });
   }
   return data;
 }
@@ -112,10 +128,13 @@ function getTicks(max: number, min: number, gap: number) {
   return ticks;
 }
 
-function SimpleCard({ title, content }: { title: string, content: string; }) {
-  return <Card className="flex-column" style={{ width: 150, height: "100%", justifyContent: "space-evenly", alignItems: "center" }}>
-    <Typography.Headline.Small tag='div'>{title}</Typography.Headline.Small>
-    <Typography.Headline.Large tag='div'>{content}</Typography.Headline.Large>
+function SimpleCard({ title, content, tooltip, onClick }: { title: string, content: string; tooltip: string; onClick: () => unknown; }) {
+  return <Card style={{ width: 150, height: "100%" }}>
+    <Ripple className="fill-parent flex-column" style={{ justifyContent: "space-evenly", alignItems: "center", borderRadius: "var(--_container-shape, 12px)" }}
+      onClick={onClick}>
+      <Typography.Headline.Small tag='span' title={tooltip}>{title}</Typography.Headline.Small>
+      <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
+    </Ripple>
   </Card>;
 }
 
@@ -126,4 +145,40 @@ function SimpleRow({ title, value }: { title: string; value: number; }) {
     </div>
     <LinearProgress value={value} style={{ width: "100%" }} />
   </div>;
+}
+
+function wsTo(value: number/* unit: w/h */, unit: UnitSystem) {
+  switch (unit) {
+    case UnitSystem.International:
+      return value / 1000;// unit: kw/h
+    case UnitSystem.Imperial:
+      return value / 745.699872;// unit: hp
+  }
+}
+
+function nmTo(value: number/* unit: N/m */, unit: UnitSystem) {
+  switch (unit) {
+    case UnitSystem.International:
+      return value;// unit: N/m
+    case UnitSystem.Imperial:
+      return value * 0.73756;// unit: lb/ft
+  }
+}
+
+function getPowerUnit(unit: UnitSystem) {
+  switch (unit) {
+    case UnitSystem.International:
+      return "KW/H";
+    case UnitSystem.Imperial:
+      return "HP";
+  }
+}
+
+function getTorqueUnit(unit: UnitSystem) {
+  switch (unit) {
+    case UnitSystem.International:
+      return "N/M";
+    case UnitSystem.Imperial:
+      return "LB/FT";
+  }
 }

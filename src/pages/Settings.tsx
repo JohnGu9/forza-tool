@@ -1,12 +1,14 @@
 import React from "react";
 import { Button, Dialog, TextField, Typography } from "rmcw/dist/components3";
-import { ReactAppContext } from "../common/AppContext";
+import { ReactAppContext, UnitSystem } from "../common/AppContext";
 
 export default function Settings({ opened, close }: {
   opened: boolean;
   close: () => unknown;
 }) {
-  const { listenAddress, setListenAddress, enableDarkTheme, setEnableDarkTheme } = React.useContext(ReactAppContext);
+  const { listenAddress, setListenAddress,
+    enableDarkTheme, setEnableDarkTheme,
+    unitSystem, setUnitSystem } = React.useContext(ReactAppContext);
   const [address, port] = listenAddress;
   const [newAddress, setNewAddress] = React.useState(address);
   const [newPort, setNewPort] = React.useState(port);
@@ -32,11 +34,31 @@ export default function Settings({ opened, close }: {
       <div style={{ height: 16 }} aria-hidden />
       <Button onClick={() => localStorage.clear()}>Reset Localstorage</Button>
       <div style={{ height: 16 }} aria-hidden />
+      <Button onClick={() => setUnitSystem(getNextUnitSystem(unitSystem))}>UnitSystem: {getUnitSystemName(unitSystem)}</Button>
+      <div style={{ height: 16 }} aria-hidden />
       <Button onClick={() => setEnableDarkTheme(getNextThemeStats(enableDarkTheme))}>Theme: {getThemeName(enableDarkTheme)}</Button>
       {/* <div style={{ height: 16 }} aria-hidden />
       <Button onClick={() => log("Test")}>Test</Button> */}
     </div>
   </Dialog>;
+}
+
+function getUnitSystemName(unit: UnitSystem) {
+  switch (unit) {
+    case UnitSystem.International:
+      return "International";
+    case UnitSystem.Imperial:
+      return "Imperial";
+  }
+}
+
+function getNextUnitSystem(unit: UnitSystem) {
+  switch (unit) {
+    case UnitSystem.International:
+      return UnitSystem.Imperial;
+    case UnitSystem.Imperial:
+      return UnitSystem.International;
+  }
 }
 
 function getThemeName(enableDarkTheme: boolean | undefined) {

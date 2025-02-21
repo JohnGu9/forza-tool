@@ -9,7 +9,7 @@ import ErrorMessage from './pages/ErrorMessage';
 import { analyzeMessageData, dummyMessageData, MessageData, MessageDataAnalysis, newMessageDataAnalysis, resetMessageDataAnalysis } from './common/MessageData';
 import CircularBuffer from './common/CircularBuffer';
 import { FadeThrough } from 'material-design-transform';
-import { AppContext, ReactAppContext, ReactStreamAppContext, StreamAppContext } from './common/AppContext';
+import { AppContext, ReactAppContext, ReactStreamAppContext, StreamAppContext, UnitSystem } from './common/AppContext';
 import Detail from './pages/Detail';
 import SpeedMeter from './pages/SpeedMeter';
 
@@ -27,6 +27,7 @@ export default function App() {
   const [page, setPage] = React.useState(Page.Engine);
 
   const [enableDarkTheme, setEnableDarkTheme] = React.useState(undefined as undefined | boolean);
+  const [unitSystem, setUnitSystem] = React.useState(UnitSystem.International);
 
   const [listenAddress, _setListenAddress] = React.useState<[string, string, number/* stamp, for manually renew socket on the same address:port */]>(() => {
     const address = localStorage.getItem("address") ?? "127.0.0.1";
@@ -57,8 +58,8 @@ export default function App() {
   const [socketStats, setSocketStats] = React.useState(SocketStats.closed);
 
   const appContext = React.useMemo<AppContext>(() => {
-    return { listenAddress, setListenAddress, enableDarkTheme, setEnableDarkTheme };
-  }, [enableDarkTheme, listenAddress, setListenAddress]);
+    return { listenAddress, setListenAddress, enableDarkTheme, setEnableDarkTheme, unitSystem, setUnitSystem };
+  }, [enableDarkTheme, listenAddress, setListenAddress, unitSystem]);
 
   const streamAppContext = React.useMemo<StreamAppContext>(() => {
     return { messageData, messageDataAnalysis, tick };
