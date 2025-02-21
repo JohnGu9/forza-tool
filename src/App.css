@@ -1,0 +1,7 @@
+div[data-dark-mode="rmcw3-dark-mode-off"] {
+  color: #000;
+}
+
+div[data-dark-mode="rmcw3-dark-mode-on"] {
+  color: #fff;
+}
