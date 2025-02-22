@@ -245,7 +245,7 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
     let changed = false;
     const lastMessageData = messageData.getLastUnsafe();
     const recordPower = analysis.powerCurve[lastMessageData.currentEngineRpm];
-    if (recordPower === undefined || (lastMessageData.accelerator === 255 && recordPower.power < lastMessageData.power)) {
+    if ((recordPower === undefined && lastMessageData.power !== 0) || (lastMessageData.accelerator === 255 && recordPower.power < lastMessageData.power)) {
         analysis.powerCurve[lastMessageData.currentEngineRpm] = { power: lastMessageData.power, torque: lastMessageData.torque };
         changed = true;
     }

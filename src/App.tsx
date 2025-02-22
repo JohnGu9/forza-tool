@@ -91,6 +91,9 @@ export default function App() {
     const onData = (event: { event: 'data'; data: { data: number[]; }; }) => {
       try {
         const data = parseMessageData(event.data.data);
+        if (!data.isRaceOn) {
+          return;
+        }
         // log(`${JSON.stringify(data)}`);
         if (isNeedToReset(messageData, data)) { // car changed
           messageData.clear();
@@ -216,8 +219,7 @@ function isNeedToReset(messageData: CircularBuffer<MessageData>, newData: Messag
     return false;
   }
   const lastData = messageData.getLastUnsafe();
-  if (lastData.isRaceOn === newData.isRaceOn &&
-    lastData.carOrdinal === newData.carOrdinal &&
+  if (lastData.carOrdinal === newData.carOrdinal &&
     lastData.carPerformanceIndex === lastData.carPerformanceIndex &&
     lastData.numCylinders === lastData.numCylinders
   ) {

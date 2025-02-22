@@ -38,7 +38,7 @@ export default function Engine() {
       <SimpleCard title="Power" content={wsTo(lastMessageData.power, unitSystem).toFixed(1)}
         tooltip={`unit: ${getPowerUnit(unitSystem)}`}
         onClick={changeUnitSystem} />
-      <SimpleCard title="PowerLevel" content={`${(powerLevel * 100).toFixed(0)}%`}
+      <SimpleCard title="PowerLevel" content={`${(powerLevel * 100).toFixed(1)}%`}
         tooltip="Current Power / Max Power"
         onClick={() => setShowPowerCurve(!showPowerCurve)} />
     </div>
@@ -72,7 +72,7 @@ function PowerCurveChart({ size, messageDataAnalysis, lastMessageData }: { size:
         <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
       </linearGradient>
     </defs>
-    <XAxis dataKey="rpm" type="number" domain={['dataMin', 'dataMax']}
+    <XAxis dataKey="rpm" type="number" domain={[lastMessageData.engineIdleRpm, lastMessageData.engineMaxRpm]} allowDataOverflow={false}
       ticks={getTicks(lastMessageData.engineMaxRpm, lastMessageData.engineIdleRpm, 1000)} />
     <YAxis yAxisId={0} type="number" domain={[0, 'dataMax + 20']} allowDataOverflow={false} hide />
     <YAxis yAxisId={1} type="number" domain={[0, 'dataMax + 20']} allowDataOverflow={false} />
@@ -110,7 +110,19 @@ function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
   for (const [rpm, { power, torque }] of Object.entries(messageAnalysis.powerCurve)) {
     data.push({ rpm: parseInt(rpm), power: wsTo(power, unit), torque: nmTo(torque, unit) });
   }
-  return data.sort((a, b) => a.rpm - b.rpm);
+  const res = data.sort((a, b) => a.rpm - b.rpm);
+  if (res.length < 500) {
+    return res;
+  }
+  const reduceRatio = Math.floor(res.length / 250);
+  const reduceItems = new Array(Math.floor(res.length / reduceRatio));
+  for (let i = 0; i < reduceItems.length; i++) {
+    const startIndex = i * reduceRatio;
+    const sorted = res.slice(startIndex, startIndex + reduceRatio).sort((a, b) => b.power - a.power);
+    reduceItems[i] = sorted[0];
+  }
+  reduceItems.push(res[res.length - 1]);
+  return reduceItems;
 }
 
 function getTicks(max: number, min: number, gap: number) {
