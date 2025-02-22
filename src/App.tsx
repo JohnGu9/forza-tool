@@ -76,9 +76,15 @@ export default function App() {
 
   const [socketStats, setSocketStats] = React.useState(SocketStats.closed);
 
+  const resetData = React.useCallback(() => {
+    messageData.clear();
+    resetMessageDataAnalysis(messageDataAnalysis, capacity);
+    updateTick();
+  }, [messageData, messageDataAnalysis, updateTick]);
+
   const appContext = React.useMemo<AppContext>(() => {
-    return { listenAddress, setListenAddress, enableDarkTheme, setEnableDarkTheme, unitSystem, setUnitSystem };
-  }, [enableDarkTheme, listenAddress, setListenAddress, unitSystem]);
+    return { resetData, listenAddress, setListenAddress, enableDarkTheme, setEnableDarkTheme, unitSystem, setUnitSystem };
+  }, [resetData, enableDarkTheme, listenAddress, setListenAddress, unitSystem]);
 
   const streamAppContext = React.useMemo<StreamAppContext>(() => {
     return { messageData, messageDataAnalysis, tick };
@@ -96,8 +102,7 @@ export default function App() {
         }
         // log(`${JSON.stringify(data)}`);
         if (isNeedToReset(messageData, data)) { // car changed
-          messageData.clear();
-          resetMessageDataAnalysis(messageDataAnalysis, capacity);
+          resetData();
         }
         messageData.push(data);
         analyzeMessageData(messageData, messageDataAnalysis);
@@ -130,7 +135,7 @@ export default function App() {
       updateTick();
       return () => { (async () => { (await unlisten)(); })(); };
     });
-  }, [addErrorMessage, listenAddress, messageData, messageDataAnalysis, updateTick]);
+  }, [addErrorMessage, listenAddress, messageData, messageDataAnalysis, resetData, updateTick]);
 
   return (
     <ReactAppContext.Provider value={appContext}>

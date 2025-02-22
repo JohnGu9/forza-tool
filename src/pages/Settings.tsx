@@ -6,7 +6,8 @@ export default function Settings({ opened, close }: {
   opened: boolean;
   close: () => unknown;
 }) {
-  const { enableDarkTheme, setEnableDarkTheme,
+  const { resetData,
+    enableDarkTheme, setEnableDarkTheme,
     unitSystem, setUnitSystem } = React.useContext(ReactAppContext);
   return <Dialog open={opened}
     onScrimClick={close}
@@ -16,7 +17,9 @@ export default function Settings({ opened, close }: {
       <Button buttonStyle='text' onClick={close}>Close</Button>
     </>}>
     <div style={{ width: 360, display: "flex", flexDirection: "column" }}>
-      <div style={{ height: 8 }} aria-hidden />
+    <div style={{ height: 8 }} aria-hidden />
+      <Button onClick={resetData}>Reset Data</Button>
+      <div style={{ height: 16 }} aria-hidden />
       <Button onClick={() => setEnableDarkTheme(getNextThemeStats(enableDarkTheme))}>Theme: {getThemeName(enableDarkTheme)}</Button>
       <div style={{ height: 16 }} aria-hidden />
       <Button onClick={() => setUnitSystem(getNextUnitSystem(unitSystem))}>UnitSystem: {getUnitSystemName(unitSystem)}</Button>

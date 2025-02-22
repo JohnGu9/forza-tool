@@ -23,7 +23,7 @@ export default function Detail() {
         margin={{ top: 16, right: 2, left: -10, bottom: 24 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="index" type="number" hide />
-        <YAxis domain={([dataMin, dataMax]) => { return [dataMin, dataMax]; }} />
+        <YAxis domain={([dataMin, dataMax]) => { return [dataMin, dataMax]; }} tickFormatter={value => value.toFixed(1)} />
         <Tooltip />
         <Line type="monotone" dataKey="value" stroke="#82ca9d" />
       </LineChart>

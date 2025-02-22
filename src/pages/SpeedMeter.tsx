@@ -43,7 +43,7 @@ export default function SpeedMeter() {
           </linearGradient>
         </defs>
         <XAxis dataKey="index" type="number" hide />
-        <YAxis />
+        <YAxis tickFormatter={value => value.toFixed(1)} />
         <CartesianGrid strokeDasharray="3 3" />
         <Tooltip />
         <Legend />

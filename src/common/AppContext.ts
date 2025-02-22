@@ -17,6 +17,7 @@ export enum UnitSystem {
 };
 
 export type AppContext = {
+    resetData: () => unknown,
     listenAddress: ListenAddress;
     setListenAddress: (value: ListenAddress) => unknown,
     enableDarkTheme: boolean | undefined,

@@ -51,7 +51,7 @@ export default function Engine() {
     <SimpleRow title="Accelerator" value={lastMessageData.accelerator / 255} />
     <SimpleRow title="Brake" value={lastMessageData.brake / 255} />
     <SimpleRow title="Handbrake" value={lastMessageData.handbrake / 255} />
-    <div style={{ height: 8 }} />
+    <div style={{ height: 16 }} />
   </div>;
 }
 
@@ -74,9 +74,9 @@ function PowerCurveChart({ size, messageDataAnalysis, lastMessageData }: { size:
     </defs>
     <XAxis dataKey="rpm" type="number" domain={[lastMessageData.engineIdleRpm, lastMessageData.engineMaxRpm]} allowDataOverflow={false}
       ticks={getTicks(lastMessageData.engineMaxRpm, lastMessageData.engineIdleRpm, 1000)} />
-    <YAxis yAxisId={0} type="number" domain={[0, 'dataMax + 20']} allowDataOverflow={false} hide />
-    <YAxis yAxisId={1} type="number" domain={[0, 'dataMax + 20']} allowDataOverflow={false} />
-    <CartesianGrid strokeDasharray="3 3" horizontalCoordinatesGenerator={() => []} />
+    <YAxis yAxisId={0} type="number" domain={[0, 'dataMax + 20']} hide />
+    <YAxis yAxisId={1} type="number" domain={[0, 'dataMax + 20']} ticks={[0, wsTo(messageDataAnalysis.maxPower, unitSystem)]} tickFormatter={value => value.toFixed(1)} interval={0} />
+    <CartesianGrid strokeDasharray="3 3" />
     <Tooltip />
     <Legend />
     <Area yAxisId={0} type="monotone" dataKey="torque" stroke="#8884d8" fillOpacity={1} fill="url(#colorTorque)" />
@@ -118,8 +118,14 @@ function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
   const reduceItems = new Array(Math.floor(res.length / reduceRatio));
   for (let i = 0; i < reduceItems.length; i++) {
     const startIndex = i * reduceRatio;
-    const sorted = res.slice(startIndex, startIndex + reduceRatio).sort((a, b) => b.power - a.power);
-    reduceItems[i] = sorted[0];
+    const slice = res.slice(startIndex, startIndex + reduceRatio);
+    const theMax = slice.reduce((max, value) => {
+      if (value.power > max.power) {
+        Object.assign(max, value);
+      }
+      return max;
+    }, slice[0]);
+    reduceItems[i] = theMax;
   }
   reduceItems.push(res[res.length - 1]);
   return reduceItems;
