@@ -2,7 +2,7 @@ import React from "react";
 import { Card, LinearProgress, ListItem, Radio, Typography } from "rmcw/dist/components3";
 import { MessageData } from "../common/MessageData";
 import CircularBuffer from "../common/CircularBuffer";
-import useResize from "../hooks/resize";
+import useResize, { sizeToKey } from "../hooks/resize";
 import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
 import { ReactStreamAppContext } from "../common/AppContext";
 
@@ -61,8 +61,8 @@ function SimpleCard({ title, tireInfo, tirePosition }: { title: string, tireInfo
     return tireInfo.map((value, index) => { return { index, value: value[tirePosition] }; });
   }, [tireInfo, tirePosition]);
   return <Card className="flex-column" style={{ flexGrow: "1", height: "100%", justifyContent: "space-evenly", alignItems: "center", padding: 16 }}>
-    <div ref={ref} style={{ flexGrow: "1", width: "100%" }}>
-      <LineChart width={size.width} height={size.height} data={data}
+    <div ref={ref} style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
+      <LineChart key={sizeToKey(size)} width={size.width} height={size.height} data={data}
         margin={{ top: 5, right: 0, left: -30, bottom: -10 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="index" type="number" tick={false} />

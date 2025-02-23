@@ -1,7 +1,7 @@
 import { Select, SelectOption } from "rmcw/dist/components3";
 import { dummyMessageData, MessageData } from "../common/MessageData";
 import React from "react";
-import useResize from "../hooks/resize";
+import useResize, { sizeToKey } from "../hooks/resize";
 import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
 import { ReactStreamAppContext } from "../common/AppContext";
 
@@ -18,8 +18,8 @@ export default function Detail() {
       {keys.map(key => <SelectOption key={key} headline={key} selected={option === key} onClick={() => setOption(key)} />)}
     </Select>
     <div style={{ height: 16 }} aria-hidden />
-    <div ref={ref} style={{ flexGrow: "1", width: "100%" }}>
-      <LineChart width={size.width} height={size.height} data={data}
+    <div ref={ref} style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
+      <LineChart key={sizeToKey(size)} width={size.width} height={size.height} data={data}
         margin={{ top: 16, right: 2, left: -10, bottom: 24 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="index" type="number" hide />

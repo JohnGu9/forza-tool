@@ -18,3 +18,10 @@ export default function useResize<T extends HTMLElement | null>(ref: React.RefOb
     }, [ref]);
     return size;
 }
+
+export function sizeToKey({ height, width }: {
+    height: number;
+    width: number;
+}) {
+    return `${height}:${width}`;
+}

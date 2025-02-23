@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, Ripple, Typography } from "rmcw/dist/components3";
-import useResize from "../hooks/resize";
+import useResize, { sizeToKey } from "../hooks/resize";
 import { Area, AreaChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis } from "recharts";
 import { ReactAppContext, ReactStreamAppContext, UnitSystem } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
@@ -29,8 +29,8 @@ export default function SpeedMeter() {
       <SimpleCard title="Velocity" content={lastData.velocity.toFixed(1)} tooltip={`velocity = (position delta) / (time delta); unit: ${getSpeedUnit(unitSystem)}`} onClick={changeUnitSystem} />
       <SimpleCard title="Delta" content={`${((lastData.velocity / lastData.speed) * 100).toFixed(1)} %`} tooltip="velocity / speed" onClick={changeUnitSystem} />
     </div>
-    <div ref={ref} style={{ flexGrow: "1", width: "100%" }}>
-      <AreaChart width={size.width} height={size.height} data={data}
+    <div ref={ref} style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
+      <AreaChart key={sizeToKey(size)} width={size.width} height={size.height} data={data}
         margin={{ top: 16, right: 2, left: 0, bottom: 8 }}>
         <defs>
           <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">

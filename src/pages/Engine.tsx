@@ -1,5 +1,5 @@
 import { Area, AreaChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis } from "recharts";
-import useResize from "../hooks/resize";
+import useResize, { sizeToKey } from "../hooks/resize";
 import React from "react";
 import { Card, LinearProgress, Ripple, Typography } from "rmcw/dist/components3";
 import { dummyMessageData, MessageData, MessageDataAnalysis } from "../common/MessageData";
@@ -42,7 +42,7 @@ export default function Engine() {
         tooltip="Current Power / Max Power"
         onClick={() => setShowPowerCurve(!showPowerCurve)} />
     </div>
-    <div ref={ref} style={{ flexGrow: "1", width: "100%" }}>
+    <div ref={ref} style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
       {showPowerCurve ?
         <PowerCurveChart size={size} messageDataAnalysis={messageDataAnalysis} lastMessageData={lastMessageData} /> :
         <PowerLevelChart size={size} messageDataAnalysis={messageDataAnalysis} messageData={messageData} />}
@@ -60,7 +60,7 @@ function PowerCurveChart({ size, messageDataAnalysis, lastMessageData }: { size:
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const data = React.useMemo(() => toData(messageDataAnalysis, unitSystem), [unitSystem, messageDataAnalysis.stamp]);
 
-  return <AreaChart width={size.width} height={size.height} data={data}
+  return <AreaChart key={sizeToKey(size)} width={size.width} height={size.height} data={data}
     margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
     <defs>
       <linearGradient id="colorTorque" x1="0" y1="0" x2="0" y2="1">
@@ -75,7 +75,7 @@ function PowerCurveChart({ size, messageDataAnalysis, lastMessageData }: { size:
     <XAxis dataKey="rpm" type="number" domain={[lastMessageData.engineIdleRpm, lastMessageData.engineMaxRpm]} allowDataOverflow={false}
       ticks={getTicks(lastMessageData.engineMaxRpm, lastMessageData.engineIdleRpm, 1000)} />
     <YAxis yAxisId={0} type="number" domain={[0, 'dataMax + 20']} hide />
-    <YAxis yAxisId={1} type="number" domain={[0, 'dataMax + 20']} ticks={[0, wsTo(messageDataAnalysis.maxPower, unitSystem)]} tickFormatter={value => value.toFixed(1)} interval={0} />
+    <YAxis yAxisId={1} type="number" domain={[0, 'dataMax + 20']} ticks={[wsTo(messageDataAnalysis.maxPower, unitSystem)]} tickFormatter={value => value.toFixed(1)} />
     <CartesianGrid strokeDasharray="3 3" />
     <Tooltip />
     <Legend />
@@ -88,7 +88,7 @@ function PowerLevelChart({ size, messageDataAnalysis, messageData }: { size: { h
   const data = messageData.map((data, index) => {
     return { index, powerLevel: Math.max(data.power / messageDataAnalysis.maxPower, 0) * 100 };
   });
-  return <AreaChart width={size.width} height={size.height} data={data}
+  return <AreaChart key={sizeToKey(size)} width={size.width} height={size.height} data={data}
     margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
     <defs>
       <linearGradient id="colorPower" x1="0" y1="0" x2="0" y2="1">
@@ -111,23 +111,27 @@ function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
     data.push({ rpm: parseInt(rpm), power: wsTo(power, unit), torque: nmTo(torque, unit) });
   }
   const res = data.sort((a, b) => a.rpm - b.rpm);
-  if (res.length < 500) {
-    return res;
+
+  // only show part of data, reduce render work
+
+  const reduceItems = [];
+  for (let i = 0; i < res.length; i++) {
+    const data = res[i];
+    let lastData: {
+      rpm: number;
+      torque: number;
+      power: number;
+    }[] = [];
+    lastData.push(data);
+    for (; i < res.length && (res[i].rpm - data.rpm) < 20; i++) { // every 20 rpm show 1 data
+      lastData.push(res[i]);
+    }
+    i -= 1;
+    lastData = lastData.sort((a, b) => b.power - a.power);
+    const theMaxPower = lastData[0]; // use the max power data to reduce data noise
+    reduceItems.push(theMaxPower);
+
   }
-  const reduceRatio = Math.floor(res.length / 250);
-  const reduceItems = new Array(Math.floor(res.length / reduceRatio));
-  for (let i = 0; i < reduceItems.length; i++) {
-    const startIndex = i * reduceRatio;
-    const slice = res.slice(startIndex, startIndex + reduceRatio);
-    const theMax = slice.reduce((max, value) => {
-      if (value.power > max.power) {
-        Object.assign(max, value);
-      }
-      return max;
-    }, slice[0]);
-    reduceItems[i] = theMax;
-  }
-  reduceItems.push(res[res.length - 1]);
   return reduceItems;
 }
 
