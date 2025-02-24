@@ -70,11 +70,11 @@ function SimpleCard({ title, tireInfo, tirePosition }: { title: string, tireInfo
           ticks={[-1, 0, 1]} />
         <Tooltip formatter={(value) => { return (value as number).toFixed(3); }}
           contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-        <Line type="monotone" dataKey="value" stroke="#82ca9d" />
+        <Line type="monotone" dataKey="value" stroke="#82ca9d" dot={false} />
       </LineChart>
     </div>
     <div className="flex-row" style={{ width: "100%", justifyContent: "space-between", alignItems: "center", padding: "4px 0" }}>
-      <span>{title}</span>{(value * 100).toFixed(0)}%
+      <span>{title}</span>{(value * 100).toFixed(1)}%
     </div>
     <LinearProgress value={value} style={{ width: "100%" }} />
   </Card>;

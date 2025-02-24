@@ -36,7 +36,7 @@ export default function Detail() {
         <YAxis domain={([dataMin, dataMax]) => { return [dataMin, dataMax]; }} tickFormatter={value => value.toFixed(1)} />
         <Tooltip formatter={(value) => { return (value as number).toFixed(6); }}
           contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-        <Line type="monotone" dataKey="value" stroke="#82ca9d" />
+        <Line type="monotone" dataKey="value" stroke="#82ca9d" dot={false}/>
       </LineChart>
     </div>
   </div>;

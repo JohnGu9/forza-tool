@@ -13,6 +13,7 @@ import Detail from './pages/Detail';
 import SpeedMeter from './pages/SpeedMeter';
 import Network from './pages/Network';
 import { listen } from '@tauri-apps/api/event';
+import Control from './pages/Control';
 
 export default function App() {
   const [isOpenSettings, setOpenSettings] = React.useState(false);
@@ -183,6 +184,9 @@ export default function App() {
                       return <Detail />;
                     case Page.SpeedMeter:
                       return <SpeedMeter />;
+                    case Page.Control:
+                      return <Control />;
+
                   }
                 })()}
               </SharedAxis>
@@ -223,6 +227,7 @@ enum Page {
   Engine = "Engine",
   Tire = "Tire",
   SpeedMeter = "SpeedMeter",
+  Control = "Control",
   Detail = "Detail",
 };
 
