@@ -2,7 +2,7 @@ use std::sync::LazyLock;
 
 use futures::FutureExt;
 use serde::Serialize;
-use tauri::{Emitter, Manager};
+use tauri::Emitter;
 use tauri::{ipc::Channel, AppHandle};
 use tokio::net::UdpSocket;
 use tokio::sync::{oneshot, Mutex};
@@ -17,7 +17,7 @@ pub fn run() {
                         .level(log::LevelFilter::Info)
                         .build(),
                 )?;
-
+                // use tauri::Manager;
                 // let window = app.get_webview_window("main").unwrap();
                 // window.open_devtools();
             }
@@ -35,7 +35,7 @@ fn my_custom_command(message: String) {
 
 #[derive(Clone, Serialize, Debug)]
 #[serde(rename_all = "camelCase", tag = "event", content = "data")]
-enum ListenEvent {
+enum ListenEvent<'a> {
     #[serde(rename_all = "camelCase")]
     Error { reason: String },
     #[serde(rename_all = "camelCase")]
@@ -45,7 +45,7 @@ enum ListenEvent {
     #[serde(rename_all = "camelCase")]
     Closed {},
     #[serde(rename_all = "camelCase")]
-    RawData { data: Vec<u8> },
+    RawData { data: &'a [u8] },
     // #[serde(rename_all = "camelCase")]
     // Data {
     //     // Sled
@@ -152,7 +152,7 @@ async fn listen_data(
     app: AppHandle,
     url: String,
     forward: Option<String>,
-    on_event: Channel<ListenEvent>,
+    on_event: Channel<ListenEvent<'_>>,
 ) {
     let end_signal_lock = {
         let (mut new_tx, new_rx) = oneshot::channel();
@@ -197,20 +197,18 @@ async fn listen_data(
 
         match udp_message {
             Ok((amt, _)) => {
-                // on_event is buggy, tauri channel is not reliable at all!!!
+                // `on_event` is buggy, tauri channel is not reliable at all!!!
                 // use globe event to send data
                 // if let Err(e) = on_event.send(to_data(&buf[..amt])) {
                 //     println!("Channel Error ({:?})", e);
                 // }
-                // and the Serialize is also buggy, only u32 number can be transmitted
+                // and the `Serialize` is also buggy, only u32 number can be transmitted
                 // other number type will reset to 0 for no reason
                 // let data = to_data(&buf[..amt]);
                 // println!("{:?}", &data);
 
                 // parse in js, tauri is stupid!!!
-                let data = ListenEvent::RawData {
-                    data: buf[..amt].to_vec(),
-                };
+                let data = ListenEvent::RawData { data: &buf[..amt] };
                 app.emit("on-data", data).unwrap();
                 if let Some(forward) = &forward {
                     if let Err(e) = socket.send_to(&buf[..amt], &forward).await {

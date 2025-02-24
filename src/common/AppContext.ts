@@ -24,7 +24,8 @@ export type AppContext = {
     setEnableDarkTheme: (v: boolean | undefined) => unknown,
     unitSystem: UnitSystem,
     setUnitSystem: (v: UnitSystem) => unknown,
-
+    dataBufferLength: number,
+    setDataBufferLength: (v: number) => unknown,
 };
 
 export const ReactAppContext = React.createContext(null as unknown as AppContext);

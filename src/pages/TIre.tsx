@@ -68,7 +68,8 @@ function SimpleCard({ title, tireInfo, tirePosition }: { title: string, tireInfo
         <XAxis dataKey="index" type="number" tick={false} />
         <YAxis domain={([dataMin, dataMax]) => { const absMax = Math.max(Math.abs(dataMin), Math.abs(dataMax)) + 0.2; return [-absMax, absMax]; }}
           ticks={[-1, 0, 1]} />
-        <Tooltip />
+        <Tooltip formatter={(value) => { return (value as number).toFixed(3); }}
+          contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
         <Line type="monotone" dataKey="value" stroke="#82ca9d" />
       </LineChart>
     </div>

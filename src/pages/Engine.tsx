@@ -30,11 +30,9 @@ export default function Engine() {
       <SimpleCard title="RPM" content={lastMessageData.currentEngineRpm.toFixed(0)}
         tooltip="unit: REV/MIN"
         onClick={changeUnitSystem} />
-      *
       <SimpleCard title="Torque" content={nmTo(lastMessageData.torque, unitSystem).toFixed(1)}
         tooltip={`unit: ${getTorqueUnit(unitSystem)}`}
         onClick={changeUnitSystem} />
-      =
       <SimpleCard title="Power" content={wsTo(lastMessageData.power, unitSystem).toFixed(1)}
         tooltip={`unit: ${getPowerUnit(unitSystem)}`}
         onClick={changeUnitSystem} />
@@ -59,7 +57,7 @@ function PowerCurveChart({ size, messageDataAnalysis, lastMessageData }: { size:
   const { unitSystem } = React.useContext(ReactAppContext);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const data = React.useMemo(() => toData(messageDataAnalysis, unitSystem), [unitSystem, messageDataAnalysis.stamp]);
-
+  const maxPower = wsTo(messageDataAnalysis.maxPower, unitSystem);
   return <AreaChart key={sizeToKey(size)} width={size.width} height={size.height} data={data}
     margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
     <defs>
@@ -74,10 +72,21 @@ function PowerCurveChart({ size, messageDataAnalysis, lastMessageData }: { size:
     </defs>
     <XAxis dataKey="rpm" type="number" domain={[lastMessageData.engineIdleRpm, lastMessageData.engineMaxRpm]} allowDataOverflow={false}
       ticks={getTicks(lastMessageData.engineMaxRpm, lastMessageData.engineIdleRpm, 1000)} />
-    <YAxis yAxisId={0} type="number" domain={[0, 'dataMax + 20']} hide />
-    <YAxis yAxisId={1} type="number" domain={[0, 'dataMax + 20']} ticks={[wsTo(messageDataAnalysis.maxPower, unitSystem)]} tickFormatter={value => value.toFixed(1)} />
+    <YAxis yAxisId={0} type="number" domain={([, max]) => { return [0, max * 1.05]; }} hide />
+    <YAxis yAxisId={1} type="number" domain={([, max]) => { return [0, max * 1.05]; }}
+      ticks={[maxPower]}
+      tickFormatter={value => value.toFixed(1)} />
     <CartesianGrid strokeDasharray="3 3" />
-    <Tooltip />
+    <Tooltip formatter={(value, name) => {
+      switch (name) {
+        case "rpm":
+          return (value as number).toFixed(0);
+        case "power":
+          return `${(value as number).toFixed(1)} (${((value as number) / maxPower * 100).toFixed(1)}%)`;
+        default:
+          return (value as number).toFixed(1);
+      }
+    }} contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
     <Legend />
     <Area yAxisId={0} type="monotone" dataKey="torque" stroke="#8884d8" fillOpacity={1} fill="url(#colorTorque)" />
     <Area yAxisId={1} type="monotone" dataKey="power" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" />
@@ -99,7 +108,8 @@ function PowerLevelChart({ size, messageDataAnalysis, messageData }: { size: { h
     <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
     <YAxis yAxisId={1} type="number" domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} allowDataOverflow={false} />
     <CartesianGrid strokeDasharray="3 3" />
-    <Tooltip />
+    <Tooltip formatter={(value) => { return (value as number).toFixed(1); }}
+      contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
     <Legend />
     <Area yAxisId={1} type="monotone" dataKey="powerLevel" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" unit="%" />
   </AreaChart>;
@@ -158,7 +168,7 @@ function SimpleCard({ title, content, tooltip, onClick }: { title: string, conte
 function SimpleRow({ title, value }: { title: string; value: number; }) {
   return <div className="flex-column" style={{ justifyContent: "space-around", padding: "8px 32px" }}>
     <div className="flex-row" style={{ justifyContent: "space-between", alignItems: "center", padding: "4px 0" }}>
-      <span>{title}</span>{(value * 100).toFixed(0)}%
+      <span>{title}</span>{(value * 100).toFixed(1)}%
     </div>
     <LinearProgress value={value} style={{ width: "100%" }} />
   </div>;

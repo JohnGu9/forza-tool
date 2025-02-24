@@ -1,6 +1,5 @@
 // When using the Tauri API npm package:
 import { invoke, Channel } from '@tauri-apps/api/core';
-import { MessageData } from './common/MessageData';
 
 export type CallableCmd = "my_custom_command";
 
@@ -35,8 +34,8 @@ export type ListenDataEvent =
         data: unknown;
     }
     | {
-        event: 'data';
-        data: MessageData;
+        event: 'raw_data';
+        data: number[];
     };
 
 export async function listenData(url: string, forward: string | null, onMessage: (event: ListenDataEvent) => unknown) {

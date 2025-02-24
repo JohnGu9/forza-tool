@@ -8,7 +8,7 @@ export default function ErrorMessage({ opened, close, errorCollection }: {
   return <Dialog open={opened}
     onScrimClick={close}
     onEscapeKey={close}
-    headline="Error Message"
+    headline="Error"
     actions={<Button buttonStyle='text' onClick={close}>Close</Button>}>
     {errorCollection.length === 0 ?
       <div>No Error Message Yet. </div> :

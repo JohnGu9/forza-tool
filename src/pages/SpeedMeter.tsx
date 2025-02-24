@@ -24,14 +24,14 @@ export default function SpeedMeter() {
   const data = toData(messageData, messageDataAnalysis, unitSystem);
   const lastData = data.length === 0 ? { index: 0, speed: 0, velocity: 0 } : data[0];
   return <div className="fill-parent flex-column" style={{ padding: "16px 32px" }}>
-    <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-between" }}>
+    <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-between", padding: "0 0 16px" }}>
       <SimpleCard title="Speed" content={lastData.speed.toFixed(1)} tooltip={`car speed meter value; unit: ${getSpeedUnit(unitSystem)}`} onClick={changeUnitSystem} />
       <SimpleCard title="Velocity" content={lastData.velocity.toFixed(1)} tooltip={`velocity = (position delta) / (time delta); unit: ${getSpeedUnit(unitSystem)}`} onClick={changeUnitSystem} />
-      <SimpleCard title="Delta" content={`${((lastData.velocity / lastData.speed) * 100).toFixed(1)} %`} tooltip="velocity / speed" onClick={changeUnitSystem} />
+      <SimpleCard title="Ratio" content={`${((lastData.velocity / lastData.speed) * 100).toFixed(1)} %`} tooltip="velocity / speed" onClick={changeUnitSystem} />
     </div>
     <div ref={ref} style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
       <AreaChart key={sizeToKey(size)} width={size.width} height={size.height} data={data}
-        margin={{ top: 16, right: 2, left: 0, bottom: 8 }}>
+        margin={{ top: 4, right: 2, left: 0, bottom: 8 }}>
         <defs>
           <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
@@ -45,7 +45,8 @@ export default function SpeedMeter() {
         <XAxis dataKey="index" type="number" hide />
         <YAxis tickFormatter={value => value.toFixed(1)} />
         <CartesianGrid strokeDasharray="3 3" />
-        <Tooltip />
+        <Tooltip formatter={(value) => { return (value as number).toFixed(3); }}
+          contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
         <Legend />
         <Area type="monotone" dataKey="speed" stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
         <Area type="monotone" dataKey="velocity" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPv)" />
@@ -57,7 +58,7 @@ export default function SpeedMeter() {
 function SimpleCard({ title, tooltip, content, onClick }: { title: string, tooltip: string, content: string; onClick: () => unknown; }) {
   return <Card style={{ width: 150, height: "100%" }}>
     <Ripple onClick={onClick} className="fill-parent flex-column" style={{ justifyContent: "space-evenly", alignItems: "center", borderRadius: "var(--_container-shape, 12px)" }}>
-      <Typography.Headline.Small tag='span' title={tooltip}>{title}</Typography.Headline.Small>
+      <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
       <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
     </Ripple>
   </Card>;

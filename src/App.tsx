@@ -5,7 +5,6 @@ import Settings from './pages/Settings';
 import React from 'react';
 import Tire from './pages/TIre';
 import { listenData } from './ipc';
-import ErrorMessage from './pages/ErrorMessage';
 import { analyzeMessageData, dummyMessageData, MessageData, MessageDataAnalysis, newMessageDataAnalysis, parseMessageData, resetMessageDataAnalysis } from './common/MessageData';
 import CircularBuffer from './common/CircularBuffer';
 import { SharedAxis, SharedAxisTransform } from 'material-design-transform';
@@ -15,16 +14,10 @@ import SpeedMeter from './pages/SpeedMeter';
 import Network from './pages/Network';
 import { listen } from '@tauri-apps/api/event';
 
-const capacity = 256;
-
 export default function App() {
   const [isOpenSettings, setOpenSettings] = React.useState(false);
   const openSettings = React.useCallback(() => setOpenSettings(true), []);
   const closeSettings = React.useCallback(() => setOpenSettings(false), []);
-
-  const [isOpenErrorMessage, setOpenErrorMessage] = React.useState(false);
-  const openErrorMessage = React.useCallback(() => setOpenErrorMessage(true), []);
-  const closeErrorMessage = React.useCallback(() => setOpenErrorMessage(false), []);
 
   const [isOpenNetwork, setOpenNetwork] = React.useState(false);
   const openNetwork = React.useCallback(() => setOpenNetwork(true), []);
@@ -57,8 +50,17 @@ export default function App() {
     }
   }, [listenAddress]);
 
-  const messageData = React.useMemo<CircularBuffer<MessageData>>(() => new CircularBuffer<MessageData>(capacity), []);
-  const messageDataAnalysis = React.useMemo<MessageDataAnalysis>(() => newMessageDataAnalysis(capacity), []);
+  const [dataBufferLength, _setDataBufferLength] = React.useState(parseIntSafe(localStorage.getItem("data-buffer-length")));
+  const setDataBufferLength = React.useCallback((newValue: number) => {
+    newValue = Math.ceil(Math.max(10, newValue));
+    if (dataBufferLength !== newValue) {
+      _setDataBufferLength(newValue);
+      localStorage.setItem("data-buffer-length", newValue.toFixed(0));
+    }
+  }, [dataBufferLength]);
+
+  const messageData = React.useMemo<CircularBuffer<MessageData>>(() => new CircularBuffer<MessageData>(dataBufferLength), [dataBufferLength]);
+  const messageDataAnalysis = React.useMemo<MessageDataAnalysis>(() => newMessageDataAnalysis(dataBufferLength), [dataBufferLength]);
 
   const [errorCollection, setErrorCollection] = React.useState<string[]>([]);
   const addErrorMessage = React.useCallback((errorMessage: string) => setErrorCollection((current) => {
@@ -78,13 +80,13 @@ export default function App() {
 
   const resetData = React.useCallback(() => {
     messageData.clear();
-    resetMessageDataAnalysis(messageDataAnalysis, capacity);
+    resetMessageDataAnalysis(messageDataAnalysis);
     updateTick();
   }, [messageData, messageDataAnalysis, updateTick]);
 
   const appContext = React.useMemo<AppContext>(() => {
-    return { resetData, listenAddress, setListenAddress, enableDarkTheme, setEnableDarkTheme, unitSystem, setUnitSystem };
-  }, [resetData, enableDarkTheme, listenAddress, setListenAddress, unitSystem]);
+    return { resetData, listenAddress, setListenAddress, enableDarkTheme, setEnableDarkTheme, unitSystem, setUnitSystem, dataBufferLength, setDataBufferLength };
+  }, [resetData, listenAddress, setListenAddress, enableDarkTheme, unitSystem, dataBufferLength, setDataBufferLength]);
 
   const streamAppContext = React.useMemo<StreamAppContext>(() => {
     return { messageData, messageDataAnalysis, tick };
@@ -122,9 +124,9 @@ export default function App() {
         case "messageError":
           addErrorMessage(`[${new Date().toTimeString()}] ${event.data.reason}`);
           break;
-        case "data":
-          // onData(event);
-          break;
+        // case "data":
+        //   onData(event);
+        //   break;
         case "opened":
           setSocketStats(SocketStats.opened);
           break;
@@ -141,20 +143,26 @@ export default function App() {
     <ReactAppContext.Provider value={appContext}>
       <Theme className='fill-parent' withBackgroundColor enableDarkTheme={enableDarkTheme}>
         <div className="rmcw-drawer fill-parent">
-          <NavigationDrawer opened style={{ position: "absolute", display: "flex", flexDirection: "column" }}>
+          <NavigationDrawer opened style={{
+            position: "absolute", display: "flex", flexDirection: "column",
+            "--md-navigation-drawer-container-shape": "0 8px 8px 0",
+          } as React.CSSProperties}>
             <List style={{ padding: 0, flexGrow: 1 }}>
               <Typography.Headline.Large tag='div' style={{ padding: 16 }}>Forza</Typography.Headline.Large>
               <Divider />
               {Object.values(Page).map(value =>
                 <ListItem key={value} type='button' onClick={() => setPage(value)}
-                  trailingSupportingText={page === value ? <Icon>radio_button_checked</Icon> : <></>}>{value}</ListItem>)}
+                  style={page === value ? {
+                    backgroundColor: "rgb(from var(--md-sys-color-primary-fixed-dim) r g b / 0.2)",
+                    "--md-list-item-label-text-color": "var(--md-sys-color-primary)"
+                  } as React.CSSProperties : undefined}>
+                  {value}
+                </ListItem>)}
             </List>
             <List style={{ padding: 0 }}>
               <LapTime messageData={messageData} />
               <ListItem type='button' trailingSupportingText={`Socket: ${socketStats}`}
                 onClick={openNetwork}>Network</ListItem>
-              <ListItem type='button' trailingSupportingText={(slotName) => <Icon slot={slotName}>error</Icon>}
-                onClick={openErrorMessage}>Error Message</ListItem>
               <ListItem type='button' trailingSupportingText={(slotName) => <Icon slot={slotName}>settings</Icon>}
                 onClick={openSettings}>Settings</ListItem>
             </List>
@@ -182,8 +190,7 @@ export default function App() {
           </NavigationDrawerPadding>
         </div>
         <Network opened={isOpenNetwork} close={closeNetwork} />
-        <ErrorMessage opened={isOpenErrorMessage} close={closeErrorMessage} errorCollection={errorCollection} />
-        <Settings opened={isOpenSettings} close={closeSettings} />
+        <Settings opened={isOpenSettings} close={closeSettings} errorCollection={errorCollection} />
       </Theme>
     </ReactAppContext.Provider>
   );
@@ -231,4 +238,17 @@ function isNeedToReset(messageData: CircularBuffer<MessageData>, newData: Messag
     return false;
   }
   return true;
+}
+
+
+function parseIntSafe(value: string | null, defaultValue = 256) {
+  if (value === null) {
+    return defaultValue;
+  }
+  try {
+    return Math.max(10, parseInt(value));
+  } catch (e) {
+    console.error(e);
+    return defaultValue;
+  }
 }
