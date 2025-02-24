@@ -3,21 +3,43 @@ import { Card, LinearProgress } from "rmcw/dist/components3";
 import useResize, { sizeToKey } from "../hooks/resize";
 import React from "react";
 import { ReactStreamAppContext } from "../common/AppContext";
+import CircularBuffer from "../common/CircularBuffer";
+import { MessageData } from "../common/MessageData";
 
 export default function Control() {
   const { messageData } = React.useContext(ReactStreamAppContext);
+  const { clutch, accelerator, brake, handbrake } = getTargetData(messageData);
   return <div className="fill-parent flex-column" style={{ padding: "16px 32px" }}>
-    <SimpleCard title="Clutch" data={messageData.map((value, index) => { return { index, value: value.clutch / 255 * 100 }; })} />
+    <SimpleCard title="Clutch" data={clutch} />
     <div style={{ height: 16 }} aria-hidden />
-    <SimpleCard title="Accelerator" data={messageData.map((value, index) => { return { index, value: value.accelerator / 255 * 100 }; })} />
+    <SimpleCard title="Accelerator" data={accelerator} />
     <div style={{ height: 16 }} aria-hidden />
-    <SimpleCard title="Brake" data={messageData.map((value, index) => { return { index, value: value.brake / 255 * 100 }; })} />
+    <SimpleCard title="Brake" data={brake} />
     <div style={{ height: 16 }} aria-hidden />
-    <SimpleCard title="Handbrake" data={messageData.map((value, index) => { return { index, value: value.handbrake / 255 * 100 }; })} />
+    <SimpleCard title="Handbrake" data={handbrake} />
   </div>;
 }
 
-function SimpleCard({ title, data }: { title: string, data: { index: number; value: number; }[]; }) {
+type DataType = { index: number; value: number; };
+
+function getTargetData(messageData: CircularBuffer<MessageData>) {
+  let index = 0;
+  const length = messageData.getElementCount();
+  const clutch = new Array<DataType>(length);
+  const accelerator = new Array<DataType>(length);
+  const brake = new Array<DataType>(length);
+  const handbrake = new Array<DataType>(length);
+  for (const data of messageData) {
+    clutch[index] = { index, value: data.clutch / 255 * 100 };
+    accelerator[index] = { index, value: data.accelerator / 255 * 100 };
+    brake[index] = { index, value: data.brake / 255 * 100 };
+    handbrake[index] = { index, value: data.handbrake / 255 * 100 };
+    index += 1;
+  }
+  return { clutch, accelerator, brake, handbrake };
+}
+
+function SimpleCard({ title, data }: { title: string, data: DataType[]; }) {
   const ref = React.useRef<HTMLDivElement>(null);
   const size = useResize(ref);
   const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1].value);
