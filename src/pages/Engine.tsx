@@ -26,30 +26,30 @@ export default function Engine() {
     }
   }, [setUnitSystem, unitSystem]);
   return <div className="fill-parent flex-column">
-    <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-between", alignItems: "center", padding: "16px 32px" }}>
+    <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-between", alignItems: "center", gap: 8, padding: "16px 32px" }}>
       <SimpleCard title="RPM" content={lastMessageData.currentEngineRpm.toFixed(0)}
         tooltip="unit: REV/MIN"
         onClick={changeUnitSystem} />
+      *
       <SimpleCard title="Torque" content={nmTo(lastMessageData.torque, unitSystem).toFixed(1)}
         tooltip={`unit: ${getTorqueUnit(unitSystem)}`}
         onClick={changeUnitSystem} />
+      =
       <SimpleCard title="Power" content={wsTo(lastMessageData.power, unitSystem).toFixed(1)}
         tooltip={`unit: ${getPowerUnit(unitSystem)}`}
-        onClick={changeUnitSystem} />
-      <SimpleCard title="PowerLevel" content={`${(powerLevel * 100).toFixed(1)}%`}
-        tooltip="Current Power / Max Power"
-        onClick={() => setShowPowerCurve(!showPowerCurve)} />
+        onClick={() => setShowPowerCurve(value => !value)} />
     </div>
     <div ref={ref} style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
       {showPowerCurve ?
         <PowerCurveChart size={size} messageDataAnalysis={messageDataAnalysis} lastMessageData={lastMessageData} /> :
         <PowerLevelChart size={size} messageDataAnalysis={messageDataAnalysis} messageData={messageData} />}
     </div>
-    <SimpleRow title="Clutch" value={lastMessageData.clutch / 255} />
-    <SimpleRow title="Accelerator" value={lastMessageData.accelerator / 255} />
-    <SimpleRow title="Brake" value={lastMessageData.brake / 255} />
-    <SimpleRow title="Handbrake" value={lastMessageData.handbrake / 255} />
     <div style={{ height: 16 }} />
+    <Ripple onClick={() => setShowPowerCurve(value => !value)}>
+      <SimpleRow title="Power Level" value={powerLevel} />
+      <SimpleRow title="Accelerator" value={lastMessageData.accelerator / 255} />
+      <div style={{ height: 24 }} />
+    </Ripple>
   </div>;
 }
 
@@ -72,15 +72,13 @@ function PowerCurveChart({ size, messageDataAnalysis, lastMessageData }: { size:
     </defs>
     <XAxis dataKey="rpm" type="number" domain={[lastMessageData.engineIdleRpm, lastMessageData.engineMaxRpm]} allowDataOverflow={false}
       ticks={getTicks(lastMessageData.engineMaxRpm, lastMessageData.engineIdleRpm, 1000)} />
-    <YAxis yAxisId={0} type="number" domain={([, max]) => { return [0, max * 1.05]; }} hide />
-    <YAxis yAxisId={1} type="number" domain={([, max]) => { return [0, max * 1.05]; }}
-      ticks={[maxPower]}
+    <YAxis yAxisId={1} type="number" domain={([, max]) => { return [0, max * 1.05]; }} hide />
+    <YAxis yAxisId={0} type="number" domain={([, max]) => { return [0, max * 1.05]; }}
+      ticks={maxPower === 0 ? [0] : [0, maxPower / 2, maxPower]}
       tickFormatter={value => value.toFixed(1)} />
-    <CartesianGrid strokeDasharray="3 3" />
+    <CartesianGrid strokeDasharray="3 3" horizontalValues={[maxPower / 4, maxPower / 2, maxPower * 3 / 4, maxPower]} />
     <Tooltip formatter={(value, name) => {
       switch (name) {
-        case "rpm":
-          return (value as number).toFixed(0);
         case "power":
           return `${(value as number).toFixed(1)} (${((value as number) / maxPower * 100).toFixed(1)}%)`;
         default:
@@ -88,14 +86,14 @@ function PowerCurveChart({ size, messageDataAnalysis, lastMessageData }: { size:
       }
     }} contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
     <Legend />
-    <Area yAxisId={0} type="monotone" dataKey="torque" stroke="#8884d8" fillOpacity={1} fill="url(#colorTorque)" />
-    <Area yAxisId={1} type="monotone" dataKey="power" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" />
+    <Area yAxisId={1} type="monotone" dataKey="torque" stroke="#8884d8" fillOpacity={1} fill="url(#colorTorque)" />
+    <Area yAxisId={0} type="monotone" dataKey="power" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" />
   </AreaChart>;
 }
 
 function PowerLevelChart({ size, messageDataAnalysis, messageData }: { size: { height: number; width: number; }; messageDataAnalysis: MessageDataAnalysis; messageData: CircularBuffer<MessageData>; }) {
   const data = messageData.map((data, index) => {
-    return { index, powerLevel: Math.max(data.power / messageDataAnalysis.maxPower, 0) * 100 };
+    return { index, "power level": Math.max(data.power / messageDataAnalysis.maxPower, 0) * 100 };
   });
   return <AreaChart key={sizeToKey(size)} width={size.width} height={size.height} data={data}
     margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
@@ -111,7 +109,7 @@ function PowerLevelChart({ size, messageDataAnalysis, messageData }: { size: { h
     <Tooltip formatter={(value) => { return (value as number).toFixed(1); }}
       contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
     <Legend />
-    <Area yAxisId={1} type="monotone" dataKey="powerLevel" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" unit="%" />
+    <Area yAxisId={1} type="monotone" dataKey="power level" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" unit="%" />
   </AreaChart>;
 }
 
@@ -156,7 +154,7 @@ function getTicks(max: number, min: number, gap: number) {
 }
 
 function SimpleCard({ title, content, tooltip, onClick }: { title: string, content: string; tooltip: string; onClick: () => unknown; }) {
-  return <Card style={{ width: 150, height: "100%" }}>
+  return <Card style={{ flexGrow: "1", maxWidth: 240, height: "100%" }}>
     <Ripple className="fill-parent flex-column" style={{ justifyContent: "space-evenly", alignItems: "center", borderRadius: "var(--_container-shape, 12px)" }}
       onClick={onClick}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
@@ -170,7 +168,7 @@ function SimpleRow({ title, value }: { title: string; value: number; }) {
     <div className="flex-row" style={{ justifyContent: "space-between", alignItems: "center", padding: "4px 0" }}>
       <span>{title}</span>{(value * 100).toFixed(1)}%
     </div>
-    <LinearProgress value={value} style={{ width: "100%" }} />
+    <LinearProgress value={value} style={{ width: "100%", "--rmcw-linear-progress-transition": "none" } as React.CSSProperties} />
   </div>;
 }
 

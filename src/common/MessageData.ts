@@ -284,17 +284,19 @@ export function parseMessageData(buffer: number[]): MessageData {
 export type MessageDataAnalysis = {
     maxPower: number;
     powerCurve: { [rpm: number]: { power: number, torque: number; }; };
+    distance: CircularBuffer<number>,
     speed: CircularBuffer<number>,
     stamp: number;
 };
 
 export function newMessageDataAnalysis(capacity: number): MessageDataAnalysis {
-    return { maxPower: 0, powerCurve: {}, speed: new CircularBuffer<number>(capacity), stamp: 0 };
+    return { maxPower: 0, powerCurve: {}, distance: new CircularBuffer<number>(capacity), speed: new CircularBuffer<number>(capacity), stamp: 0 };
 }
 
 export function resetMessageDataAnalysis(analysis: MessageDataAnalysis) {
     analysis.maxPower = 0;
     analysis.powerCurve = {};
+    analysis.distance = new CircularBuffer(analysis.distance.getCapacity());
     analysis.speed = new CircularBuffer(analysis.speed.getCapacity());
     analysis.stamp = 0;
 }
@@ -318,12 +320,15 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
     }
 
     if (messageData.getElementCount() > 1) {
-        const lastIndex = messageData.getUpperBound() - 1;
-        const secondLastIndex = lastIndex - 1;
-        const lastData = messageData.get(lastIndex)!;
-        const secondLastData = messageData.get(secondLastIndex)!;
-        analysis.speed.push(positionToVelocity(lastData, secondLastData, (lastData.timestampMs - secondLastData.timestampMs) / 1000));
+        const maxBacktracking = 6;
+        const path = messageData.slice(-maxBacktracking);
+        analysis.distance.push(getDistance(path[path.length - 1], path[path.length - 2]));
+
+        const timeDelta = path[path.length - 1].timestampMs - path[0].timestampMs;
+        analysis.speed.push(positionToVelocity(analysis.distance.slice(-maxBacktracking), timeDelta / 1000));
         changed = true;
+    } else {
+        analysis.distance.push(0);
     }
 
     if (changed) {
@@ -336,12 +341,16 @@ type Position = {
     positionY: number,
     positionZ: number,
 };// unit: m
-function positionToVelocity(now: Position, then: Position, timeDelta: number /* unit: s */) {
+function positionToVelocity(distances: number[], timeDelta: number /* unit: s */) {
     if (timeDelta <= 0) { return 0; }
-    const destSquare = Math.pow(now.positionX - then.positionX, 2) +
-        Math.pow(now.positionY - then.positionY, 2) +
-        Math.pow(now.positionZ - then.positionZ, 2);
-    return Math.pow(destSquare, 1 / 3) / timeDelta; // unit: m/s
+    const distance = distances.reduce((sum, value) => sum += value, 0);
+    return distance / timeDelta; // unit: m/s
+}
+function getDistance(now: Position, before: Position) {
+    const distanceSquare = Math.pow(now.positionX - before.positionX, 2) +
+        Math.pow(now.positionY - before.positionY, 2) +
+        Math.pow(now.positionZ - before.positionZ, 2);
+    return Math.pow(distanceSquare, 1 / 3);
 }
 
 export const dummyMessageData: MessageData = {

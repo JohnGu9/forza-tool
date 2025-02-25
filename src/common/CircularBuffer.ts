@@ -7,22 +7,22 @@ export default class CircularBuffer<T> {
     static IndexError = {};
 
     protected _array: Array<T>;
-    protected length: number;
+    protected _length: number;
 
     constructor(capacity: number) {
         this._array = new Array(capacity);
-        this.length = 0;
+        this._length = 0;
     }
 
     get(i: number) {
-        if (i < 0 || i < this.length - this._array.length) {
+        if (i < 0 || i < this._length - this._array.length) {
             return undefined;
         }
         return this._array[i % this._array.length];
     }
 
     getLast() {
-        if (this.length === 0) {
+        if (this._length === 0) {
             return undefined;
         }
         return this.get(this.getUpperBound() - 1);
@@ -30,36 +30,36 @@ export default class CircularBuffer<T> {
 
     // ensure the buffer is not empty before call this method
     getLastUnsafe() {
-        return this._array[(this.length - 1) % this._array.length];
+        return this._array[(this._length - 1) % this._array.length];
     }
 
     push(v: T) {
-        this._array[this.length % this._array.length] = v;
-        this.length++;
+        this._array[this._length % this._array.length] = v;
+        this._length++;
 
-        if (this.length === 2 * this._array.length) { // prevent from number overflow 
-            this.length = this._array.length;
+        if (this._length === 2 * this._array.length) { // prevent from number overflow 
+            this._length = this._array.length;
         }
     }
 
     clear() {
         this._array.fill(undefined as T);
-        this.length = 0;
+        this._length = 0;
     }
 
     getLowerBound() {
-        if (this.length < this._array.length) {
+        if (this._length < this._array.length) {
             return 0;
         }
-        return this.length - this._array.length;
+        return this._length - this._array.length;
     }
 
     getUpperBound() {
-        return this.length;
+        return this._length;
     }
 
     getElementCount() {
-        return Math.min(this.length, this._array.length);
+        return Math.min(this._length, this._array.length);
     }
 
     getCapacity() {
@@ -67,7 +67,34 @@ export default class CircularBuffer<T> {
     }
 
     isEmpty() {
-        return this.length === 0;
+        return this._length === 0;
+    }
+
+    slice(start: number, end?: number) {
+        const upper = this.getUpperBound();
+        const lower = this.getLowerBound();
+        if (start < 0) {
+            const trueStart = Math.max(lower, upper + start);
+            const length = upper - trueStart;
+            const res = new Array<T>(length);
+            for (let i = trueStart, index = 0; i < upper; i++, index++) {
+                res[index] = this._array[i % this._array.length];
+            }
+            return res;
+        }
+        const trueStart = Math.min(Math.max(lower, start), upper);
+        const trueEnd = end === undefined ? upper : Math.min(Math.max(lower, end), upper);
+        if (trueStart < trueEnd) {
+            const length = trueEnd - trueStart;
+            const res = new Array<T>(length);
+            for (let i = trueStart, index = 0; i < trueEnd; i++, index++) {
+                res[index] = this._array[i % this._array.length];
+            }
+            return res;
+        } else {
+            return [];
+        }
+
     }
 
     map<X>(fn: (element: T, index: number) => X) {
@@ -100,6 +127,6 @@ export default class CircularBuffer<T> {
     }
 
     toString() {
-        return '[object CircularBuffer(' + this._array.length + ') length ' + this.length + ']';
+        return '[object CircularBuffer(' + this._array.length + ') length ' + this._length + ']';
     }
 };

@@ -10,8 +10,11 @@ export default function useResize<T extends HTMLElement | null>(ref: React.RefOb
             };
             const ob = new ResizeObserver(cb);
             ob.observe(current);
+            window.addEventListener("resize", cb);
+
             cb();
             return () => {
+                window.removeEventListener("resize", cb);
                 ob.disconnect();
             };
         }

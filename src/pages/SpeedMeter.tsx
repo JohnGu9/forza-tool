@@ -22,9 +22,9 @@ export default function SpeedMeter() {
     }
   }, [setUnitSystem, unitSystem]);
   const data = toData(messageData, messageDataAnalysis, unitSystem);
-  const lastData = data.length === 0 ? { index: 0, speed: 0, velocity: 0 } : data[0];
+  const lastData = data.length === 0 ? { index: 0, speed: 0, velocity: 0 } : data[data.length - 1];
   return <div className="fill-parent flex-column" style={{ padding: "16px 32px" }}>
-    <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-between", padding: "0 0 16px" }}>
+    <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-between", gap: 16, padding: "0 0 16px" }}>
       <SimpleCard title="Speed" content={lastData.speed.toFixed(1)} tooltip={`car speed meter value; unit: ${getSpeedUnit(unitSystem)}`} onClick={changeUnitSystem} />
       <SimpleCard title="Velocity" content={lastData.velocity.toFixed(1)} tooltip={`velocity = (position delta) / (time delta); unit: ${getSpeedUnit(unitSystem)}`} onClick={changeUnitSystem} />
       <SimpleCard title="Ratio" content={`${((lastData.velocity / lastData.speed) * 100).toFixed(1)} %`} tooltip="velocity / speed" onClick={changeUnitSystem} />
@@ -33,11 +33,11 @@ export default function SpeedMeter() {
       <AreaChart key={sizeToKey(size)} width={size.width} height={size.height} data={data}
         margin={{ top: 4, right: 2, left: 0, bottom: 8 }}>
         <defs>
-          <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="colorSpeed" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
             <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
           </linearGradient>
-          <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="colorVelocity" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
             <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
           </linearGradient>
@@ -48,15 +48,15 @@ export default function SpeedMeter() {
         <Tooltip formatter={(value) => { return (value as number).toFixed(3); }}
           contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
         <Legend />
-        <Area type="monotone" dataKey="speed" stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
-        <Area type="monotone" dataKey="velocity" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPv)" />
+        <Area type="monotone" dataKey="speed" stroke="#8884d8" fillOpacity={1} fill="url(#colorSpeed)" />
+        <Area type="monotone" dataKey="velocity" stroke="#82ca9d" fillOpacity={1} fill="url(#colorVelocity)" />
       </AreaChart>
     </div>
   </div>;
 }
 
 function SimpleCard({ title, tooltip, content, onClick }: { title: string, tooltip: string, content: string; onClick: () => unknown; }) {
-  return <Card style={{ width: 150, height: "100%" }}>
+  return <Card style={{ flexGrow: "1", maxWidth: 240, height: "100%" }}>
     <Ripple onClick={onClick} className="fill-parent flex-column" style={{ justifyContent: "space-evenly", alignItems: "center", borderRadius: "var(--_container-shape, 12px)" }}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
       <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
