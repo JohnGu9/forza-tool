@@ -17,9 +17,9 @@ pub fn run() {
                         .level(log::LevelFilter::Info)
                         .build(),
                 )?;
-                // use tauri::Manager;
-                // let window = app.get_webview_window("main").unwrap();
-                // window.open_devtools();
+                use tauri::Manager;
+                let window = app.get_webview_window("main").unwrap();
+                window.open_devtools();
             }
             Ok(())
         })
@@ -152,7 +152,7 @@ async fn listen_data(
     app: AppHandle,
     url: String,
     forward: Option<String>,
-    on_event: Channel<ListenEvent<'_>>,
+    on_event: Channel<ListenEvent<'_>>, // warning: `Channel` not working in async, use `AppHandle` to send message
 ) {
     let end_signal_lock = {
         let (mut new_tx, new_rx) = oneshot::channel();
@@ -202,8 +202,8 @@ async fn listen_data(
                 // if let Err(e) = on_event.send(to_data(&buf[..amt])) {
                 //     println!("Channel Error ({:?})", e);
                 // }
-                // and the `Serialize` is also buggy, only u32 number can be transmitted
-                // other number type will reset to 0 for no reason
+                // And the `Serialize` is also buggy, only u32 number can be transmitted.
+                // Other number type will reset to 0 for no reason.
                 // let data = to_data(&buf[..amt]);
                 // println!("{:?}", &data);
 

@@ -1,7 +1,6 @@
 import React from "react";
 import { Card, Ripple, Typography } from "rmcw/dist/components3";
-import useResize, { sizeToKey } from "../hooks/resize";
-import { Area, AreaChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ReactAppContext, ReactStreamAppContext, UnitSystem } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
 import { MessageData, MessageDataAnalysis } from "../common/MessageData";
@@ -9,8 +8,6 @@ import { MessageData, MessageDataAnalysis } from "../common/MessageData";
 const columnHeight = 150;
 
 export default function SpeedMeter() {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const size = useResize(ref);
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const { unitSystem, setUnitSystem } = React.useContext(ReactAppContext);
   const changeUnitSystem = React.useCallback(() => {
@@ -29,28 +26,30 @@ export default function SpeedMeter() {
       <SimpleCard title="Velocity" content={lastData.velocity.toFixed(1)} tooltip={`velocity = (position delta) / (time delta); unit: ${getSpeedUnit(unitSystem)}`} onClick={changeUnitSystem} />
       <SimpleCard title="Ratio" content={`${((lastData.velocity / lastData.speed) * 100).toFixed(1)} %`} tooltip="velocity / speed" onClick={changeUnitSystem} />
     </div>
-    <div ref={ref} style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
-      <AreaChart key={sizeToKey(size)} width={size.width} height={size.height} data={data}
-        margin={{ top: 4, right: 2, left: 0, bottom: 8 }}>
-        <defs>
-          <linearGradient id="colorSpeed" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-            <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-          </linearGradient>
-          <linearGradient id="colorVelocity" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-            <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <XAxis dataKey="index" type="number" hide />
-        <YAxis tickFormatter={value => value.toFixed(1)} />
-        <CartesianGrid strokeDasharray="3 3" />
-        <Tooltip formatter={(value) => { return (value as number).toFixed(3); }}
-          contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-        <Legend />
-        <Area type="monotone" dataKey="speed" stroke="#8884d8" fillOpacity={1} fill="url(#colorSpeed)" />
-        <Area type="monotone" dataKey="velocity" stroke="#82ca9d" fillOpacity={1} fill="url(#colorVelocity)" />
-      </AreaChart>
+    <div style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data}
+          margin={{ top: 4, right: 2, left: 0, bottom: 8 }}>
+          <defs>
+            <linearGradient id="colorSpeed" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient id="colorVelocity" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <XAxis dataKey="index" type="number" hide />
+          <YAxis tickFormatter={value => value.toFixed(1)} />
+          <CartesianGrid strokeDasharray="3 3" />
+          <Tooltip formatter={(value) => { return (value as number).toFixed(3); }}
+            contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
+          <Legend />
+          <Area type="monotone" dataKey="speed" stroke="#8884d8" fillOpacity={1} fill="url(#colorSpeed)" animationDuration={350} />
+          <Area type="monotone" dataKey="velocity" stroke="#82ca9d" fillOpacity={1} fill="url(#colorVelocity)" animationDuration={350} />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   </div>;
 }

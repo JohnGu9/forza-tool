@@ -1,17 +1,22 @@
 import { Button, Dialog } from "rmcw/dist/components3";
+import { ReactAppContext } from "../common/AppContext";
+import React from "react";
 
-export default function ErrorMessage({ opened, close, errorCollection }: {
+export default function ErrorMessage({ opened, close }: {
   opened: boolean;
   close: () => unknown;
-  errorCollection: string[];
 }) {
+  const { errorMessage, setErrorMessage } = React.useContext(ReactAppContext);
   return <Dialog open={opened}
     onScrimClick={close}
     onEscapeKey={close}
     headline="Error"
-    actions={<Button buttonStyle='text' onClick={close}>Close</Button>}>
-    {errorCollection.length === 0 ?
+    actions={<>
+      <Button buttonStyle='text' onClick={() => setErrorMessage([])} disabled={errorMessage.length === 0}>Clear</Button>
+      <Button buttonStyle='text' onClick={close}>Close</Button>
+    </>}>
+    {errorMessage.length === 0 ?
       <div>No Error Message Yet. </div> :
-      errorCollection.map((errorMessage, index) => <div key={index}>{errorMessage}</div>)}
+      errorMessage.map((errorMessage, index) => <div key={index}>{errorMessage}</div>)}
   </Dialog>;
 }

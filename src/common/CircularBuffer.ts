@@ -21,6 +21,10 @@ export default class CircularBuffer<T> {
         return this._array[i % this._array.length];
     }
 
+    getUnsafe(i: number) {
+        return this._array[i % this._array.length];
+    }
+
     getLast() {
         if (this._length === 0) {
             return undefined;
@@ -78,17 +82,17 @@ export default class CircularBuffer<T> {
             const length = upper - trueStart;
             const res = new Array<T>(length);
             for (let i = trueStart, index = 0; i < upper; i++, index++) {
-                res[index] = this._array[i % this._array.length];
+                res[index] = this.getUnsafe(i);
             }
             return res;
         }
-        const trueStart = Math.min(Math.max(lower, start), upper);
+        const trueStart = Math.min(Math.max(start, lower), upper);
         const trueEnd = end === undefined ? upper : Math.min(Math.max(lower, end), upper);
         if (trueStart < trueEnd) {
             const length = trueEnd - trueStart;
             const res = new Array<T>(length);
             for (let i = trueStart, index = 0; i < trueEnd; i++, index++) {
-                res[index] = this._array[i % this._array.length];
+                res[index] = this.getUnsafe(i);
             }
             return res;
         } else {
@@ -117,10 +121,13 @@ export default class CircularBuffer<T> {
                     const i = index++;
                     return {
                         value: this._array[i % this._array.length],
-                        done: false
+                        done: false,
                     };
                 } else {
-                    return { value: undefined as T, done: true };
+                    return {
+                        value: undefined as T,
+                        done: true,
+                    };
                 }
             },
         };

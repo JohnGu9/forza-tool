@@ -63,11 +63,7 @@ export default function App() {
   const messageData = React.useMemo<CircularBuffer<MessageData>>(() => new CircularBuffer<MessageData>(dataBufferLength), [dataBufferLength]);
   const messageDataAnalysis = React.useMemo<MessageDataAnalysis>(() => newMessageDataAnalysis(dataBufferLength), [dataBufferLength]);
 
-  const [errorCollection, setErrorCollection] = React.useState<string[]>([]);
-  const addErrorMessage = React.useCallback((errorMessage: string) => setErrorCollection((current) => {
-    current.push(errorMessage);
-    return [...current.slice(Math.max(current.length - 20, 0))];
-  }), []);
+  const [errorMessage, setErrorMessage] = React.useState<string[]>([]);
 
   const [tick, _setTick] = React.useState(0); // CircularBuffer data updated flag
   const updateTick = React.useCallback(() => _setTick(value => {
@@ -85,9 +81,23 @@ export default function App() {
     updateTick();
   }, [messageData, messageDataAnalysis, updateTick]);
 
+  const [showEnginePowerCurve, setShowEnginePowerCurve] = React.useState(true);
+  const [detailOption, setDetailOption] = React.useState("timestampMs");
+  const [showDetailDelta, setShowDetailDelta] = React.useState(false);
+
   const appContext = React.useMemo<AppContext>(() => {
-    return { resetData, listenAddress, setListenAddress, enableDarkTheme, setEnableDarkTheme, unitSystem, setUnitSystem, dataBufferLength, setDataBufferLength };
-  }, [resetData, listenAddress, setListenAddress, enableDarkTheme, unitSystem, dataBufferLength, setDataBufferLength]);
+    return {
+      resetData,
+      listenAddress, setListenAddress,
+      enableDarkTheme, setEnableDarkTheme,
+      unitSystem, setUnitSystem,
+      dataBufferLength, setDataBufferLength,
+      errorMessage, setErrorMessage,
+      showEnginePowerCurve, setShowEnginePowerCurve,
+      detailOption, setDetailOption,
+      showDetailDelta, setShowDetailDelta
+    };
+  }, [resetData, listenAddress, setListenAddress, enableDarkTheme, unitSystem, dataBufferLength, setDataBufferLength, errorMessage, showEnginePowerCurve, detailOption, showDetailDelta]);
 
   const streamAppContext = React.useMemo<StreamAppContext>(() => {
     return { messageData, messageDataAnalysis, tick };
@@ -97,6 +107,10 @@ export default function App() {
     setSocketStats(SocketStats.opening);
     const [address, port, forwardSwitch, forwardAddress, forwardPort] = listenAddress;
     const forward = forwardSwitch ? `${forwardAddress}:${forwardPort}` : null;
+    const addErrorMessage = (errorMessage: string) => setErrorMessage((current) => {
+      current.push(errorMessage);
+      return [...current.slice(Math.max(current.length - 20, 0))];
+    });
     const onData = (event: { event: 'data'; data: { data: number[]; }; }) => {
       try {
         const data = parseMessageData(event.data.data);
@@ -138,7 +152,7 @@ export default function App() {
       updateTick();
       return () => { (async () => { (await unlisten)(); })(); };
     });
-  }, [addErrorMessage, listenAddress, messageData, messageDataAnalysis, resetData, updateTick]);
+  }, [listenAddress, messageData, messageDataAnalysis, resetData, updateTick]);
 
   return (
     <ReactAppContext.Provider value={appContext}>
@@ -194,7 +208,7 @@ export default function App() {
           </NavigationDrawerPadding>
         </div>
         <Network opened={isOpenNetwork} close={closeNetwork} />
-        <Settings opened={isOpenSettings} close={closeSettings} errorCollection={errorCollection} />
+        <Settings opened={isOpenSettings} close={closeSettings} />
       </Theme>
     </ReactAppContext.Provider>
   );

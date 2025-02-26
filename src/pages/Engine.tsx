@@ -1,5 +1,4 @@
-import { Area, AreaChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis } from "recharts";
-import useResize, { sizeToKey } from "../hooks/resize";
+import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import React from "react";
 import { Card, LinearProgress, Ripple, Typography } from "rmcw/dist/components3";
 import { dummyMessageData, MessageData, MessageDataAnalysis } from "../common/MessageData";
@@ -10,13 +9,10 @@ const columnHeight = 150;
 const chartsPadding = 32;
 
 export default function Engine() {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const size = useResize(ref);
-  const { unitSystem, setUnitSystem } = React.useContext(ReactAppContext);
+  const { unitSystem, setUnitSystem, showEnginePowerCurve, setShowEnginePowerCurve } = React.useContext(ReactAppContext);
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const lastMessageData = messageData.isEmpty() ? dummyMessageData : messageData.getLastUnsafe();
-  const powerLevel = messageDataAnalysis.maxPower === 0 ? 0 : Math.max(lastMessageData.power / messageDataAnalysis.maxPower, 0);
-  const [showPowerCurve, setShowPowerCurve] = React.useState(true);
+  const powerLevel = messageDataAnalysis.maxPower.value === 0 ? 0 : Math.max(lastMessageData.power / messageDataAnalysis.maxPower.value, 0);
   const changeUnitSystem = React.useCallback(() => {
     switch (unitSystem) {
       case UnitSystem.International:
@@ -25,6 +21,7 @@ export default function Engine() {
         return setUnitSystem(UnitSystem.International);
     }
   }, [setUnitSystem, unitSystem]);
+  const powerUnit = getPowerUnit(unitSystem);
   return <div className="fill-parent flex-column">
     <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-between", alignItems: "center", gap: 8, padding: "16px 32px" }}>
       <SimpleCard title="RPM" content={lastMessageData.currentEngineRpm.toFixed(0)}
@@ -36,81 +33,86 @@ export default function Engine() {
         onClick={changeUnitSystem} />
       =
       <SimpleCard title="Power" content={wsTo(lastMessageData.power, unitSystem).toFixed(1)}
-        tooltip={`unit: ${getPowerUnit(unitSystem)}`}
-        onClick={() => setShowPowerCurve(value => !value)} />
+        tooltip={`unit: ${powerUnit}`}
+        onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)} />
     </div>
-    <div ref={ref} style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
-      {showPowerCurve ?
-        <PowerCurveChart size={size} messageDataAnalysis={messageDataAnalysis} lastMessageData={lastMessageData} /> :
-        <PowerLevelChart size={size} messageDataAnalysis={messageDataAnalysis} messageData={messageData} />}
+    <div style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
+      {showEnginePowerCurve ?
+        <PowerCurveChart messageDataAnalysis={messageDataAnalysis} lastMessageData={lastMessageData} /> :
+        <PowerLevelChart messageDataAnalysis={messageDataAnalysis} messageData={messageData} />}
     </div>
     <div style={{ height: 16 }} />
-    <Ripple onClick={() => setShowPowerCurve(value => !value)}>
-      <SimpleRow title="Power Level" value={powerLevel} />
+    <Ripple onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)}>
+      <SimpleRow title={`Power Level (Max Power = ${wsTo(messageDataAnalysis.maxPower.value, unitSystem).toFixed(1)} ${powerUnit}; RPM = ${messageDataAnalysis.maxPower.rpm.toFixed(1)} Rev/Min)`} value={powerLevel} />
       <SimpleRow title="Accelerator" value={lastMessageData.accelerator / 255} />
       <div style={{ height: 24 }} />
     </Ripple>
   </div>;
 }
 
-function PowerCurveChart({ size, messageDataAnalysis, lastMessageData }: { size: { height: number; width: number; }; messageDataAnalysis: MessageDataAnalysis; lastMessageData: MessageData; }) {
+function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageDataAnalysis: MessageDataAnalysis; lastMessageData: MessageData; }) {
   const { unitSystem } = React.useContext(ReactAppContext);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const data = React.useMemo(() => toData(messageDataAnalysis, unitSystem), [unitSystem, messageDataAnalysis.stamp]);
-  const maxPower = wsTo(messageDataAnalysis.maxPower, unitSystem);
-  return <AreaChart key={sizeToKey(size)} width={size.width} height={size.height} data={data}
-    margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
-    <defs>
-      <linearGradient id="colorTorque" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-        <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-      </linearGradient>
-      <linearGradient id="colorPower" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-        <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
-      </linearGradient>
-    </defs>
-    <XAxis dataKey="rpm" type="number" domain={[lastMessageData.engineIdleRpm, lastMessageData.engineMaxRpm]} allowDataOverflow={false}
-      ticks={getTicks(lastMessageData.engineMaxRpm, lastMessageData.engineIdleRpm, 1000)} />
-    <YAxis yAxisId={1} type="number" domain={([, max]) => { return [0, max * 1.05]; }} hide />
-    <YAxis yAxisId={0} type="number" domain={([, max]) => { return [0, max * 1.05]; }}
-      ticks={maxPower === 0 ? [0] : [0, maxPower / 2, maxPower]}
-      tickFormatter={value => value.toFixed(1)} />
-    <CartesianGrid strokeDasharray="3 3" horizontalValues={[maxPower / 4, maxPower / 2, maxPower * 3 / 4, maxPower]} />
-    <Tooltip formatter={(value, name) => {
-      switch (name) {
-        case "power":
-          return `${(value as number).toFixed(1)} (${((value as number) / maxPower * 100).toFixed(1)}%)`;
-        default:
-          return (value as number).toFixed(1);
-      }
-    }} contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-    <Legend />
-    <Area yAxisId={1} type="monotone" dataKey="torque" stroke="#8884d8" fillOpacity={1} fill="url(#colorTorque)" />
-    <Area yAxisId={0} type="monotone" dataKey="power" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" />
-  </AreaChart>;
+  const maxPower = wsTo(messageDataAnalysis.maxPower.value, unitSystem);
+  return <ResponsiveContainer width="100%" height="100%">
+    <AreaChart data={data}
+      margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
+      <defs>
+        <linearGradient id="colorTorque" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+          <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+        </linearGradient>
+        <linearGradient id="colorPower" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
+          <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      <XAxis dataKey="rpm" type="number" domain={[lastMessageData.engineIdleRpm, lastMessageData.engineMaxRpm]} allowDataOverflow={false}
+        ticks={getTicks(lastMessageData.engineMaxRpm, lastMessageData.engineIdleRpm, 1000)} />
+      <YAxis yAxisId={1} type="number" domain={([, max]) => { return [0, max * 1.05]; }} hide />
+      <YAxis yAxisId={0} type="number" domain={([, max]) => { return [0, max * 1.05]; }}
+        ticks={getTicks(maxPower * 1.05, 0, 50)} />
+      <CartesianGrid strokeDasharray="3 3" />
+      <Tooltip formatter={(value, name) => {
+        switch (name) {
+          case "power":
+            return `${(value as number).toFixed(1)} (${((value as number) / maxPower * 100).toFixed(1)}%)`;
+          default:
+            return (value as number).toFixed(1);
+        }
+      }} contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
+      <Legend />
+      <ReferenceLine stroke="#82ca9d" y={maxPower} label={maxPower.toFixed(1)} ifOverflow="visible" isFront={true} />
+      <ReferenceLine stroke="#82ca9d" x={messageDataAnalysis.maxPower.rpm} label={messageDataAnalysis.maxPower.rpm.toFixed(1)} ifOverflow="visible" isFront={true} />
+      <Area yAxisId={1} type="monotone" dataKey="torque" stroke="#8884d8" fillOpacity={1} fill="url(#colorTorque)" animationDuration={650} />
+      <Area yAxisId={0} type="monotone" dataKey="power" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" animationDuration={650} />
+    </AreaChart>
+  </ResponsiveContainer>;
 }
 
-function PowerLevelChart({ size, messageDataAnalysis, messageData }: { size: { height: number; width: number; }; messageDataAnalysis: MessageDataAnalysis; messageData: CircularBuffer<MessageData>; }) {
+function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnalysis: MessageDataAnalysis; messageData: CircularBuffer<MessageData>; }) {
   const data = messageData.map((data, index) => {
-    return { index, "power level": Math.max(data.power / messageDataAnalysis.maxPower, 0) * 100 };
+    return { index, "power level": Math.max(data.power / messageDataAnalysis.maxPower.value, 0) * 100 };
   });
-  return <AreaChart key={sizeToKey(size)} width={size.width} height={size.height} data={data}
-    margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
-    <defs>
-      <linearGradient id="colorPower" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-        <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
-      </linearGradient>
-    </defs>
-    <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
-    <YAxis yAxisId={1} type="number" domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} allowDataOverflow={false} />
-    <CartesianGrid strokeDasharray="3 3" />
-    <Tooltip formatter={(value) => { return (value as number).toFixed(1); }}
-      contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-    <Legend />
-    <Area yAxisId={1} type="monotone" dataKey="power level" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" unit="%" />
-  </AreaChart>;
+  return <ResponsiveContainer width="100%" height="100%">
+    <AreaChart data={data}
+      margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
+      <defs>
+        <linearGradient id="colorPower" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
+          <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
+      <YAxis yAxisId={1} type="number" domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} allowDataOverflow={false} />
+      <CartesianGrid strokeDasharray="3 3" />
+      <Tooltip formatter={(value) => { return (value as number).toFixed(1); }}
+        contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
+      <Legend />
+      <Area yAxisId={1} type="monotone" dataKey="power level" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" unit="%" animationDuration={650} />
+    </AreaChart>
+  </ResponsiveContainer>;
 }
 
 function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
@@ -125,12 +127,7 @@ function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
   const reduceItems = [];
   for (let i = 0; i < res.length; i++) {
     const data = res[i];
-    let lastData: {
-      rpm: number;
-      torque: number;
-      power: number;
-    }[] = [];
-    lastData.push(data);
+    let lastData = [data];
     for (; i < res.length && (res[i].rpm - data.rpm) < 20; i++) { // every 20 rpm show 1 data
       lastData.push(res[i]);
     }

@@ -3,17 +3,17 @@ import { Button, Dialog } from "rmcw/dist/components3";
 import { ReactAppContext, UnitSystem } from "../common/AppContext";
 import ErrorMessage from "./ErrorMessage";
 
-export default function Settings({ opened, close, errorCollection }: {
+export default function Settings({ opened, close }: {
   opened: boolean;
   close: () => unknown;
-  errorCollection: string[];
 }) {
-  const { resetData,
+  const { resetData, errorMessage,
     enableDarkTheme, setEnableDarkTheme,
     unitSystem, setUnitSystem, } = React.useContext(ReactAppContext);
 
   const [isOpenErrorMessage, setOpenErrorMessage] = React.useState(false);
   const closeErrorMessage = React.useCallback(() => setOpenErrorMessage(false), []);
+
   return <>
     <Dialog open={opened && !isOpenErrorMessage}
       onScrimClick={close}
@@ -30,12 +30,12 @@ export default function Settings({ opened, close, errorCollection }: {
         <div style={{ height: 16 }} aria-hidden />
         <Button onClick={() => setUnitSystem(getNextUnitSystem(unitSystem))}>UnitSystem: {getUnitSystemName(unitSystem)}</Button>
         <div style={{ height: 32 }} aria-hidden />
-        <Button onClick={() => setOpenErrorMessage(true)}>Error Message</Button>
+        <Button onClick={() => setOpenErrorMessage(true)}>Error Message ({errorMessage.length})</Button>
         {/* <div style={{ height: 16 }} aria-hidden />
          <Button onClick={() => log("Test")}>Test</Button> */}
       </div>
     </Dialog>
-    <ErrorMessage opened={isOpenErrorMessage} close={closeErrorMessage} errorCollection={errorCollection} />
+    <ErrorMessage opened={isOpenErrorMessage} close={closeErrorMessage} />
   </>;
 }
 

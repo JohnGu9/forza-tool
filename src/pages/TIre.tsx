@@ -2,8 +2,7 @@ import React from "react";
 import { Card, LinearProgress, ListItem, Radio, Typography } from "rmcw/dist/components3";
 import { MessageData } from "../common/MessageData";
 import CircularBuffer from "../common/CircularBuffer";
-import useResize, { sizeToKey } from "../hooks/resize";
-import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ReactStreamAppContext } from "../common/AppContext";
 
 export default function Tire() {
@@ -35,7 +34,6 @@ enum Type {
 type DataType = { index: number; value: number; };
 
 function getTargetData(messageData: CircularBuffer<MessageData>, type: Type) {
-  let index = 0;
   const { keyFrontLeft, keyFrontRight, keyRearLeft, keyRearRight } = {
     keyFrontLeft: `${type}FrontLeft`,
     keyFrontRight: `${type}FrontRight`,
@@ -47,36 +45,38 @@ function getTargetData(messageData: CircularBuffer<MessageData>, type: Type) {
   const frontRight = new Array<DataType>(length);
   const rearLeft = new Array<DataType>(length);
   const rearRight = new Array<DataType>(length);
+
+  let index = 0;
   for (const data of messageData) {
-    frontLeft[index] = { index, value: data[keyFrontLeft as "tireSlipAngleFrontLeft"] };
-    frontRight[index] = { index, value: data[keyFrontRight as "tireSlipAngleFrontLeft"] };
-    rearLeft[index] = { index, value: data[keyRearLeft as "tireSlipAngleFrontLeft"] };
-    rearRight[index] = { index, value: data[keyRearRight as "tireSlipAngleFrontLeft"] };
+    frontLeft[index] = { index, value: data[keyFrontLeft as "tireSlipAngleFrontLeft"] * 100 };
+    frontRight[index] = { index, value: data[keyFrontRight as "tireSlipAngleFrontLeft"] * 100 };
+    rearLeft[index] = { index, value: data[keyRearLeft as "tireSlipAngleFrontLeft"] * 100 };
+    rearRight[index] = { index, value: data[keyRearRight as "tireSlipAngleFrontLeft"] * 100 };
     index++;
   }
   return { frontLeft, frontRight, rearLeft, rearRight };
 }
 
 function SimpleCard({ title, tireInfo }: { title: string, tireInfo: DataType[]; }) {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const size = useResize(ref);
   const value = tireInfo.length === 0 ? 0 : Math.abs(tireInfo[tireInfo.length - 1].value);
   return <Card className="flex-column" style={{ flexGrow: "1", height: "100%", justifyContent: "space-evenly", alignItems: "center", padding: 16 }}>
-    <div ref={ref} style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
-      <LineChart key={sizeToKey(size)} width={size.width} height={size.height} data={tireInfo}
-        margin={{ top: 5, right: 0, left: -36, bottom: -10 }}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="index" type="number" tick={false} />
-        <YAxis domain={([dataMin, dataMax]) => { const absMax = Math.max(Math.abs(dataMin), Math.abs(dataMax)) + 0.2; return [-absMax, absMax]; }}
-          ticks={[-1, 0, 1]} />
-        <Tooltip formatter={(value) => { return (value as number).toFixed(3); }}
-          contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-        <Line type="monotone" dataKey="value" stroke="#82ca9d" dot={false} />
-      </LineChart>
+    <div style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={tireInfo}
+          margin={{ top: 5, right: 0, left: -24, bottom: -10 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="index" type="number" tick={false} />
+          <YAxis domain={([dataMin, dataMax]) => { const absMax = Math.max(Math.abs(dataMin), Math.abs(dataMax)) + 0.2; return [-absMax, absMax]; }}
+            ticks={[-100, 0, 100]} />
+          <Tooltip formatter={(value) => { return `${(value as number).toFixed(1)}%`; }}
+            contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
+          <Line type="monotone" dataKey="value" stroke="#82ca9d" dot={false} animationDuration={350} />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
     <div className="flex-row" style={{ width: "100%", justifyContent: "space-between", alignItems: "center", padding: "4px 0" }}>
-      <span>{title}</span>{(value * 100).toFixed(1)}%
+      <span>{title}</span>{(value).toFixed(1)}%
     </div>
-    <LinearProgress value={value} style={{ width: "100%", "--rmcw-linear-progress-transition": "none" } as React.CSSProperties} />
+    <LinearProgress value={value / 100} style={{ width: "100%", "--rmcw-linear-progress-transition": "none" } as React.CSSProperties} />
   </Card>;
 }

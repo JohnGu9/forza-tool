@@ -282,7 +282,7 @@ export function parseMessageData(buffer: number[]): MessageData {
 }
 
 export type MessageDataAnalysis = {
-    maxPower: number;
+    maxPower: { value: number, rpm: number, torque: number; };
     powerCurve: { [rpm: number]: { power: number, torque: number; }; };
     distance: CircularBuffer<number>,
     speed: CircularBuffer<number>,
@@ -290,11 +290,11 @@ export type MessageDataAnalysis = {
 };
 
 export function newMessageDataAnalysis(capacity: number): MessageDataAnalysis {
-    return { maxPower: 0, powerCurve: {}, distance: new CircularBuffer<number>(capacity), speed: new CircularBuffer<number>(capacity), stamp: 0 };
+    return { maxPower: { value: 0, rpm: 0, torque: 0 }, powerCurve: {}, distance: new CircularBuffer<number>(capacity), speed: new CircularBuffer<number>(capacity), stamp: 0 };
 }
 
 export function resetMessageDataAnalysis(analysis: MessageDataAnalysis) {
-    analysis.maxPower = 0;
+    analysis.maxPower = { value: 0, rpm: 0, torque: 0 };
     analysis.powerCurve = {};
     analysis.distance = new CircularBuffer(analysis.distance.getCapacity());
     analysis.speed = new CircularBuffer(analysis.speed.getCapacity());
@@ -313,9 +313,8 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
         }
     }
 
-
-    if (analysis.maxPower < lastMessageData.power) {
-        analysis.maxPower = lastMessageData.power;
+    if (analysis.maxPower.value < lastMessageData.power) {
+        analysis.maxPower = { value: lastMessageData.power, rpm: lastMessageData.currentEngineRpm, torque: lastMessageData.torque };
         changed = true;
     }
 
