@@ -53,3 +53,8 @@ body {
   display: flex;
   flex-direction: row;
 }
+
+.flex-space-evenly {
+  justify-content: space-evenly;
+  align-items: center;
+}

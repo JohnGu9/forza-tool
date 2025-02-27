@@ -5,16 +5,27 @@ import { ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
 import { MessageData } from "../common/MessageData";
 
+const gridTemplateAreas =
+  `'Accelerator Accelerator'
+'Accelerator Accelerator'
+'Brake Brake'
+'Brake Brake'
+'Clutch Handbrake'
+'Clutch Handbrake'
+'Clutch Handbrake'
+`;
+
 export default function Control() {
   const { messageData } = React.useContext(ReactStreamAppContext);
   const { clutch, accelerator, brake, handbrake } = getTargetData(messageData);
-  return <div className="fill-parent flex-column" style={{ padding: "16px 32px", gap: 16 }}>
+  return <div className="fill-parent flex-column" style={{
+    padding: "16px 32px", gap: 16,
+    display: "grid", gridTemplateAreas,
+  }}>
     <SimpleCard title="Accelerator" data={accelerator} />
     <SimpleCard title="Brake" data={brake} />
-    <div className="flex-row" style={{ flexGrow: "3", minHeight: 0, gap: 16 }}>
-      <SimpleCard title="Clutch" data={clutch} />
-      <SimpleCard title="Handbrake" data={handbrake} />
-    </div>
+    <SimpleCard title="Clutch" data={clutch} />
+    <SimpleCard title="Handbrake" data={handbrake} />
   </div>;
 }
 
@@ -39,7 +50,7 @@ function getTargetData(messageData: CircularBuffer<MessageData>) {
 
 function SimpleCard({ title, data }: { title: string, data: DataType[]; }) {
   const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1].value);
-  return <Card className="flex-column" style={{ flexGrow: "2", minHeight: 0, minWidth: 0, justifyContent: "space-evenly", alignItems: "center", padding: 16 }}>
+  return <Card className="flex-column flex-space-evenly" style={{ gridArea: title, minHeight: 0, minWidth: 0, padding: 16 }}>
     <div style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data}

@@ -1,12 +1,12 @@
 import React from "react";
 import { Button, Dialog, ListItem, Switch, TextField } from "rmcw/dist/components3";
-import { ListenAddress, ReactAppContext } from "../common/AppContext";
+import { ListenAddress, ReactAppContext, SocketStats } from "../common/AppContext";
 
 export default function Network({ opened, close }: {
   opened: boolean;
   close: () => unknown;
 }) {
-  const { listenAddress, setListenAddress, dataBufferLength, setDataBufferLength } = React.useContext(ReactAppContext);
+  const { listenAddress, setListenAddress, dataBufferLength, setDataBufferLength, socketStats } = React.useContext(ReactAppContext);
   const [address, port, forwardSwitch, forwardAddress, forwardPort, stamp] = listenAddress;
   const [newAddress, setNewAddress] = React.useState(address);
   const [newPort, setNewPort] = React.useState(port);
@@ -38,7 +38,7 @@ export default function Network({ opened, close }: {
       <TextField style={{ width: "100%" }} type="text" label="Address" required value={newAddress} onChange={e => setNewAddress(e.target.value)} />
       <div style={{ height: 16 }} aria-hidden />
       <TextField style={{ width: "100%" }} type="number" min="1" max="65535" label="Port" required value={newPort} onChange={e => setNewPort(e.target.value)}
-        supportingText={`Current listening: ${address}:${port}`} />
+        supportingText={getSocketInformation(socketStats, address, port)} />
       <div style={{ height: 16 }} aria-hidden />
       <ListItem type="button" supportingText="Send all received data to another port" trailingSupportingText={<Switch selected={forward}></Switch>} onClick={() => setForward(!forward)}>Forward</ListItem>
       <div style={{ height: 16 }} aria-hidden />
@@ -57,4 +57,18 @@ export default function Network({ opened, close }: {
       }}>Reset Socket</Button>
     </div>
   </Dialog>;
+}
+
+
+function getSocketInformation(socketStats: SocketStats, address: string, port: string) {
+  switch (socketStats) {
+    case SocketStats.opening:
+      return `Opening socket: ${address}:${port}`;
+    case SocketStats.opened:
+      return `Current listening: ${address}:${port}`;
+    case SocketStats.error:
+      return `Error socket: ${address}:${port} (Maybe port is occupied, please try another port)`;
+    case SocketStats.closed:
+      return `Closed socket: ${address}:${port} (Socket is closed abnormally, please try resetting socket)`;
+  }
 }

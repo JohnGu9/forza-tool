@@ -55,8 +55,8 @@ export default function SpeedMeter() {
 }
 
 function SimpleCard({ title, tooltip, content, onClick }: { title: string, tooltip: string, content: string; onClick: () => unknown; }) {
-  return <Card style={{ flexGrow: "1", maxWidth: 240, height: "100%" }}>
-    <Ripple onClick={onClick} className="fill-parent flex-column" style={{ justifyContent: "space-evenly", alignItems: "center", borderRadius: "var(--_container-shape, 12px)" }}>
+  return <Card style={{ flex: "1 1", maxWidth: 240, height: "100%", overflow: "clip" }}>
+    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: "var(--_container-shape, 12px)" }}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
       <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
     </Ripple>

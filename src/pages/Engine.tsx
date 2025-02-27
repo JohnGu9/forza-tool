@@ -36,7 +36,7 @@ export default function Engine() {
         tooltip={`unit: ${powerUnit}`}
         onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)} />
     </div>
-    <div style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
+    <div style={{ flexGrow: "1", width: "100%", overflow: "clip" }}>
       {showEnginePowerCurve ?
         <PowerCurveChart messageDataAnalysis={messageDataAnalysis} lastMessageData={lastMessageData} /> :
         <PowerLevelChart messageDataAnalysis={messageDataAnalysis} messageData={messageData} />}
@@ -56,7 +56,7 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
   const data = React.useMemo(() => toData(messageDataAnalysis, unitSystem), [unitSystem, messageDataAnalysis.stamp]);
   const maxPower = wsTo(messageDataAnalysis.maxPower.value, unitSystem);
   return <ResponsiveContainer width="100%" height="100%">
-    <AreaChart data={data}
+    <AreaChart title="PowerCurve" data={data}
       margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
       <defs>
         <linearGradient id="colorTorque" x1="0" y1="0" x2="0" y2="1">
@@ -96,10 +96,10 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
     return { index, "power level": Math.max(data.power / messageDataAnalysis.maxPower.value, 0) * 100 };
   });
   return <ResponsiveContainer width="100%" height="100%">
-    <AreaChart data={data}
+    <AreaChart title="PowerLevel" data={data}
       margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
       <defs>
-        <linearGradient id="colorPower" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="colorPowerLevel" x1="0" y1="0" x2="0" y2="1">
           <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
           <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
         </linearGradient>
@@ -110,7 +110,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
       <Tooltip formatter={(value) => { return (value as number).toFixed(1); }}
         contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
       <Legend />
-      <Area yAxisId={1} type="monotone" dataKey="power level" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" unit="%" animationDuration={650} />
+      <Area yAxisId={1} type="monotone" dataKey="power level" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPowerLevel)" unit="%" animationDuration={650} />
     </AreaChart>
   </ResponsiveContainer>;
 }
@@ -151,8 +151,8 @@ function getTicks(max: number, min: number, gap: number) {
 }
 
 function SimpleCard({ title, content, tooltip, onClick }: { title: string, content: string; tooltip: string; onClick: () => unknown; }) {
-  return <Card style={{ flexGrow: "1", maxWidth: 240, height: "100%" }}>
-    <Ripple className="fill-parent flex-column" style={{ justifyContent: "space-evenly", alignItems: "center", borderRadius: "var(--_container-shape, 12px)" }}
+  return <Card style={{ flex: "1 1", maxWidth: 240, height: "100%", overflow: "clip" }}>
+    <Ripple className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: "var(--_container-shape, 12px)" }}
       onClick={onClick}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
       <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>

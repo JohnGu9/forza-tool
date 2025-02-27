@@ -16,6 +16,13 @@ export enum UnitSystem {
     Imperial,
 };
 
+export enum SocketStats {
+    opening = "Opening",
+    opened = "Opened",
+    error = "Error",
+    closed = "Closed",
+}
+
 export type AppContext = {
     resetData: () => unknown,
     listenAddress: ListenAddress;
@@ -28,6 +35,7 @@ export type AppContext = {
     setDataBufferLength: (v: number) => unknown,
     errorMessage: string[],
     setErrorMessage: (v: string[]) => unknown,
+    socketStats: SocketStats,
 
     showEnginePowerCurve: boolean,
     setShowEnginePowerCurve: (v: boolean) => unknown,

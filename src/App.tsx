@@ -8,7 +8,7 @@ import { listenData } from './ipc';
 import { analyzeMessageData, dummyMessageData, MessageData, MessageDataAnalysis, newMessageDataAnalysis, parseMessageData, resetMessageDataAnalysis } from './common/MessageData';
 import CircularBuffer from './common/CircularBuffer';
 import { SharedAxis, SharedAxisTransform } from 'material-design-transform';
-import { AppContext, ListenAddress, ReactAppContext, ReactStreamAppContext, StreamAppContext, UnitSystem } from './common/AppContext';
+import { AppContext, ListenAddress, ReactAppContext, ReactStreamAppContext, SocketStats, StreamAppContext, UnitSystem } from './common/AppContext';
 import Detail from './pages/Detail';
 import SpeedMeter from './pages/SpeedMeter';
 import Network from './pages/Network';
@@ -87,7 +87,7 @@ export default function App() {
 
   const appContext = React.useMemo<AppContext>(() => {
     return {
-      resetData,
+      resetData, socketStats,
       listenAddress, setListenAddress,
       enableDarkTheme, setEnableDarkTheme,
       unitSystem, setUnitSystem,
@@ -97,7 +97,7 @@ export default function App() {
       detailOption, setDetailOption,
       showDetailDelta, setShowDetailDelta
     };
-  }, [resetData, listenAddress, setListenAddress, enableDarkTheme, unitSystem, dataBufferLength, setDataBufferLength, errorMessage, showEnginePowerCurve, detailOption, showDetailDelta]);
+  }, [resetData, socketStats, listenAddress, setListenAddress, enableDarkTheme, unitSystem, dataBufferLength, setDataBufferLength, errorMessage, showEnginePowerCurve, detailOption, showDetailDelta]);
 
   const streamAppContext = React.useMemo<StreamAppContext>(() => {
     return { messageData, messageDataAnalysis, tick };
@@ -162,7 +162,7 @@ export default function App() {
             position: "absolute", display: "flex", flexDirection: "column",
             "--md-navigation-drawer-container-shape": "0 8px 8px 0",
           } as React.CSSProperties}>
-            <List style={{ padding: 0, flexGrow: 1 }}>
+            <List style={{ padding: 0, flex: "1 1" }}>
               <Typography.Headline.Large tag='div' style={{ padding: 16 }}>Forza</Typography.Headline.Large>
               <Divider />
               {Object.values(Page).map(value =>
@@ -176,7 +176,7 @@ export default function App() {
             </List>
             <List style={{ padding: 0 }}>
               <LapTime messageData={messageData} />
-              <ListItem type='button' trailingSupportingText={`Socket: ${socketStats}`}
+              <ListItem type='button' trailingSupportingText={<span title={`Socket: ${socketStats}`}><Icon>{toIcon(socketStats)}</Icon></span>}
                 onClick={openNetwork}>Network</ListItem>
               <ListItem type='button' trailingSupportingText={(slotName) => <Icon slot={slotName}>settings</Icon>}
                 onClick={openSettings}>Settings</ListItem>
@@ -210,7 +210,7 @@ export default function App() {
         <Network opened={isOpenNetwork} close={closeNetwork} />
         <Settings opened={isOpenSettings} close={closeSettings} />
       </Theme>
-    </ReactAppContext.Provider>
+    </ReactAppContext.Provider >
   );
 }
 
@@ -230,16 +230,22 @@ function toTimeString(seconds: number) {
   return `${m.toFixed(0).padStart(2, "0")}:${s.toFixed(3).replace(".", ":").padStart(6, "0")}`;
 }
 
-enum SocketStats {
-  opening = "Opening",
-  opened = "Opened",
-  error = "Error",
-  closed = "Closed",
+function toIcon(socketStats: SocketStats) {
+  switch (socketStats) {
+    case SocketStats.opening:
+      return "pending";
+    case SocketStats.opened:
+      return "check_circle";
+    case SocketStats.error:
+      return "error";
+    case SocketStats.closed:
+      return "warning";
+  }
 }
 
 enum Page {
   Engine = "Engine",
-  Tire = "Tire",
+  Tire = "Tire & Wheel",
   SpeedMeter = "SpeedMeter",
   Control = "Control",
   Detail = "Detail",

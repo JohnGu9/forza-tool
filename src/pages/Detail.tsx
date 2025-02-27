@@ -4,6 +4,7 @@ import React from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
+import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
 
 const keys = Object.keys(dummyMessageData).filter(value => {
   switch (value) {
@@ -23,9 +24,10 @@ export default function Detail() {
     messageData.map((data, index) => { return { index, value: data[detailOption as keyof MessageData] }; });
   const lastData = messageData.getLast();
   const currentDataType = lastData ? (lastData.isDashData ? "Dash" : "Sled") : "unknown";
+  const displayText = React.useMemo(() => capitalizeFirstLetter(detailOption), [detailOption]);
   return <div className="fill-parent flex-column" style={{ padding: "16px 32px" }}>
-    <Select label="option" displayText={detailOption} supportingText={`Current Data Type: ${currentDataType}`}>
-      {keys.map(key => <SelectOption key={key} headline={key} selected={detailOption === key} onClick={() => setDetailOption(key)} />)}
+    <Select label="option" displayText={displayText} supportingText={`Current Data Type: ${currentDataType}`}>
+      {keys.map(key => <SelectOption key={key} headline={key} selected={detailOption === key} onClick={() => setDetailOption(key)} style={{ textTransform: "capitalize" }} />)}
     </Select>
     <div style={{ height: 16 }} aria-hidden />
     <div style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
