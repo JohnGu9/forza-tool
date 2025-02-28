@@ -144,7 +144,14 @@ def row_to_raw_data(row: list) -> bytes:
     return bytes(b)
 
 
-data_file = path.join(path.dirname(path.abspath(__file__)), "top_gear.csv")
+import sys
+
+data_file = (
+    path.join(path.dirname(path.abspath(__file__)), "top_gear.csv")
+    if len(sys.argv) < 2
+    else sys.argv[1]
+)
+print(f"Source file: {data_file}")
 
 with open(data_file, mode="r") as csvfile:
     spamreader = csv.reader(csvfile, delimiter=",")
@@ -153,6 +160,6 @@ with open(data_file, mode="r") as csvfile:
     for row in spamreader:
         udp.send(row_to_raw_data(row))
         send_count += 1
-        time.sleep(0.0167)
+        time.sleep(0.1)
 
     print(f"Send Count: {send_count}")

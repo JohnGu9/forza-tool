@@ -258,6 +258,7 @@ function isNeedToReset(messageData: CircularBuffer<MessageData>, newData: Messag
   const lastData = messageData.getLastUnsafe();
   if (lastData.carOrdinal === newData.carOrdinal &&
     lastData.carPerformanceIndex === lastData.carPerformanceIndex &&
+    lastData.drivetrainType === lastData.drivetrainType &&
     lastData.numCylinders === lastData.numCylinders
   ) {
     return false;

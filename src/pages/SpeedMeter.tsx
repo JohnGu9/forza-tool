@@ -26,7 +26,7 @@ export default function SpeedMeter() {
       <SimpleCard title="Velocity" content={lastData.velocity.toFixed(1)} tooltip={`velocity = (position delta) / (time delta); unit: ${getSpeedUnit(unitSystem)}`} onClick={changeUnitSystem} />
       <SimpleCard title="Ratio" content={`${((lastData.velocity / lastData.speed) * 100).toFixed(1)} %`} tooltip="velocity / speed" onClick={changeUnitSystem} />
     </div>
-    <div style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
+    <div style={{ flex: "1 1", width: "100%", overflow: "hidden" }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data}
           margin={{ top: 4, right: 2, left: 0, bottom: 8 }}>
@@ -55,7 +55,7 @@ export default function SpeedMeter() {
 }
 
 function SimpleCard({ title, tooltip, content, onClick }: { title: string, tooltip: string, content: string; onClick: () => unknown; }) {
-  return <Card style={{ flex: "1 1", maxWidth: 240, height: "100%", overflow: "clip" }}>
+  return <Card style={{ flex: "1 1", maxWidth: 240, height: "100%", overflow: "clip", textWrap: "nowrap" }}>
     <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: "var(--_container-shape, 12px)" }}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
       <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>

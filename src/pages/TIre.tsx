@@ -69,7 +69,7 @@ function SimpleCard({ title, data, type }: { title: string, data: DataType[]; ty
   const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1].value);
   const { formatter, progress, domain, ticks, } = React.useMemo(() => getSettings(type, unitSystem), [type, unitSystem]);
   return <Card className="flex-column flex-space-evenly" style={{ height: "100%", padding: 16 }}>
-    <div style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
+    <div style={{ flex: "1 1", width: "100%", overflow: "hidden" }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, right: 0, left: -32, bottom: -10 }}>
           <CartesianGrid strokeDasharray="3 3" />

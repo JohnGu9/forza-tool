@@ -1,9 +1,10 @@
-import { Area, AreaChart, CartesianGrid, Legend, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, Legend, ReferenceDot, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import React from "react";
 import { Card, LinearProgress, Ripple, Typography } from "rmcw/dist/components3";
 import { dummyMessageData, MessageData, MessageDataAnalysis } from "../common/MessageData";
 import CircularBuffer from "../common/CircularBuffer";
 import { ReactAppContext, ReactStreamAppContext, UnitSystem } from "../common/AppContext";
+import { SharedAxis, SharedAxisTransform } from "material-design-transform";
 
 const columnHeight = 150;
 const chartsPadding = 32;
@@ -21,7 +22,6 @@ export default function Engine() {
         return setUnitSystem(UnitSystem.International);
     }
   }, [setUnitSystem, unitSystem]);
-  const powerUnit = getPowerUnit(unitSystem);
   return <div className="fill-parent flex-column">
     <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-between", alignItems: "center", gap: 8, padding: "16px 32px" }}>
       <SimpleCard title="RPM" content={lastMessageData.currentEngineRpm.toFixed(0)}
@@ -33,19 +33,22 @@ export default function Engine() {
         onClick={changeUnitSystem} />
       =
       <SimpleCard title="Power" content={wsTo(lastMessageData.power, unitSystem).toFixed(1)}
-        tooltip={`unit: ${powerUnit}`}
+        tooltip={`unit: ${getPowerUnit(unitSystem)}`}
         onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)} />
     </div>
-    <div style={{ flexGrow: "1", width: "100%", overflow: "clip" }}>
+    <SharedAxis keyId={showEnginePowerCurve ? 1 : 0} style={{ flex: "1 1", width: "100%", overflow: "clip" }}
+      transform={SharedAxisTransform.fromLeftToRight}
+      onPointerEnterCapture={undefined}// ts type file is massing up, ignore the two useless argument
+      onPointerLeaveCapture={undefined}>
       {showEnginePowerCurve ?
         <PowerCurveChart messageDataAnalysis={messageDataAnalysis} lastMessageData={lastMessageData} /> :
         <PowerLevelChart messageDataAnalysis={messageDataAnalysis} messageData={messageData} />}
-    </div>
-    <div style={{ height: 16 }} />
+    </SharedAxis>
+    <div style={{ height: 16 }} aria-hidden />
     <Ripple onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)}>
-      <SimpleRow title={`Power Level (Max Power = ${wsTo(messageDataAnalysis.maxPower.value, unitSystem).toFixed(1)} ${powerUnit}; RPM = ${messageDataAnalysis.maxPower.rpm.toFixed(1)} Rev/Min)`} value={powerLevel} />
+      <SimpleRow title="Power Level" value={powerLevel} />
       <SimpleRow title="Accelerator" value={lastMessageData.accelerator / 255} />
-      <div style={{ height: 24 }} />
+      <div style={{ height: 16 }} aria-hidden />
     </Ripple>
   </div>;
 }
@@ -55,9 +58,10 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const data = React.useMemo(() => toData(messageDataAnalysis, unitSystem), [unitSystem, messageDataAnalysis.stamp]);
   const maxPower = wsTo(messageDataAnalysis.maxPower.value, unitSystem);
+  const currentPower = wsTo(lastMessageData.power, unitSystem);
   return <ResponsiveContainer width="100%" height="100%">
     <AreaChart title="PowerCurve" data={data}
-      margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
+      margin={{ top: 0, right: chartsPadding + 2, left: chartsPadding - 18 }}>
       <defs>
         <linearGradient id="colorTorque" x1="0" y1="0" x2="0" y2="1">
           <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
@@ -68,7 +72,7 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
           <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
         </linearGradient>
       </defs>
-      <XAxis dataKey="rpm" type="number" domain={[lastMessageData.engineIdleRpm, lastMessageData.engineMaxRpm]} allowDataOverflow={false}
+      <XAxis xAxisId={0} dataKey="rpm" type="number" domain={[lastMessageData.engineIdleRpm, lastMessageData.engineMaxRpm]} allowDataOverflow={false}
         ticks={getTicks(lastMessageData.engineMaxRpm, lastMessageData.engineIdleRpm, 1000)} />
       <YAxis yAxisId={1} type="number" domain={([, max]) => { return [0, max * 1.05]; }} hide />
       <YAxis yAxisId={0} type="number" domain={([, max]) => { return [0, max * 1.05]; }}
@@ -83,8 +87,11 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
         }
       }} contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
       <Legend />
-      <ReferenceLine stroke="#82ca9d" y={maxPower} label={maxPower.toFixed(1)} ifOverflow="visible" isFront={true} />
-      <ReferenceLine stroke="#82ca9d" x={messageDataAnalysis.maxPower.rpm} label={messageDataAnalysis.maxPower.rpm.toFixed(1)} ifOverflow="visible" isFront={true} />
+      <ReferenceLine stroke="#82ca9d" strokeDasharray="3 3" y={maxPower} label={maxPower.toFixed(1)} ifOverflow="visible" isFront={true} />
+      <ReferenceLine stroke="#82ca9d" strokeDasharray="3 3" x={messageDataAnalysis.maxPower.rpm} label={messageDataAnalysis.maxPower.rpm.toFixed(1)} ifOverflow="visible" isFront={true} />
+      {/* <ReferenceLine stroke="#82ca9d" x={lastMessageData.currentEngineRpm} ifOverflow="visible" isFront={true} /> */}
+      <ReferenceLine stroke="#82ca9d" strokeOpacity={currentPower / maxPower} y={currentPower} ifOverflow="visible" isFront={true} />
+      <ReferenceDot stroke="none" fill="#82ca9d" yAxisId={0} xAxisId={0} r={3} x={lastMessageData.currentEngineRpm} y={currentPower} ifOverflow="visible" isFront={true} />
       <Area yAxisId={1} type="monotone" dataKey="torque" stroke="#8884d8" fillOpacity={1} fill="url(#colorTorque)" animationDuration={650} />
       <Area yAxisId={0} type="monotone" dataKey="power" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" animationDuration={650} />
     </AreaChart>
@@ -117,27 +124,43 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
 
 function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
   const data: { rpm: number; torque: number; power: number; }[] = [];
-  for (const [rpm, { power, torque }] of Object.entries(messageAnalysis.powerCurve)) {
-    data.push({ rpm: parseInt(rpm), power: wsTo(power, unit), torque: nmTo(torque, unit) });
+  for (const [rpm, { power, torque }] of messageAnalysis.powerCurve.entries()) {
+    data.push({ rpm: parseFloat(rpm), power: wsTo(power, unit), torque: nmTo(torque, unit) });
   }
   const res = data.sort((a, b) => a.rpm - b.rpm);
 
   // only show part of data, reduce render work
-
+  const targetDrawPointAmount = 250;
+  const rpmGap = Math.max(20.0/* at least every 20 rpm show 1 data */, messageAnalysis.maxPower.rpm / targetDrawPointAmount);
   const reduceItems = [];
   for (let i = 0; i < res.length; i++) {
     const data = res[i];
-    let lastData = [data];
-    for (; i < res.length && (res[i].rpm - data.rpm) < 20; i++) { // every 20 rpm show 1 data
+    const lastData = [data];
+    for (i++; i < res.length && (res[i].rpm - data.rpm) < rpmGap; i++) {
       lastData.push(res[i]);
     }
     i -= 1;
-    lastData = lastData.sort((a, b) => b.power - a.power);
-    const theMaxPower = lastData[0]; // use the max power data to reduce data noise
+    const index = indexOfMax(lastData, (data) => data.power);
+    const theMaxPower = lastData[index]; // use the max power data to reduce data noise
     reduceItems.push(theMaxPower);
 
   }
   return reduceItems;
+}
+
+function indexOfMax<T>(arr: T[], map: (e: T) => number) {
+  let max = map(arr[0]);
+  let maxIndex = 0;
+
+  for (let i = 1; i < arr.length; i++) {
+    const v = map(arr[i]);
+    if (v > max) {
+      maxIndex = i;
+      max = v;
+    }
+  }
+
+  return maxIndex;
 }
 
 function getTicks(max: number, min: number, gap: number) {
@@ -151,7 +174,7 @@ function getTicks(max: number, min: number, gap: number) {
 }
 
 function SimpleCard({ title, content, tooltip, onClick }: { title: string, content: string; tooltip: string; onClick: () => unknown; }) {
-  return <Card style={{ flex: "1 1", maxWidth: 240, height: "100%", overflow: "clip" }}>
+  return <Card style={{ flex: "1 1", maxWidth: 240, height: "100%", overflow: "clip", textWrap: "nowrap" }}>
     <Ripple className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: "var(--_container-shape, 12px)" }}
       onClick={onClick}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>

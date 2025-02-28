@@ -51,7 +51,7 @@ function getTargetData(messageData: CircularBuffer<MessageData>) {
 function SimpleCard({ title, data }: { title: string, data: DataType[]; }) {
   const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1].value);
   return <Card className="flex-column flex-space-evenly" style={{ gridArea: title, minHeight: 0, minWidth: 0, padding: 16 }}>
-    <div style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
+    <div style={{ flex: "1 1", width: "100%", overflow: "hidden" }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data}
           margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>

@@ -283,19 +283,19 @@ export function parseMessageData(buffer: number[]): MessageData {
 
 export type MessageDataAnalysis = {
     maxPower: { value: number, rpm: number, torque: number; };
-    powerCurve: { [rpm: number]: { power: number, torque: number; }; };
+    powerCurve: Map<string, { power: number, torque: number; }>;
     distance: CircularBuffer<number>,
     speed: CircularBuffer<number>,
     stamp: number;
 };
 
 export function newMessageDataAnalysis(capacity: number): MessageDataAnalysis {
-    return { maxPower: { value: 0, rpm: 0, torque: 0 }, powerCurve: {}, distance: new CircularBuffer<number>(capacity), speed: new CircularBuffer<number>(capacity), stamp: 0 };
+    return { maxPower: { value: 0, rpm: 0, torque: 0 }, powerCurve: new Map(), distance: new CircularBuffer<number>(capacity), speed: new CircularBuffer<number>(capacity), stamp: 0 };
 }
 
 export function resetMessageDataAnalysis(analysis: MessageDataAnalysis) {
     analysis.maxPower = { value: 0, rpm: 0, torque: 0 };
-    analysis.powerCurve = {};
+    analysis.powerCurve = new Map();
     analysis.distance = new CircularBuffer(analysis.distance.getCapacity());
     analysis.speed = new CircularBuffer(analysis.speed.getCapacity());
     analysis.stamp = 0;
@@ -303,14 +303,63 @@ export function resetMessageDataAnalysis(analysis: MessageDataAnalysis) {
 
 export function analyzeMessageData(messageData: CircularBuffer<MessageData>, analysis: MessageDataAnalysis) {
     let changed = false;
-    const lastMessageData = messageData.getLastUnsafe();
-    const recordPower = analysis.powerCurve[lastMessageData.currentEngineRpm];
-    if (lastMessageData.accelerator === 255) {
-        if ((recordPower === undefined && lastMessageData.power > 500.0 /* at least 0.5KWH */) ||
-            (recordPower !== undefined && recordPower.power < lastMessageData.power)) {
-            analysis.powerCurve[lastMessageData.currentEngineRpm] = { power: lastMessageData.power, torque: lastMessageData.torque };
-            changed = true;
+    const lastData = messageData.slice(-3);
+    const lastMessageData = lastData[lastData.length - 1];
+    const currentEngineRpm = lastMessageData.currentEngineRpm.toFixed(1); // limit data dense
+    const recordPower = analysis.powerCurve.get(currentEngineRpm);
+
+    function isValidData() {
+        if (recordPower !== undefined && recordPower.power < lastMessageData.power) {
+            return true;
         }
+
+        if (recordPower === undefined) {
+            if (analysis.powerCurve.size < 3) {
+                return true;
+            }
+            // to reduce power data noise
+            // assume power curve is a convex function
+            // so it's second derivative is always > 0
+            // also if a < b < c, then f(a) + f(c) < 2 * f(b)
+            const tolerate = 1.0;
+            const { sorted, position } = getClosestPositions(currentEngineRpm, analysis.powerCurve);
+            if (position === 0) {
+                const bKey = sorted[0].toFixed(1);
+                const cKey = sorted[1].toFixed(1);
+                const bValue = analysis.powerCurve.get(bKey)!;
+                const cValue = analysis.powerCurve.get(cKey)!;
+
+                if ((lastMessageData.power + cValue.power) > (bValue.power * 2 * tolerate)) {// lastMessageData as a
+                    analysis.powerCurve.delete(bKey); // upper is invalid power data, remove it
+                }
+            } else if (position === sorted.length) {
+                const aKey = sorted[sorted.length - 2].toFixed(1);
+                const bKey = sorted[sorted.length - 1].toFixed(1);
+                const aValue = analysis.powerCurve.get(aKey)!;
+                const bValue = analysis.powerCurve.get(bKey)!;
+
+                if ((lastMessageData.power + aValue.power) > (bValue.power * 2 * tolerate)) {// lastMessageData as c
+                    analysis.powerCurve.delete(bKey); // lower is invalid power data, remove it
+                }
+            } else {
+                const aKey = sorted[position - 1].toFixed(1);
+                const cKey = sorted[position].toFixed(1);
+                const aValue = analysis.powerCurve.get(aKey)!;
+                const cValue = analysis.powerCurve.get(cKey)!;
+
+                if ((aValue.power + cValue.power) > (lastMessageData.power * 2 * tolerate)) {// lastMessageData as b
+                    return false; // lastMessageData is invalid power data, ignore it
+                }
+
+            }
+            return true;
+        }
+
+        return false;
+    }
+    if (isValidData()) {
+        analysis.powerCurve.set(currentEngineRpm, { power: lastMessageData.power, torque: lastMessageData.torque });
+        changed = true;
     }
 
     if (analysis.maxPower.value < lastMessageData.power) {
@@ -319,12 +368,10 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
     }
 
     if (messageData.getElementCount() > 1) {
-        const maxBacktracking = 6;
-        const path = messageData.slice(-maxBacktracking);
-        analysis.distance.push(getDistance(path[path.length - 1], path[path.length - 2]));
+        analysis.distance.push(getDistance(lastData[lastData.length - 1], lastData[lastData.length - 2]));
 
-        const timeDelta = path[path.length - 1].timestampMs - path[0].timestampMs;
-        analysis.speed.push(positionToVelocity(analysis.distance.slice(-maxBacktracking), timeDelta / 1000));
+        const timeDelta = lastData[lastData.length - 1].timestampMs - lastData[0].timestampMs;
+        analysis.speed.push(positionToVelocity(analysis.distance.slice(-lastData.length), timeDelta / 1000));
         changed = true;
     } else {
         analysis.distance.push(0);
@@ -334,6 +381,35 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
         analysis.stamp += 1;
     }
 }
+
+function getClosestPositions(currentEngineRpm: string, powerCurve: Map<string, { power: number, torque: number; }>) {
+    const currentEngineRpmNumber = parseFloat(currentEngineRpm);
+    const sorted = [...powerCurve.keys()].map(v => parseFloat(v)).sort((a, b) => a - b);
+    const position = lookForClosestValuePosition(sorted, currentEngineRpmNumber);
+    return { sorted, position };
+}
+
+function lookForClosestValuePosition(sorted: number[], target: number): number {
+    if (sorted.length <= 2) {
+        if (sorted[sorted.length - 1] < target) {
+            return sorted.length;
+        } else if (sorted[0] < target) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    const midIndex = Math.floor(sorted.length / 2);
+    const mid = sorted[midIndex];
+    if (mid < target) {
+        const subSOrted = sorted.slice(midIndex);
+        return midIndex + lookForClosestValuePosition(subSOrted, target);
+    } else {
+        const subSOrted = sorted.slice(0, midIndex);
+        return lookForClosestValuePosition(subSOrted, target);
+    }
+}
+
 
 type Position = {
     positionX: number,

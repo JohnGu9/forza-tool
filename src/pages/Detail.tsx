@@ -30,7 +30,7 @@ export default function Detail() {
       {keys.map(key => <SelectOption key={key} headline={key} selected={detailOption === key} onClick={() => setDetailOption(key)} style={{ textTransform: "capitalize" }} />)}
     </Select>
     <div style={{ height: 16 }} aria-hidden />
-    <div style={{ flexGrow: "1", width: "100%", overflow: "hidden" }}>
+    <div style={{ flex: "1 1", width: "100%", overflow: "hidden" }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}
           margin={{ top: 16, right: 2, left: 0, bottom: 24 }}>
