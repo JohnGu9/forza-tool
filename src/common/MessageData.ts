@@ -313,7 +313,7 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
             return true;
         }
 
-        if (recordPower === undefined) {
+        if (recordPower === undefined && lastMessageData.power > 500 /* at least 0.5KMH */) {
             if (analysis.powerCurve.size < 3) {
                 return true;
             }
