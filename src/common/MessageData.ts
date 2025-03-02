@@ -319,9 +319,9 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
             }
             // to reduce power data noise
             // assume power curve is a convex function
-            // so it's second derivative is always > 0
+            // so it's second derivative f`(x) is always < 0
             // also if a < b < c, then f(a) + f(c) < 2 * f(b)
-            const tolerate = 1.0;
+            const toleration = 1.05;
             const { sorted, position } = getClosestPositions(currentEngineRpm, analysis.powerCurve);
             if (position === 0) {
                 const bKey = sorted[0].toFixed(1);
@@ -329,7 +329,7 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
                 const bValue = analysis.powerCurve.get(bKey)!;
                 const cValue = analysis.powerCurve.get(cKey)!;
 
-                if ((lastMessageData.power + cValue.power) > (bValue.power * 2 * tolerate)) {// lastMessageData as a
+                if ((lastMessageData.power + cValue.power) > (bValue.power * 2 * toleration)) {// lastMessageData as a
                     analysis.powerCurve.delete(bKey); // upper is invalid power data, remove it
                 }
             } else if (position === sorted.length) {
@@ -338,7 +338,7 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
                 const aValue = analysis.powerCurve.get(aKey)!;
                 const bValue = analysis.powerCurve.get(bKey)!;
 
-                if ((lastMessageData.power + aValue.power) > (bValue.power * 2 * tolerate)) {// lastMessageData as c
+                if ((lastMessageData.power + aValue.power) > (bValue.power * 2 * toleration)) {// lastMessageData as c
                     analysis.powerCurve.delete(bKey); // lower is invalid power data, remove it
                 }
             } else {
@@ -347,10 +347,9 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
                 const aValue = analysis.powerCurve.get(aKey)!;
                 const cValue = analysis.powerCurve.get(cKey)!;
 
-                if ((aValue.power + cValue.power) > (lastMessageData.power * 2 * tolerate)) {// lastMessageData as b
+                if ((aValue.power + cValue.power) > (lastMessageData.power * 2 * toleration)) {// lastMessageData as b
                     return false; // lastMessageData is invalid power data, ignore it
                 }
-
             }
             return true;
         }

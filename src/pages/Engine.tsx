@@ -36,7 +36,7 @@ export default function Engine() {
         tooltip={`unit: ${getPowerUnit(unitSystem)}`}
         onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)} />
     </div>
-    <SharedAxis keyId={showEnginePowerCurve ? 1 : 0} style={{ flex: "1 1", width: "100%", overflow: "clip" }}
+    <SharedAxis keyId={showEnginePowerCurve ? 1 : 0} style={{ flex: "1 1", minHeight: 0, width: "100%", overflow: "clip" }}
       transform={SharedAxisTransform.fromLeftToRight}
       onPointerEnterCapture={undefined}// ts type file is massing up, ignore the two useless argument
       onPointerLeaveCapture={undefined}>
@@ -130,37 +130,32 @@ function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
   const res = data.sort((a, b) => a.rpm - b.rpm);
 
   // only show part of data, reduce render work
-  const targetDrawPointAmount = 250;
+  const targetDrawPointAmount = 256;
   const rpmGap = Math.max(20.0/* at least every 20 rpm show 1 data */, messageAnalysis.maxPower.rpm / targetDrawPointAmount);
   const reduceItems = [];
   for (let i = 0; i < res.length; i++) {
     const data = res[i];
-    const lastData = [data];
-    for (i++; i < res.length && (res[i].rpm - data.rpm) < rpmGap; i++) {
+    const lastData: { rpm: number; torque: number; power: number; }[] = [];
+    let maxPowerIndex: number | undefined = undefined;
+    for (; i < res.length && ((res[i].rpm - data.rpm) < rpmGap || lastData.length < 8); i++) {
+      if (Math.abs(messageAnalysis.maxPower.rpm - res[i].rpm) < 0.1) {
+        maxPowerIndex = i;
+      }
       lastData.push(res[i]);
     }
     i -= 1;
-    const index = indexOfMax(lastData, (data) => data.power);
-    const theMaxPower = lastData[index]; // use the max power data to reduce data noise
-    reduceItems.push(theMaxPower);
+    function getTarget() {
+      if (maxPowerIndex !== undefined) {
+        return res[maxPowerIndex];
+      }
+      const sorted = lastData.sort((a, b) => a.power - b.power);
+      return sorted[Math.floor(sorted.length * 3 / 4)];
+    }
+    const target = getTarget();
+    reduceItems.push(target);
 
   }
   return reduceItems;
-}
-
-function indexOfMax<T>(arr: T[], map: (e: T) => number) {
-  let max = map(arr[0]);
-  let maxIndex = 0;
-
-  for (let i = 1; i < arr.length; i++) {
-    const v = map(arr[i]);
-    if (v > max) {
-      maxIndex = i;
-      max = v;
-    }
-  }
-
-  return maxIndex;
 }
 
 function getTicks(max: number, min: number, gap: number) {

@@ -17,9 +17,9 @@ pub fn run() {
                         .level(log::LevelFilter::Info)
                         .build(),
                 )?;
-                use tauri::Manager;
-                let window = app.get_webview_window("main").unwrap();
-                window.open_devtools();
+                // use tauri::Manager;
+                // let window = app.get_webview_window("main").unwrap();
+                // window.open_devtools();
             }
             Ok(())
         })
