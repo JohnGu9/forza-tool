@@ -132,12 +132,13 @@ function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
   // only show part of data, reduce render work
   const targetDrawPointAmount = 256;
   const rpmGap = Math.max(20.0/* at least every 20 rpm show 1 data */, messageAnalysis.maxPower.rpm / targetDrawPointAmount);
-  const reduceItems = [];
-  for (let i = 0; i < res.length; i++) {
+  const reduceItems = [data[0]];
+  const endIndex = res.length - 1;
+  for (let i = 1; i < endIndex; i++) {
     const data = res[i];
     const lastData: { rpm: number; torque: number; power: number; }[] = [];
     let maxPowerIndex: number | undefined = undefined;
-    for (; i < res.length && ((res[i].rpm - data.rpm) < rpmGap || lastData.length < 8); i++) {
+    for (; i < endIndex && ((res[i].rpm - data.rpm) < rpmGap || lastData.length < 4); i++) {
       if (Math.abs(messageAnalysis.maxPower.rpm - res[i].rpm) < 0.1) {
         maxPowerIndex = i;
       }
@@ -153,7 +154,9 @@ function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
     }
     const target = getTarget();
     reduceItems.push(target);
-
+  }
+  if (reduceItems[reduceItems.length - 1] !== res[endIndex] && endIndex !== 0) {
+    reduceItems.push(res[endIndex]);
   }
   return reduceItems;
 }

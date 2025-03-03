@@ -303,7 +303,7 @@ export function resetMessageDataAnalysis(analysis: MessageDataAnalysis) {
 
 export function analyzeMessageData(messageData: CircularBuffer<MessageData>, analysis: MessageDataAnalysis) {
     let changed = false;
-    const lastData = messageData.slice(-3);
+    const lastData = messageData.slice(-6);
     const lastMessageData = lastData[lastData.length - 1];
     const currentEngineRpm = lastMessageData.currentEngineRpm.toFixed(1); // limit data dense
     const recordPower = analysis.powerCurve.get(currentEngineRpm);
@@ -319,10 +319,11 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
             }
             // to reduce power data noise
             // assume power curve is a convex function
-            // so it's second derivative f`(x) is always < 0
+            // so it's second derivative f''(x) is always < 0
             // also if a < b < c, then f(a) + f(c) < 2 * f(b)
-            const toleration = 1.05;
             const { sorted, position } = getClosestPositions(currentEngineRpm, analysis.powerCurve);
+            const fullAccelerator = lastData.every(v => v.accelerator > 248);
+            const toleration = fullAccelerator ? 2 : 0.9;
             if (position === 0) {
                 const bKey = sorted[0].toFixed(1);
                 const cKey = sorted[1].toFixed(1);
@@ -342,12 +343,14 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
                     analysis.powerCurve.delete(bKey); // lower is invalid power data, remove it
                 }
             } else {
-                const aKey = sorted[position - 1].toFixed(1);
-                const cKey = sorted[position].toFixed(1);
+                const aRpm = sorted[position - 1];
+                const cRpm = sorted[position];
+                const aKey = aRpm.toFixed(1);
+                const cKey = cRpm.toFixed(1);
                 const aValue = analysis.powerCurve.get(aKey)!;
                 const cValue = analysis.powerCurve.get(cKey)!;
-
-                if ((aValue.power + cValue.power) > (lastMessageData.power * 2 * toleration)) {// lastMessageData as b
+                const eccentricity = getEccentricity(lastMessageData.currentEngineRpm, aRpm, cRpm);
+                if ((aValue.power + cValue.power) > (lastMessageData.power * 2 * (toleration * (1 - eccentricity)))) {// lastMessageData as b
                     return false; // lastMessageData is invalid power data, ignore it
                 }
             }
@@ -409,6 +412,12 @@ function lookForClosestValuePosition(sorted: number[], target: number): number {
     }
 }
 
+function getEccentricity(current: number, lower: number, upper: number) {
+    const range = upper - lower;
+    const center = lower + range * 0.5;
+    const delta = Math.abs(current - center);
+    return delta / range;
+}
 
 type Position = {
     positionX: number,
