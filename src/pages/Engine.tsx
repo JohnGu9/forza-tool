@@ -87,15 +87,32 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
         }
       }} contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
       <Legend />
+      <Area yAxisId={1} type="monotone" dataKey="torque" stroke="#8884d8" fillOpacity={1} fill="url(#colorTorque)" animationDuration={650} />
+      <Area yAxisId={0} type="monotone" dataKey="power" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" animationDuration={650} />
       <ReferenceLine stroke="#82ca9d" strokeDasharray="3 3" y={maxPower} label={maxPower.toFixed(1)} ifOverflow="visible" isFront={true} />
       <ReferenceLine stroke="#82ca9d" strokeDasharray="3 3" x={messageDataAnalysis.maxPower.rpm} label={messageDataAnalysis.maxPower.rpm.toFixed(1)} ifOverflow="visible" isFront={true} />
       {/* <ReferenceLine stroke="#82ca9d" x={lastMessageData.currentEngineRpm} ifOverflow="visible" isFront={true} /> */}
       <ReferenceLine stroke="#82ca9d" strokeOpacity={currentPower / maxPower} y={currentPower} ifOverflow="visible" isFront={true} />
-      <ReferenceDot stroke="none" fill="#82ca9d" yAxisId={0} xAxisId={0} r={3} x={lastMessageData.currentEngineRpm} y={currentPower} ifOverflow="visible" isFront={true} />
-      <Area yAxisId={1} type="monotone" dataKey="torque" stroke="#8884d8" fillOpacity={1} fill="url(#colorTorque)" animationDuration={650} />
-      <Area yAxisId={0} type="monotone" dataKey="power" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" animationDuration={650} />
+      <ReferenceDot stroke="none" fill={mergeColor("#82ca9d", "#ffffff", currentPower / maxPower)} yAxisId={0} xAxisId={0} r={3} x={lastMessageData.currentEngineRpm} y={currentPower} ifOverflow="visible" isFront={true} />
     </AreaChart>
   </ResponsiveContainer>;
+}
+
+// color: string (hex format like #ffffff)
+// factor: number (0~1, 0 mean 1000% color0, 1 mean 100% color1)
+function mergeColor(color0: string, color1: string, factor: number) {
+  function colorToNumbers(color: string) {
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+    return { r, g, b };
+  }
+  const color0Value = colorToNumbers(color0);
+  const color1Value = colorToNumbers(color1);
+  const r = Math.round(color0Value.r * (1 - factor) + color1Value.r * factor);
+  const g = Math.round(color0Value.g * (1 - factor) + color1Value.g * factor);
+  const b = Math.round(color0Value.b * (1 - factor) + color1Value.b * factor);
+  return `#${r.toString(16)}${g.toString(16)}${b.toString(16)}`;
 }
 
 function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnalysis: MessageDataAnalysis; messageData: CircularBuffer<MessageData>; }) {
@@ -134,7 +151,7 @@ function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
   const rpmGap = Math.max(20.0/* at least every 20 rpm show 1 data */, messageAnalysis.maxPower.rpm / targetDrawPointAmount);
   const reduceItems = [data[0]];
   const endIndex = res.length - 1;
-  for (let i = 1; i < endIndex; i++) {
+  for (let i = 1; i < endIndex;) {
     const data = res[i];
     const lastData: { rpm: number; torque: number; power: number; }[] = [];
     let maxPowerIndex: number | undefined = undefined;
@@ -144,7 +161,6 @@ function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
       }
       lastData.push(res[i]);
     }
-    i -= 1;
     function getTarget() {
       if (maxPowerIndex !== undefined) {
         return res[maxPowerIndex];
@@ -155,7 +171,7 @@ function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
     const target = getTarget();
     reduceItems.push(target);
   }
-  if (reduceItems[reduceItems.length - 1] !== res[endIndex] && endIndex !== 0) {
+  if (endIndex !== 0) {
     reduceItems.push(res[endIndex]);
   }
   return reduceItems;

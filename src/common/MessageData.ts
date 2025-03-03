@@ -283,7 +283,7 @@ export function parseMessageData(buffer: number[]): MessageData {
 
 export type MessageDataAnalysis = {
     maxPower: { value: number, rpm: number, torque: number; };
-    powerCurve: Map<string, { power: number, torque: number; }>;
+    powerCurve: Map<string, { power: number, torque: number; isFullAcceleratorForAWhile: boolean; }>;
     distance: CircularBuffer<number>,
     speed: CircularBuffer<number>,
     stamp: number;
@@ -307,6 +307,7 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
     const lastMessageData = lastData[lastData.length - 1];
     const currentEngineRpm = lastMessageData.currentEngineRpm.toFixed(1); // limit data dense
     const recordPower = analysis.powerCurve.get(currentEngineRpm);
+    const isFullAcceleratorForAWhile = lastData.every(v => v.accelerator > 248);
 
     function isValidData() {
         if (recordPower !== undefined && recordPower.power < lastMessageData.power) {
@@ -322,24 +323,41 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
             // so it's second derivative f''(x) is always < 0
             // also if a < b < c, then f(a) + f(c) < 2 * f(b)
             const { sorted, position } = getClosestPositions(currentEngineRpm, analysis.powerCurve);
-            const fullAccelerator = lastData.every(v => v.accelerator > 248);
-            const toleration = fullAccelerator ? 2 : 0.9;
+
+            const toleration = isFullAcceleratorForAWhile ?
+                3 : // full accelerator for a while, more likely to accept this data
+                (isDataTooDense(lastMessageData.currentEngineRpm, sorted, position) ? 0.95 : 0.99);
+
+            type Position = { x: number, y: number; };
+            function isConvex(a: Position, b: Position, c: Position, _toleration = toleration) {
+                const eccentricity = getEccentricity(b.x, a.x, c.x);
+                return (a.y + c.y) < (b.y * 2 * (_toleration * (1 - eccentricity) + 1 * eccentricity));
+            }
+
             if (position === 0) {
-                const bKey = sorted[0].toFixed(1);
-                const cKey = sorted[1].toFixed(1);
+                const bRpm = sorted[0];
+                const cRpm = sorted[1];
+                const bKey = bRpm.toFixed(1);
+                const cKey = cRpm.toFixed(1);
                 const bValue = analysis.powerCurve.get(bKey)!;
                 const cValue = analysis.powerCurve.get(cKey)!;
 
-                if ((lastMessageData.power + cValue.power) > (bValue.power * 2 * toleration)) {// lastMessageData as a
+                if (!isConvex({ x: lastMessageData.currentEngineRpm, y: lastMessageData.power },// lastMessageData as a
+                    { x: bRpm, y: bValue.power },
+                    { x: cRpm, y: cValue.power })) {
                     analysis.powerCurve.delete(bKey); // upper is invalid power data, remove it
                 }
             } else if (position === sorted.length) {
-                const aKey = sorted[sorted.length - 2].toFixed(1);
-                const bKey = sorted[sorted.length - 1].toFixed(1);
+                const aRpm = sorted[sorted.length - 2];
+                const bRpm = sorted[sorted.length - 1];
+                const aKey = aRpm.toFixed(1);
+                const bKey = bRpm.toFixed(1);
                 const aValue = analysis.powerCurve.get(aKey)!;
                 const bValue = analysis.powerCurve.get(bKey)!;
 
-                if ((lastMessageData.power + aValue.power) > (bValue.power * 2 * toleration)) {// lastMessageData as c
+                if (!isConvex({ x: aRpm, y: aValue.power },
+                    { x: bRpm, y: bValue.power },
+                    { x: lastMessageData.currentEngineRpm, y: lastMessageData.power })) {// lastMessageData as c
                     analysis.powerCurve.delete(bKey); // lower is invalid power data, remove it
                 }
             } else {
@@ -349,9 +367,36 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
                 const cKey = cRpm.toFixed(1);
                 const aValue = analysis.powerCurve.get(aKey)!;
                 const cValue = analysis.powerCurve.get(cKey)!;
-                const eccentricity = getEccentricity(lastMessageData.currentEngineRpm, aRpm, cRpm);
-                if ((aValue.power + cValue.power) > (lastMessageData.power * 2 * (toleration * (1 - eccentricity)))) {// lastMessageData as b
+
+                if (!isConvex({ x: aRpm, y: aValue.power },
+                    { x: lastMessageData.currentEngineRpm, y: lastMessageData.power },// lastMessageData as b
+                    { x: cRpm, y: cValue.power })) {
                     return false; // lastMessageData is invalid power data, ignore it
+                }
+
+                if (position > 1) {
+                    const aaRpm = sorted[position - 2];
+                    const aaKey = aaRpm.toFixed(1);
+                    const aaValue = analysis.powerCurve.get(aaKey)!;
+                    const toleration = aValue.isFullAcceleratorForAWhile ? 3 : 1;
+
+                    if (!isConvex({ x: aaRpm, y: aaValue.power },
+                        { x: aRpm, y: aValue.power },
+                        { x: lastMessageData.currentEngineRpm, y: lastMessageData.power }, toleration)) {
+                        analysis.powerCurve.delete(aKey); // lower is invalid power data, remove it
+                    }
+                }
+                if (position < sorted.length - 1) {
+                    const ccRpm = sorted[position + 1];
+                    const ccKey = ccRpm.toFixed(1);
+                    const ccValue = analysis.powerCurve.get(ccKey)!;
+                    const toleration = cValue.isFullAcceleratorForAWhile ? 3 : 1;
+
+                    if (!isConvex({ x: lastMessageData.currentEngineRpm, y: lastMessageData.power },
+                        { x: cRpm, y: cValue.power },
+                        { x: ccRpm, y: ccValue.power }, toleration)) {
+                        analysis.powerCurve.delete(cKey); // upper is invalid power data, remove it
+                    }
                 }
             }
             return true;
@@ -359,8 +404,9 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
 
         return false;
     }
+
     if (isValidData()) {
-        analysis.powerCurve.set(currentEngineRpm, { power: lastMessageData.power, torque: lastMessageData.torque });
+        analysis.powerCurve.set(currentEngineRpm, { power: lastMessageData.power, torque: lastMessageData.torque, isFullAcceleratorForAWhile });
         changed = true;
     }
 
@@ -417,6 +463,19 @@ function getEccentricity(current: number, lower: number, upper: number) {
     const center = lower + range * 0.5;
     const delta = Math.abs(current - center);
     return delta / range;
+}
+
+function isDataTooDense(current: number, sorted: number[], position: number, threshold = 100) {
+    if (position === 0 && sorted[0] - current < threshold) {
+        return true;
+    }
+    if (position === sorted.length && current - sorted[sorted.length - 1] < threshold) {
+        return true;
+    }
+    if (current - sorted[position - 1] < threshold && sorted[position] - current < threshold) {
+        return true;
+    }
+    return false;
 }
 
 type Position = {
