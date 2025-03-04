@@ -144,18 +144,21 @@ function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
   for (const [rpm, { power, torque }] of messageAnalysis.powerCurve.entries()) {
     data.push({ rpm: parseFloat(rpm), power: wsTo(power, unit), torque: nmTo(torque, unit) });
   }
+  if (data.length === 0) {
+    return [];
+  }
   const res = data.sort((a, b) => a.rpm - b.rpm);
 
   // only show part of data, reduce render work
   const targetDrawPointAmount = 256;
-  const rpmGap = Math.max(20.0/* at least every 20 rpm show 1 data */, messageAnalysis.maxPower.rpm / targetDrawPointAmount);
+  const rpmGap = Math.max(20.0/* at least every 20 rpm show 1 data */, (data[data.length - 1].rpm - data[0].rpm) / targetDrawPointAmount);
   const reduceItems = [data[0]];
   const endIndex = res.length - 1;
   for (let i = 1; i < endIndex;) {
     const data = res[i];
     const lastData: { rpm: number; torque: number; power: number; }[] = [];
     let maxPowerIndex: number | undefined = undefined;
-    for (; i < endIndex && ((res[i].rpm - data.rpm) < rpmGap || lastData.length < 4); i++) {
+    for (; i < endIndex && (res[i].rpm - data.rpm) < rpmGap; i++) {
       if (Math.abs(messageAnalysis.maxPower.rpm - res[i].rpm) < 0.1) {
         maxPowerIndex = i;
       }

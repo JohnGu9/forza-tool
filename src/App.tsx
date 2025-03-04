@@ -7,7 +7,7 @@ import Tire from './pages/TIre';
 import { listenData } from './ipc';
 import { analyzeMessageData, dummyMessageData, MessageData, MessageDataAnalysis, newMessageDataAnalysis, parseMessageData, resetMessageDataAnalysis } from './common/MessageData';
 import CircularBuffer from './common/CircularBuffer';
-import { SharedAxis, SharedAxisTransform } from 'material-design-transform';
+import { FadeThrough, SharedAxis, SharedAxisTransform } from 'material-design-transform';
 import { AppContext, ListenAddress, ReactAppContext, ReactStreamAppContext, SocketStats, StreamAppContext, UnitSystem } from './common/AppContext';
 import Detail from './pages/Detail';
 import SpeedMeter from './pages/SpeedMeter';
@@ -176,7 +176,10 @@ export default function App() {
             </List>
             <List style={{ padding: 0 }}>
               <LapTime messageData={messageData} />
-              <ListItem type='button' trailingSupportingText={<span title={`Socket: ${socketStats}`}><Icon>{toIcon(socketStats)}</Icon></span>}
+              <ListItem type='button' trailingSupportingText={
+                <FadeThrough keyId={socketStats} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}>
+                  <span title={`Socket: ${socketStats}`}><Icon>{toIcon(socketStats)}</Icon></span>
+                </FadeThrough>}
                 onClick={openNetwork}>Network</ListItem>
               <ListItem type='button' trailingSupportingText={(slotName) => <Icon slot={slotName}>settings</Icon>}
                 onClick={openSettings}>Settings</ListItem>
@@ -233,9 +236,9 @@ function toTimeString(seconds: number) {
 function toIcon(socketStats: SocketStats) {
   switch (socketStats) {
     case SocketStats.opening:
-      return "pending";
+      return "settings_input_antenna";
     case SocketStats.opened:
-      return "check_circle";
+      return "wifi_tethering";
     case SocketStats.error:
       return "error";
     case SocketStats.closed:
