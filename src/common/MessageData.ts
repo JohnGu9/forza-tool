@@ -1,4 +1,5 @@
 import CircularBuffer from "./CircularBuffer";
+import quickSearch from "./QuickSearch";
 
 export type MessageData = {
     isDashData: boolean,
@@ -283,7 +284,7 @@ export function parseMessageData(buffer: number[]): MessageData {
 
 export type MessageDataAnalysis = {
     maxPower: { value: number, rpm: number, torque: number; };
-    powerCurve: Map<string/* (rpm: number).toFixed(1) */, { power: number, torque: number; isFullAcceleratorForAWhile: boolean; }>;
+    powerCurve: Map<string/* (rpm: number).toFixed(1) */, { rpm: number, power: number, torque: number; isFullAcceleratorForAWhile: boolean; }>;
     distance: CircularBuffer<number>,
     speed: CircularBuffer<number>,
     stamp: number;
@@ -306,13 +307,14 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
     const lastData = messageData.slice(-6);
     const lastMessageData = lastData[lastData.length - 1];
     const isFullAcceleratorForAWhile = lastData.every(v => v.accelerator > 248);
+    const isMaxPower = analysis.maxPower.value < lastMessageData.power;
 
-    if (isValidData(analysis, lastMessageData, isFullAcceleratorForAWhile)) {
-        analysis.powerCurve.set(lastMessageData.currentEngineRpm.toFixed(1), { power: lastMessageData.power, torque: lastMessageData.torque, isFullAcceleratorForAWhile });
+    if (isMaxPower || isValidData(analysis, lastMessageData, isFullAcceleratorForAWhile)) {
+        analysis.powerCurve.set(lastMessageData.currentEngineRpm.toFixed(1), { rpm: lastMessageData.currentEngineRpm, power: lastMessageData.power, torque: lastMessageData.torque, isFullAcceleratorForAWhile });
         changed = true;
     }
 
-    if (analysis.maxPower.value < lastMessageData.power) {
+    if (isMaxPower) {
         analysis.maxPower = { value: lastMessageData.power, rpm: lastMessageData.currentEngineRpm, torque: lastMessageData.torque };
         changed = true;
     }
@@ -388,10 +390,11 @@ function isValidData(analysis: MessageDataAnalysis, lastMessageData: MessageData
             const aValue = analysis.powerCurve.get(aKey)!;
             const cValue = analysis.powerCurve.get(cKey)!;
 
+            let valid = true;
             if (!isConvex({ x: aRpm, y: aValue.power },
                 { x: lastMessageData.currentEngineRpm, y: lastMessageData.power },// lastMessageData as b
                 { x: cRpm, y: cValue.power }, toleration)) {
-                return false; // lastMessageData is invalid power data, ignore it
+                valid = false; // lastMessageData is invalid power data, ignore it
             }
             // accept lastMessageData
             // clean up lower/upper bound data
@@ -419,6 +422,10 @@ function isValidData(analysis: MessageDataAnalysis, lastMessageData: MessageData
                     analysis.powerCurve.delete(cKey); // upper is invalid power data, remove it
                 }
             }
+
+            if (valid === false) {
+                return false;
+            }
         }
         return true;
     }
@@ -436,29 +443,8 @@ function isConvex(a: AxisPosition, b: AxisPosition, c: AxisPosition, toleration:
 function getClosestPositions(currentEngineRpm: string, powerCurve: Map<string, { power: number, torque: number; }>) {
     const currentEngineRpmNumber = parseFloat(currentEngineRpm);
     const sorted = [...powerCurve.keys()].map(v => parseFloat(v)).sort((a, b) => a - b);
-    const position = lookForClosestValuePosition(sorted, currentEngineRpmNumber);
+    const position = quickSearch(sorted, currentEngineRpmNumber);
     return { sorted, position };
-}
-
-function lookForClosestValuePosition(sorted: number[], target: number): number {
-    if (sorted.length <= 2) {
-        if (sorted[sorted.length - 1] < target) {
-            return sorted.length;
-        } else if (sorted[0] < target) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-    const midIndex = Math.floor(sorted.length / 2);
-    const mid = sorted[midIndex];
-    if (mid < target) {
-        const subSOrted = sorted.slice(midIndex);
-        return midIndex + lookForClosestValuePosition(subSOrted, target);
-    } else {
-        const subSOrted = sorted.slice(0, midIndex);
-        return lookForClosestValuePosition(subSOrted, target);
-    }
 }
 
 function getEccentricity(current: number, lower: number, upper: number) {

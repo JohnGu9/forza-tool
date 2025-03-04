@@ -14,6 +14,7 @@ import SpeedMeter from './pages/SpeedMeter';
 import Network from './pages/Network';
 import { listen } from '@tauri-apps/api/event';
 import Control from './pages/Control';
+import Tachometer from './pages/Tachometer';
 
 export default function App() {
   const [isOpenSettings, setOpenSettings] = React.useState(false);
@@ -197,6 +198,8 @@ export default function App() {
                       return <Engine />;
                     case Page.Tire:
                       return <Tire />;
+                    case Page.Tachometer:
+                      return <Tachometer />;
                     case Page.Detail:
                       return <Detail />;
                     case Page.SpeedMeter:
@@ -249,6 +252,7 @@ function toIcon(socketStats: SocketStats) {
 enum Page {
   Engine = "Engine",
   Tire = "Tire & Wheel",
+  Tachometer = "Tachometer",
   SpeedMeter = "SpeedMeter",
   Control = "Control",
   Detail = "Detail",
