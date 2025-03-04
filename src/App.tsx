@@ -178,7 +178,7 @@ export default function App() {
             <List style={{ padding: 0 }}>
               <LapTime messageData={messageData} />
               <ListItem type='button' trailingSupportingText={
-                <FadeThrough keyId={socketStats} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined}>
+                <FadeThrough keyId={socketStats}>
                   <span title={`Socket: ${socketStats}`}><Icon>{toIcon(socketStats)}</Icon></span>
                 </FadeThrough>}
                 onClick={openNetwork}>Network</ListItem>
@@ -189,9 +189,7 @@ export default function App() {
           <NavigationDrawerPadding opened style={{ height: "100%" }}>
             <ReactStreamAppContext.Provider value={streamAppContext}>
               <SharedAxis className="fill-parent" keyId={page}
-                transform={SharedAxisTransform.fromLeftToRight}
-                onPointerEnterCapture={undefined}// ts type file is massing up, ignore the two useless argument
-                onPointerLeaveCapture={undefined}>
+                transform={SharedAxisTransform.fromLeftToRight}>
                 {(() => {
                   switch (page) {
                     case Page.Engine:

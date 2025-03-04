@@ -37,9 +37,7 @@ export default function Engine() {
         onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)} />
     </div>
     <SharedAxis keyId={showEnginePowerCurve ? 1 : 0} style={{ flex: "1 1", minHeight: 0, width: "100%", overflow: "clip" }}
-      transform={SharedAxisTransform.fromLeftToRight}
-      onPointerEnterCapture={undefined}// ts type file is massing up, ignore the two useless argument
-      onPointerLeaveCapture={undefined}>
+      transform={SharedAxisTransform.fromLeftToRight}>
       {showEnginePowerCurve ?
         <PowerCurveChart messageDataAnalysis={messageDataAnalysis} lastMessageData={lastMessageData} /> :
         <PowerLevelChart messageDataAnalysis={messageDataAnalysis} messageData={messageData} />}
