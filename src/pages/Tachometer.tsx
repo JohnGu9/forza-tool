@@ -18,10 +18,10 @@ export default function Tachometer() {
   const markData = React.useMemo(() => getMarkData(lastData.engineMaxRpm, { lower, upper }), [lastData.engineMaxRpm, lower, upper]);
   const powerLevel = messageDataAnalysis.maxPower.value === 0 ? 0 : Math.max(lastData.power / messageDataAnalysis.maxPower.value, 0);
   const isRange = lastData.currentEngineRpm >= lower && lastData.currentEngineRpm < upper;
-  return <div className="fill-parent flex-column" style={{ padding: "16px 32px" }}>
+  return <div className="fill-parent flex-column" style={{ padding: "16px 32px", gap: 16 }}>
     <div style={{ flex: "1 1", minHeight: 0, width: "100%", position: "relative" }}>
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart margin={{ bottom: -16 }}>
+        <PieChart margin={{ bottom: -48 }}>
           {showPowerLevel ? <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="60%" outerRadius="65%" fill={powerLevel > 0.97 ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)"} startAngle={startAngle} endAngle={getAngle(powerLevel, startAngle, endAngle)}
             stroke="var(--md-sys-color-on-background)"
             data={[{ name: "PowerLevel", value: powerLevel }]} /> : undefined}
@@ -37,14 +37,15 @@ export default function Tachometer() {
           <Tooltip content={<CustomTooltip />} />
         </PieChart>
       </ResponsiveContainer>
-      <div className="flex-column flex-space-evenly" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+      <div className="flex-column flex-space-evenly" style={{ position: "absolute", inset: 0, pointerEvents: "none", paddingTop: 32 }}>
         <Typography.Display.Large tag="span" title="Gear" style={{
-          fontSize: "10vmax",
+          fontSize: "12vmax",
           color: isRange ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)",
           transition: "color 200ms",
         }}>{lastData.gear}</Typography.Display.Large>
       </div>
     </div>
+    <IndicatorLights lower={lower} upper={upper} current={lastData.currentEngineRpm} />
     <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-around", gap: 16, padding: "0 0 16px" }}>
       <SimpleCard title="RPM" content={lastData.currentEngineRpm.toFixed(0)} tooltip={`Rev / Min`} onClick={() => setShowPowerLevel(!showPowerLevel)} />
       <SimpleCard title="High Power RPM Range" content={`${lower.toFixed(0)} - ${upper.toFixed(0)}`} tooltip={`Rev / Min`} onClick={() => setShowPowerLevel(!showPowerLevel)} />
@@ -165,3 +166,47 @@ function SimpleCard({ title, tooltip, content, onClick }: { title: string, toolt
     </Ripple>
   </Card>;
 }
+
+
+function IndicatorLights({ lower, upper, current }: { lower: number, upper: number, current: number; }) {
+  function getProgress(lower: number, upper: number, current: number) {
+    if (lower === upper) {
+      return 0;
+    }
+    if (current < lower) {
+      return 0;
+    }
+    return (current - lower) / (upper - lower);
+  }
+  const progress = getProgress(lower, upper, current);
+  function isInRange(lower: number, current: number) {
+    if (lower === upper) {
+      return false;
+    }
+    return current > lower;
+  }
+  const [show, setShow] = React.useState(true);
+  const over = progress > 1;
+  React.useEffect(() => {
+    if (over) {
+      setShow(false);
+      const timer = setInterval(() => setShow(value => !value), 300);
+      return () => {
+        clearInterval(timer);
+        setShow(true);
+      };
+    }
+  }, [over]);
+  return <div className="flex-row" style={{ gap: 16, justifyContent: "space-around" }}>
+    {[{ lower: 0, upper: 1 }, { lower: 0.2, upper: 1 }, { lower: 0.4, upper: 1 }, { lower: 0.6, upper: 1 }, { lower: 0.8, upper: 1 }].map(({ lower }, index) =>
+      <Card key={index} style={{
+        flex: "1 1", maxWidth: 120, height: 32,
+        "--md-elevated-card-container-color": show && isInRange(lower, progress) ? "var(--md-sys-color-tertiary)" : undefined,
+      } as React.CSSProperties}></Card>
+    )}
+  </div>;
+}
+
+
+
+
