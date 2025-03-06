@@ -43,7 +43,6 @@ export type AppContext = {
     setDetailOption: (v: string) => unknown,
     showDetailDelta: boolean,
     setShowDetailDelta: (v: boolean) => unknown,
-
 };
 
 export const ReactAppContext = React.createContext(null as unknown as AppContext);

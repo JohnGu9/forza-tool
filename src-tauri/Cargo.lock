@@ -934,6 +934,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-log",
+ "tauri-plugin-window-state",
  "tokio",
 ]
 
@@ -3754,6 +3755,20 @@ dependencies = [
  "tauri-plugin",
  "thiserror 2.0.11",
  "time",
+]
+
+[[package]]
+name = "tauri-plugin-window-state"
+version = "2.2.1"
+source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v2#5c9cf52e75c39bc5efbb142d9c32d358413cec4a"
+dependencies = [
+ "bitflags 2.8.0",
+ "log",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.11",
 ]
 
 [[package]]

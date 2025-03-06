@@ -204,7 +204,6 @@ export default function App() {
                       return <SpeedMeter />;
                     case Page.Control:
                       return <Control />;
-
                   }
                 })()}
               </SharedAxis>

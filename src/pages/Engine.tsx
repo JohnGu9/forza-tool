@@ -92,7 +92,7 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
       <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeDasharray="3 3" x={messageDataAnalysis.maxPower.rpm} label={messageDataAnalysis.maxPower.rpm.toFixed(1)} ifOverflow="visible" isFront={true} />
       {/* <ReferenceLine stroke="var(--md-sys-color-tertiary)" x={lastMessageData.currentEngineRpm} ifOverflow="visible" isFront={true} /> */}
       <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeOpacity={powerLevel} y={currentPower} ifOverflow="visible" isFront={true} />
-      <ReferenceDot stroke="none" fill={mergeColor("var(--md-sys-color-tertiary)", "#ffffff", powerLevel)} yAxisId={0} xAxisId={0} r={3} x={lastMessageData.currentEngineRpm} y={currentPower} ifOverflow="visible" isFront={true} />
+      <ReferenceDot stroke="none" fill={mergeColor("#82ca9d", "#ffffff", powerLevel)} yAxisId={0} xAxisId={0} r={3} x={lastMessageData.currentEngineRpm} y={currentPower} ifOverflow="visible" isFront={true} />
     </AreaChart>
   </ResponsiveContainer>;
 }
