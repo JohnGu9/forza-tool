@@ -11,26 +11,27 @@ const columnHeight = 150;
 
 export default function Tachometer() {
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
+  const [showPowerLevel, setShowPowerLevel] = React.useState(true);
+
   const lastData = messageData.getLast() ?? { currentEngineRpm: 0, engineMaxRpm: 6000, power: 0, gear: 0 };
   const { lower, upper } = getRange(messageDataAnalysis);
+  const markData = React.useMemo(() => getMarkData(lastData.engineMaxRpm, { lower, upper }), [lastData.engineMaxRpm, lower, upper]);
   const powerLevel = messageDataAnalysis.maxPower.value === 0 ? 0 : Math.max(lastData.power / messageDataAnalysis.maxPower.value, 0);
-  const markData = getMarkData(lastData.engineMaxRpm, { lower, upper });
-  const [showPowerLevel, setShowPowerLevel] = React.useState(true);
   const isRange = lastData.currentEngineRpm >= lower && lastData.currentEngineRpm < upper;
   return <div className="fill-parent flex-column" style={{ padding: "16px 32px" }}>
     <div style={{ flex: "1 1", minHeight: 0, width: "100%", position: "relative" }}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart margin={{ bottom: -16 }}>
-          {showPowerLevel ? <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="60%" outerRadius="65%" fill={powerLevel > 0.97 ? "#82ca9d" : "#8884d8"} startAngle={startAngle} endAngle={getAngle(powerLevel, startAngle, endAngle)}
+          {showPowerLevel ? <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="60%" outerRadius="65%" fill={powerLevel > 0.97 ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)"} startAngle={startAngle} endAngle={getAngle(powerLevel, startAngle, endAngle)}
             stroke="var(--md-sys-color-on-background)"
             data={[{ name: "PowerLevel", value: powerLevel }]} /> : undefined}
-          <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="70%" outerRadius="80%" fill="#8884d8" startAngle={startAngle} endAngle={endAngle} paddingAngle={1}
+          <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="70%" outerRadius="80%" fill="var(--md-sys-color-primary)" startAngle={startAngle} endAngle={endAngle} paddingAngle={1}
             stroke="var(--md-sys-color-on-background)"
             data={markData}>
             {markData.map((data, index) =>
-              <Cell key={index} fill={data.mark ? "#82ca9d" : "#8884d8"} />)}
+              <Cell key={index} fill={data.mark ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)"} />)}
           </Pie>
-          <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="85%" outerRadius="90%" fill={isRange ? "#82ca9d" : "#8884d8"} startAngle={startAngle} endAngle={getAngle(lastData.engineMaxRpm === 0 ? 0 : lastData.currentEngineRpm / lastData.engineMaxRpm, startAngle, endAngle)}
+          <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="85%" outerRadius="90%" fill={isRange ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)"} startAngle={startAngle} endAngle={getAngle(lastData.engineMaxRpm === 0 ? 0 : lastData.currentEngineRpm / lastData.engineMaxRpm, startAngle, endAngle)}
             stroke="var(--md-sys-color-on-background)"
             data={[{ name: "CurrentEngineRpm", value: lastData.currentEngineRpm }]} />
           <Tooltip content={<CustomTooltip />} />
@@ -39,14 +40,14 @@ export default function Tachometer() {
       <div className="flex-column flex-space-evenly" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
         <Typography.Display.Large tag="span" title="Gear" style={{
           fontSize: "10vmax",
-          color: isRange ? "#82ca9d" : undefined,
-          transition: "color 350ms",
+          color: isRange ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)",
+          transition: "color 200ms",
         }}>{lastData.gear}</Typography.Display.Large>
       </div>
     </div>
     <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-around", gap: 16, padding: "0 0 16px" }}>
       <SimpleCard title="RPM" content={lastData.currentEngineRpm.toFixed(0)} tooltip={`Rev / Min`} onClick={() => setShowPowerLevel(!showPowerLevel)} />
-      <SimpleCard title="Recommend RPM Range" content={`${lower.toFixed(0)} - ${upper.toFixed(0)}`} tooltip={`Rev / Min`} onClick={() => setShowPowerLevel(!showPowerLevel)} />
+      <SimpleCard title="High Power RPM Range" content={`${lower.toFixed(0)} - ${upper.toFixed(0)}`} tooltip={`Rev / Min`} onClick={() => setShowPowerLevel(!showPowerLevel)} />
       <SimpleCard title="Power Level" content={`${(powerLevel * 100).toFixed(1)}%`} tooltip={``} onClick={() => setShowPowerLevel(!showPowerLevel)} />
     </div>
   </div>;

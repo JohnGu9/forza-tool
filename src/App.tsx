@@ -157,7 +157,7 @@ export default function App() {
 
   return (
     <ReactAppContext.Provider value={appContext}>
-      <Theme className='fill-parent' withBackgroundColor enableDarkTheme={enableDarkTheme}>
+      <Theme className='fill-parent' withBackgroundColor enableDarkTheme={enableDarkTheme} style={{ "--md-sys-color-tertiary": "#82ca9d" } as React.CSSProperties}>
         <div className="rmcw-drawer fill-parent">
           <NavigationDrawer opened style={{
             position: "absolute", display: "flex", flexDirection: "column",

@@ -39,7 +39,7 @@ export default function Detail() {
           <YAxis type="number" domain={([min, max]) => [min, max]} tickFormatter={value => value.toFixed(1)} />
           <Tooltip formatter={(value) => (value as number).toFixed(6)}
             contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-          <Line type="monotone" dataKey="value" stroke="#82ca9d" dot={false} animationDuration={350} strokeLinecap="round" />
+          <Line type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" dot={false} animationDuration={350} strokeLinecap="round" />
         </LineChart>
       </ResponsiveContainer>
     </div>

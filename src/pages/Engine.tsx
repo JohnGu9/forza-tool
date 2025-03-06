@@ -1,4 +1,4 @@
-import { Area, AreaChart, CartesianGrid, Legend, ReferenceDot, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, ReferenceDot, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import React from "react";
 import { Card, LinearProgress, Ripple, Typography } from "rmcw/dist/components3";
 import { dummyMessageData, MessageData, MessageDataAnalysis } from "../common/MessageData";
@@ -63,12 +63,12 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
       margin={{ top: 0, right: chartsPadding + 2, left: chartsPadding - 18 }}>
       <defs>
         <linearGradient id="colorTorque" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-          <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+          <stop offset="5%" stopColor="var(--md-sys-color-primary)" stopOpacity={0.8} />
+          <stop offset="95%" stopColor="var(--md-sys-color-primary)" stopOpacity={0} />
         </linearGradient>
         <linearGradient id="colorPower" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-          <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
+          <stop offset="5%" stopColor="var(--md-sys-color-tertiary)" stopOpacity={0.8} />
+          <stop offset="95%" stopColor="var(--md-sys-color-tertiary)" stopOpacity={0} />
         </linearGradient>
       </defs>
       <XAxis xAxisId={0} dataKey="rpm" type="number" domain={[lastMessageData.engineIdleRpm, lastMessageData.engineMaxRpm]} allowDataOverflow={false}
@@ -86,13 +86,13 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
         }
       }} contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
       <Legend />
-      <Area yAxisId={1} type="monotone" dataKey="torque" stroke="#8884d8" fillOpacity={1} fill="url(#colorTorque)" animationDuration={650} />
-      <Area yAxisId={0} type="monotone" dataKey="power" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPower)" animationDuration={650} />
-      <ReferenceLine stroke="#82ca9d" strokeDasharray="3 3" y={maxPower} label={maxPower.toFixed(1)} ifOverflow="visible" isFront={true} />
-      <ReferenceLine stroke="#82ca9d" strokeDasharray="3 3" x={messageDataAnalysis.maxPower.rpm} label={messageDataAnalysis.maxPower.rpm.toFixed(1)} ifOverflow="visible" isFront={true} />
-      {/* <ReferenceLine stroke="#82ca9d" x={lastMessageData.currentEngineRpm} ifOverflow="visible" isFront={true} /> */}
-      <ReferenceLine stroke="#82ca9d" strokeOpacity={powerLevel} y={currentPower} ifOverflow="visible" isFront={true} />
-      <ReferenceDot stroke="none" fill={mergeColor("#82ca9d", "#ffffff", powerLevel)} yAxisId={0} xAxisId={0} r={3} x={lastMessageData.currentEngineRpm} y={currentPower} ifOverflow="visible" isFront={true} />
+      <Area yAxisId={1} type="monotone" dataKey="torque" stroke="var(--md-sys-color-primary)" fillOpacity={1} fill="url(#colorTorque)" animationDuration={650} />
+      <Area yAxisId={0} type="monotone" dataKey="power" stroke="var(--md-sys-color-tertiary)" fillOpacity={1} fill="url(#colorPower)" animationDuration={650} />
+      <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeDasharray="3 3" y={maxPower} label={maxPower.toFixed(1)} ifOverflow="visible" isFront={true} />
+      <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeDasharray="3 3" x={messageDataAnalysis.maxPower.rpm} label={messageDataAnalysis.maxPower.rpm.toFixed(1)} ifOverflow="visible" isFront={true} />
+      {/* <ReferenceLine stroke="var(--md-sys-color-tertiary)" x={lastMessageData.currentEngineRpm} ifOverflow="visible" isFront={true} /> */}
+      <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeOpacity={powerLevel} y={currentPower} ifOverflow="visible" isFront={true} />
+      <ReferenceDot stroke="none" fill={mergeColor("var(--md-sys-color-tertiary)", "#ffffff", powerLevel)} yAxisId={0} xAxisId={0} r={3} x={lastMessageData.currentEngineRpm} y={currentPower} ifOverflow="visible" isFront={true} />
     </AreaChart>
   </ResponsiveContainer>;
 }
@@ -119,22 +119,18 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
     return { index, "power level": Math.max(data.power / messageDataAnalysis.maxPower.value, 0) * 100 };
   });
   return <ResponsiveContainer width="100%" height="100%">
-    <AreaChart title="PowerLevel" data={data}
+    <BarChart title="PowerLevel" data={data}
       margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
-      <defs>
-        <linearGradient id="colorPowerLevel" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-          <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
-        </linearGradient>
-      </defs>
       <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
       <YAxis yAxisId={1} type="number" domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} allowDataOverflow={false} />
       <CartesianGrid strokeDasharray="3 3" />
       <Tooltip formatter={(value) => { return (value as number).toFixed(1); }}
         contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
       <Legend />
-      <Area yAxisId={1} type="monotone" dataKey="power level" stroke="#82ca9d" fillOpacity={1} fill="url(#colorPowerLevel)" unit="%" animationDuration={650} />
-    </AreaChart>
+      <Bar yAxisId={1} dataKey="power level" fill="var(--md-sys-color-tertiary)" unit="%" isAnimationActive={false} >
+        {data.map((value) => <Cell key={value.index} fill={value["power level"] < 97 ? "var(--md-sys-color-primary)" : "var(--md-sys-color-tertiary)"} />)}
+      </Bar>
+    </BarChart>
   </ResponsiveContainer>;
 }
 

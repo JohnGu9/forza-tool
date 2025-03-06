@@ -77,7 +77,7 @@ function SimpleCard({ title, data, type }: { title: string, data: DataType[]; ty
           <YAxis domain={domain} ticks={ticks} />
           <Tooltip formatter={(value) => { return formatter(value as number); }}
             contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-          <Line type="monotone" dataKey="value" stroke="#82ca9d" dot={false} animationDuration={350} />
+          <Line type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" dot={false} animationDuration={350} />
         </LineChart>
       </ResponsiveContainer>
     </div>

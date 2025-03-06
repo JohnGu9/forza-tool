@@ -57,8 +57,8 @@ function SimpleCard({ title, data }: { title: string, data: DataType[]; }) {
           margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>
           <defs>
             <linearGradient id={`color${title}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
+              <stop offset="5%" stopColor="var(--md-sys-color-tertiary)" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="var(--md-sys-color-tertiary)" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
@@ -66,7 +66,7 @@ function SimpleCard({ title, data }: { title: string, data: DataType[]; }) {
           <YAxis domain={[0, 50, 100]} ticks={[0, 100]} />
           <Tooltip formatter={(value) => { return `${(value as number).toFixed(1)}%`; }}
             contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-          <Area type="monotone" dataKey="value" stroke="#82ca9d" fillOpacity={1} fill={`url(#color${title})`} animationDuration={650} />
+          <Area type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" fillOpacity={1} fill={`url(#color${title})`} animationDuration={650} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

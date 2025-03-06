@@ -33,12 +33,12 @@ export default function SpeedMeter() {
           margin={{ top: 4, right: 2, left: 0, bottom: 8 }}>
           <defs>
             <linearGradient id="colorSpeed" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+              <stop offset="5%" stopColor="var(--md-sys-color-primary)" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="var(--md-sys-color-primary)" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="colorVelocity" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
+              <stop offset="5%" stopColor="var(--md-sys-color-tertiary)" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="var(--md-sys-color-tertiary)" stopOpacity={0} />
             </linearGradient>
           </defs>
           <XAxis dataKey="index" type="number" hide />
@@ -47,8 +47,8 @@ export default function SpeedMeter() {
           <Tooltip formatter={(value) => { return (value as number).toFixed(3); }}
             contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
           <Legend />
-          <Area type="monotone" dataKey="speed" stroke="#8884d8" fillOpacity={1} fill="url(#colorSpeed)" animationDuration={350} />
-          <Area type="monotone" dataKey="velocity" stroke="#82ca9d" fillOpacity={1} fill="url(#colorVelocity)" animationDuration={350} />
+          <Area type="monotone" dataKey="speed" stroke="var(--md-sys-color-primary)" fillOpacity={1} fill="url(#colorSpeed)" animationDuration={350} />
+          <Area type="monotone" dataKey="velocity" stroke="var(--md-sys-color-tertiary)" fillOpacity={1} fill="url(#colorVelocity)" animationDuration={350} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
