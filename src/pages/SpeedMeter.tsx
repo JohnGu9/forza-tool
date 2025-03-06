@@ -20,11 +20,12 @@ export default function SpeedMeter() {
   }, [setUnitSystem, unitSystem]);
   const data = toData(messageData, messageDataAnalysis, unitSystem);
   const lastData = data.length === 0 ? { index: 0, speed: 0, velocity: 0 } : data[data.length - 1];
+  const ratio = lastData.speed === 0 ? 0 : lastData.velocity / lastData.speed;
   return <div className="fill-parent flex-column" style={{ padding: "16px 32px" }}>
     <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-between", gap: 16, padding: "0 0 16px" }}>
       <SimpleCard title="Speed" content={lastData.speed.toFixed(1)} tooltip={`car speed meter value; unit: ${getSpeedUnit(unitSystem)}`} onClick={changeUnitSystem} />
       <SimpleCard title="Velocity" content={lastData.velocity.toFixed(1)} tooltip={`velocity = (position delta) / (time delta); unit: ${getSpeedUnit(unitSystem)}`} onClick={changeUnitSystem} />
-      <SimpleCard title="Ratio" content={`${((lastData.velocity / lastData.speed) * 100).toFixed(1)} %`} tooltip="velocity / speed" onClick={changeUnitSystem} />
+      <SimpleCard title="Ratio" content={`${(ratio * 100).toFixed(1)} %`} tooltip="velocity / speed" onClick={changeUnitSystem} />
     </div>
     <div style={{ flex: "1 1", width: "100%", overflow: "hidden" }}>
       <ResponsiveContainer width="100%" height="100%">

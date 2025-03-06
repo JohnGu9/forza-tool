@@ -57,6 +57,7 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
   const data = React.useMemo(() => toData(messageDataAnalysis, unitSystem), [unitSystem, messageDataAnalysis.stamp]);
   const maxPower = wsTo(messageDataAnalysis.maxPower.value, unitSystem);
   const currentPower = wsTo(lastMessageData.power, unitSystem);
+  const powerLevel = maxPower === 0 ? 0 : currentPower / maxPower;
   return <ResponsiveContainer width="100%" height="100%">
     <AreaChart title="PowerCurve" data={data}
       margin={{ top: 0, right: chartsPadding + 2, left: chartsPadding - 18 }}>
@@ -90,8 +91,8 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
       <ReferenceLine stroke="#82ca9d" strokeDasharray="3 3" y={maxPower} label={maxPower.toFixed(1)} ifOverflow="visible" isFront={true} />
       <ReferenceLine stroke="#82ca9d" strokeDasharray="3 3" x={messageDataAnalysis.maxPower.rpm} label={messageDataAnalysis.maxPower.rpm.toFixed(1)} ifOverflow="visible" isFront={true} />
       {/* <ReferenceLine stroke="#82ca9d" x={lastMessageData.currentEngineRpm} ifOverflow="visible" isFront={true} /> */}
-      <ReferenceLine stroke="#82ca9d" strokeOpacity={currentPower / maxPower} y={currentPower} ifOverflow="visible" isFront={true} />
-      <ReferenceDot stroke="none" fill={mergeColor("#82ca9d", "#ffffff", currentPower / maxPower)} yAxisId={0} xAxisId={0} r={3} x={lastMessageData.currentEngineRpm} y={currentPower} ifOverflow="visible" isFront={true} />
+      <ReferenceLine stroke="#82ca9d" strokeOpacity={powerLevel} y={currentPower} ifOverflow="visible" isFront={true} />
+      <ReferenceDot stroke="none" fill={mergeColor("#82ca9d", "#ffffff", powerLevel)} yAxisId={0} xAxisId={0} r={3} x={lastMessageData.currentEngineRpm} y={currentPower} ifOverflow="visible" isFront={true} />
     </AreaChart>
   </ResponsiveContainer>;
 }

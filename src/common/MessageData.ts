@@ -309,13 +309,13 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
     const isFullAcceleratorForAWhile = lastData.every(v => v.accelerator > 248);
     const isMaxPower = analysis.maxPower.value < lastMessageData.power;
 
-    if (isMaxPower || isValidData(analysis, lastMessageData, isFullAcceleratorForAWhile)) {
-        analysis.powerCurve.set(lastMessageData.currentEngineRpm.toFixed(1), { rpm: lastMessageData.currentEngineRpm, power: lastMessageData.power, torque: lastMessageData.torque, isFullAcceleratorForAWhile });
+    if (isMaxPower) {
+        analysis.maxPower = { value: lastMessageData.power, rpm: lastMessageData.currentEngineRpm, torque: lastMessageData.torque };
         changed = true;
     }
 
-    if (isMaxPower) {
-        analysis.maxPower = { value: lastMessageData.power, rpm: lastMessageData.currentEngineRpm, torque: lastMessageData.torque };
+    if (isMaxPower || isValidData(analysis, lastMessageData, isFullAcceleratorForAWhile)) {
+        analysis.powerCurve.set(lastMessageData.currentEngineRpm.toFixed(1), { rpm: lastMessageData.currentEngineRpm, power: lastMessageData.power, torque: lastMessageData.torque, isFullAcceleratorForAWhile });
         changed = true;
     }
 
@@ -338,9 +338,12 @@ function isValidData(analysis: MessageDataAnalysis, lastMessageData: MessageData
     const currentEngineRpm = lastMessageData.currentEngineRpm.toFixed(1); // limit data dense
 
     const recordPower = analysis.powerCurve.get(currentEngineRpm);
-    if (recordPower !== undefined && recordPower.power < lastMessageData.power) {
-        return true;
+    if (recordPower !== undefined) {
+        return recordPower.power < lastMessageData.power;
     }
+
+    // ensure max power record show in power curve
+    const maxPowerRecordRpmKey = analysis.maxPower.rpm.toFixed(1);
 
     if (recordPower === undefined && lastMessageData.power > 500 /* at least 0.5KMH */) {
         if (analysis.powerCurve.size < 3) {
@@ -364,9 +367,10 @@ function isValidData(analysis: MessageDataAnalysis, lastMessageData: MessageData
             const bValue = analysis.powerCurve.get(bKey)!;
             const cValue = analysis.powerCurve.get(cKey)!;
 
-            if (!isConvex({ x: lastMessageData.currentEngineRpm, y: lastMessageData.power },// lastMessageData as a
-                { x: bRpm, y: bValue.power },
-                { x: cRpm, y: cValue.power }, toleration)) {
+            if (bKey !== maxPowerRecordRpmKey &&
+                !isConvex({ x: lastMessageData.currentEngineRpm, y: lastMessageData.power },// lastMessageData as a
+                    { x: bRpm, y: bValue.power },
+                    { x: cRpm, y: cValue.power }, toleration)) {
                 analysis.powerCurve.delete(bKey); // upper is invalid power data, remove it
             }
         } else if (position === sorted.length) {
@@ -377,9 +381,10 @@ function isValidData(analysis: MessageDataAnalysis, lastMessageData: MessageData
             const aValue = analysis.powerCurve.get(aKey)!;
             const bValue = analysis.powerCurve.get(bKey)!;
 
-            if (!isConvex({ x: aRpm, y: aValue.power },
-                { x: bRpm, y: bValue.power },
-                { x: lastMessageData.currentEngineRpm, y: lastMessageData.power }, toleration)) {// lastMessageData as c
+            if (bKey !== maxPowerRecordRpmKey &&
+                !isConvex({ x: aRpm, y: aValue.power },
+                    { x: bRpm, y: bValue.power },
+                    { x: lastMessageData.currentEngineRpm, y: lastMessageData.power }, toleration)) {// lastMessageData as c
                 analysis.powerCurve.delete(bKey); // lower is invalid power data, remove it
             }
         } else {
@@ -402,11 +407,12 @@ function isValidData(analysis: MessageDataAnalysis, lastMessageData: MessageData
                 const aaRpm = sorted[position - 2];
                 const aaKey = aaRpm.toFixed(1);
                 const aaValue = analysis.powerCurve.get(aaKey)!;
-                const toleration = aValue.isFullAcceleratorForAWhile ? 3 : 0.9;
+                const toleration = aValue.isFullAcceleratorForAWhile ? 3 : 0.8;
 
-                if (!isConvex({ x: aaRpm, y: aaValue.power },
-                    { x: aRpm, y: aValue.power },
-                    { x: lastMessageData.currentEngineRpm, y: lastMessageData.power }, toleration)) {
+                if (aKey !== maxPowerRecordRpmKey &&
+                    !isConvex({ x: aaRpm, y: aaValue.power },
+                        { x: aRpm, y: aValue.power },
+                        { x: lastMessageData.currentEngineRpm, y: lastMessageData.power }, toleration)) {
                     analysis.powerCurve.delete(aKey); // lower is invalid power data, remove it
                 }
             }
@@ -414,11 +420,12 @@ function isValidData(analysis: MessageDataAnalysis, lastMessageData: MessageData
                 const ccRpm = sorted[position + 1];
                 const ccKey = ccRpm.toFixed(1);
                 const ccValue = analysis.powerCurve.get(ccKey)!;
-                const toleration = cValue.isFullAcceleratorForAWhile ? 3 : 0.9;
+                const toleration = cValue.isFullAcceleratorForAWhile ? 3 : 0.8;
 
-                if (!isConvex({ x: lastMessageData.currentEngineRpm, y: lastMessageData.power },
-                    { x: cRpm, y: cValue.power },
-                    { x: ccRpm, y: ccValue.power }, toleration)) {
+                if (cKey !== maxPowerRecordRpmKey &&
+                    !isConvex({ x: lastMessageData.currentEngineRpm, y: lastMessageData.power },
+                        { x: cRpm, y: cValue.power },
+                        { x: ccRpm, y: ccValue.power }, toleration)) {
                     analysis.powerCurve.delete(cKey); // upper is invalid power data, remove it
                 }
             }
