@@ -3,14 +3,15 @@ import React from "react";
 import { Card, LinearProgress, Ripple, Typography } from "rmcw/dist/components3";
 import { dummyMessageData, MessageData, MessageDataAnalysis } from "../common/MessageData";
 import CircularBuffer from "../common/CircularBuffer";
-import { ReactAppContext, ReactStreamAppContext, UnitSystem } from "../common/AppContext";
+import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, UnitSystem } from "../common/AppContext";
 import { SharedAxis, SharedAxisTransform } from "material-design-transform";
 
 const columnHeight = 150;
 const chartsPadding = 32;
 
 export default function Engine() {
-  const { unitSystem, setUnitSystem, showEnginePowerCurve, setShowEnginePowerCurve } = React.useContext(ReactAppContext);
+  const { unitSystem, setUnitSystem } = React.useContext(ReactAppContext);
+  const { showEnginePowerCurve, setShowEnginePowerCurve } = React.useContext(ReactWindowContext);
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const lastMessageData = messageData.isEmpty() ? dummyMessageData : messageData.getLastUnsafe();
   const powerLevel = messageDataAnalysis.maxPower.value === 0 ? 0 : Math.max(lastMessageData.power / messageDataAnalysis.maxPower.value, 0);
@@ -62,11 +63,11 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
     <AreaChart title="PowerCurve" data={data}
       margin={{ top: 0, right: chartsPadding + 2, left: chartsPadding - 18 }}>
       <defs>
-        <linearGradient id="colorTorque" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="colorPrimary" x1="0" y1="0" x2="0" y2="1">
           <stop offset="5%" stopColor="var(--md-sys-color-primary)" stopOpacity={0.8} />
           <stop offset="95%" stopColor="var(--md-sys-color-primary)" stopOpacity={0} />
         </linearGradient>
-        <linearGradient id="colorPower" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="colorTertiary" x1="0" y1="0" x2="0" y2="1">
           <stop offset="5%" stopColor="var(--md-sys-color-tertiary)" stopOpacity={0.8} />
           <stop offset="95%" stopColor="var(--md-sys-color-tertiary)" stopOpacity={0} />
         </linearGradient>
@@ -86,8 +87,8 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
         }
       }} contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
       <Legend />
-      <Area yAxisId={1} type="monotone" dataKey="torque" stroke="var(--md-sys-color-primary)" fillOpacity={1} fill="url(#colorTorque)" animationDuration={650} />
-      <Area yAxisId={0} type="monotone" dataKey="power" stroke="var(--md-sys-color-tertiary)" fillOpacity={1} fill="url(#colorPower)" animationDuration={650} />
+      <Area yAxisId={1} type="monotone" dataKey="torque" stroke="var(--md-sys-color-primary)" fillOpacity={1} fill="url(#colorPrimary)" animationDuration={650} />
+      <Area yAxisId={0} type="monotone" dataKey="power" stroke="var(--md-sys-color-tertiary)" fillOpacity={1} fill="url(#colorTertiary)" animationDuration={650} />
       <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeDasharray="3 3" y={maxPower} label={maxPower.toFixed(1)} ifOverflow="visible" isFront={true} />
       <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeDasharray="3 3" x={messageDataAnalysis.maxPower.rpm} label={messageDataAnalysis.maxPower.rpm.toFixed(1)} ifOverflow="visible" isFront={true} />
       {/* <ReferenceLine stroke="var(--md-sys-color-tertiary)" x={lastMessageData.currentEngineRpm} ifOverflow="visible" isFront={true} /> */}

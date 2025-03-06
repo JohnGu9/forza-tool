@@ -2,7 +2,7 @@ import { ListItem, Select, SelectOption, Switch } from "rmcw/dist/components3";
 import { dummyMessageData, MessageData } from "../common/MessageData";
 import React from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
+import { ReactStreamAppContext, ReactWindowContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
 import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
 
@@ -18,7 +18,7 @@ const keys = Object.keys(dummyMessageData).filter(value => {
 
 export default function Detail() {
   const { messageData } = React.useContext(ReactStreamAppContext);
-  const { detailOption, setDetailOption, showDetailDelta, setShowDetailDelta } = React.useContext(ReactAppContext);
+  const { detailOption, setDetailOption, showDetailDelta, setShowDetailDelta } = React.useContext(ReactWindowContext);
   const data = showDetailDelta ?
     getDelta(messageData, detailOption as keyof MessageData) :
     messageData.map((data, index) => { return { index, value: data[detailOption as keyof MessageData] }; });

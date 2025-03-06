@@ -23,7 +23,25 @@ export enum SocketStats {
     closed = "Closed",
 }
 
+export enum AppWindowMode {
+    Single,
+    Multi,
+};
+
+export type WindowContext = {
+    showEnginePowerCurve: boolean,
+    setShowEnginePowerCurve: (v: boolean) => unknown,
+    detailOption: string,
+    setDetailOption: (v: string) => unknown,
+    showDetailDelta: boolean,
+    setShowDetailDelta: (v: boolean) => unknown,
+};
+
+export const ReactWindowContext = React.createContext(null as unknown as WindowContext);
+
 export type AppContext = {
+    openNetwork: () => unknown,
+    openSettings: () => unknown,
     resetData: () => unknown,
     listenAddress: ListenAddress;
     setListenAddress: (v: ListenAddress) => unknown,
@@ -37,12 +55,8 @@ export type AppContext = {
     setErrorMessage: (v: string[]) => unknown,
     socketStats: SocketStats,
 
-    showEnginePowerCurve: boolean,
-    setShowEnginePowerCurve: (v: boolean) => unknown,
-    detailOption: string,
-    setDetailOption: (v: string) => unknown,
-    showDetailDelta: boolean,
-    setShowDetailDelta: (v: boolean) => unknown,
+    appWindowMode: AppWindowMode,
+    setAppWindowMode: (v: AppWindowMode) => unknown,
 };
 
 export const ReactAppContext = React.createContext(null as unknown as AppContext);

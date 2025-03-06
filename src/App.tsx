@@ -1,20 +1,15 @@
 import './App.css';
-import { Divider, Icon, List, ListItem, NavigationDrawer, NavigationDrawerPadding, Theme, Typography } from 'rmcw/dist/components3';
-import Engine from './pages/Engine';
+import { Theme } from 'rmcw/dist/components3';
 import Settings from './pages/Settings';
 import React from 'react';
-import Tire from './pages/TIre';
 import { listenData } from './ipc';
-import { analyzeMessageData, dummyMessageData, MessageData, MessageDataAnalysis, newMessageDataAnalysis, parseMessageData, resetMessageDataAnalysis } from './common/MessageData';
+import { analyzeMessageData, MessageData, MessageDataAnalysis, newMessageDataAnalysis, parseMessageData, resetMessageDataAnalysis } from './common/MessageData';
 import CircularBuffer from './common/CircularBuffer';
-import { FadeThrough, SharedAxis, SharedAxisTransform } from 'material-design-transform';
-import { AppContext, ListenAddress, ReactAppContext, ReactStreamAppContext, SocketStats, StreamAppContext, UnitSystem } from './common/AppContext';
-import Detail from './pages/Detail';
-import SpeedMeter from './pages/SpeedMeter';
+import { AppContext, AppWindowMode, ListenAddress, ReactAppContext, SocketStats, StreamAppContext, UnitSystem } from './common/AppContext';
 import Network from './pages/Network';
 import { listen } from '@tauri-apps/api/event';
-import Control from './pages/Control';
-import Tachometer from './pages/Tachometer';
+import SinglePageApp from './SinglePageApp';
+import MultiPageApp from './MultiPageApp';
 
 export default function App() {
   const [isOpenSettings, setOpenSettings] = React.useState(false);
@@ -24,8 +19,6 @@ export default function App() {
   const [isOpenNetwork, setOpenNetwork] = React.useState(false);
   const openNetwork = React.useCallback(() => setOpenNetwork(true), []);
   const closeNetwork = React.useCallback(() => setOpenNetwork(false), []);
-
-  const [page, setPage] = React.useState(Page.Engine);
 
   const [enableDarkTheme, setEnableDarkTheme] = React.useState(undefined as undefined | boolean);
   const [unitSystem, setUnitSystem] = React.useState(UnitSystem.International);
@@ -82,23 +75,37 @@ export default function App() {
     updateTick();
   }, [messageData, messageDataAnalysis, updateTick]);
 
-  const [showEnginePowerCurve, setShowEnginePowerCurve] = React.useState(true);
-  const [detailOption, setDetailOption] = React.useState("timestampMs");
-  const [showDetailDelta, setShowDetailDelta] = React.useState(false);
+  const [appWindowMode, _setAppWindowMode] = React.useState(() => {
+    const record = localStorage.getItem("app-window-mode");
+    if (record === null) {
+      return AppWindowMode.Single;
+    }
+    const mode = JSON.parse(record);
+    switch (mode) {
+      case AppWindowMode.Single:
+        return AppWindowMode.Single;
+      case AppWindowMode.Multi:
+        return AppWindowMode.Multi;
+    }
+    return AppWindowMode.Single;
+  });
+  const setAppWindowMode = React.useCallback((newState: AppWindowMode) => {
+    localStorage.setItem("app-window-mode", JSON.stringify(newState));
+    _setAppWindowMode(newState);
+  }, []);
 
   const appContext = React.useMemo<AppContext>(() => {
     return {
+      openNetwork, openSettings,
       resetData, socketStats,
       listenAddress, setListenAddress,
       enableDarkTheme, setEnableDarkTheme,
       unitSystem, setUnitSystem,
       dataBufferLength, setDataBufferLength,
       errorMessage, setErrorMessage,
-      showEnginePowerCurve, setShowEnginePowerCurve,
-      detailOption, setDetailOption,
-      showDetailDelta, setShowDetailDelta
+      appWindowMode, setAppWindowMode,
     };
-  }, [resetData, socketStats, listenAddress, setListenAddress, enableDarkTheme, unitSystem, dataBufferLength, setDataBufferLength, errorMessage, showEnginePowerCurve, detailOption, showDetailDelta]);
+  }, [openNetwork, openSettings, resetData, socketStats, listenAddress, setListenAddress, enableDarkTheme, unitSystem, dataBufferLength, setDataBufferLength, errorMessage, appWindowMode, setAppWindowMode]);
 
   const streamAppContext = React.useMemo<StreamAppContext>(() => {
     return { messageData, messageDataAnalysis, tick };
@@ -158,58 +165,7 @@ export default function App() {
   return (
     <ReactAppContext.Provider value={appContext}>
       <Theme className='fill-parent' withBackgroundColor enableDarkTheme={enableDarkTheme} style={{ "--md-sys-color-tertiary": "#82ca9d" } as React.CSSProperties}>
-        <div className="rmcw-drawer fill-parent">
-          <NavigationDrawer opened style={{
-            position: "absolute", display: "flex", flexDirection: "column",
-            "--md-navigation-drawer-container-shape": "0 8px 8px 0",
-          } as React.CSSProperties}>
-            <List style={{ padding: 0, flex: "1 1" }}>
-              <Typography.Headline.Large tag='div' style={{ padding: 16 }}>Forza</Typography.Headline.Large>
-              <Divider />
-              {Object.values(Page).map(value =>
-                <ListItem key={value} type='button' onClick={() => setPage(value)}
-                  style={page === value ? {
-                    backgroundColor: "rgb(from var(--md-sys-color-primary-fixed-dim) r g b / 0.2)",
-                    "--md-list-item-label-text-color": "var(--md-sys-color-primary)"
-                  } as React.CSSProperties : undefined}>
-                  {value}
-                </ListItem>)}
-            </List>
-            <List style={{ padding: 0 }}>
-              <LapTime messageData={messageData} />
-              <ListItem type='button' trailingSupportingText={
-                <FadeThrough keyId={socketStats}>
-                  <span title={`Socket: ${socketStats}`}><Icon>{toIcon(socketStats)}</Icon></span>
-                </FadeThrough>}
-                onClick={openNetwork}>Network</ListItem>
-              <ListItem type='button' trailingSupportingText={(slotName) => <Icon slot={slotName}>settings</Icon>}
-                onClick={openSettings}>Settings</ListItem>
-            </List>
-          </NavigationDrawer>
-          <NavigationDrawerPadding opened style={{ height: "100%" }}>
-            <ReactStreamAppContext.Provider value={streamAppContext}>
-              <SharedAxis className="fill-parent" keyId={page}
-                transform={SharedAxisTransform.fromLeftToRight}>
-                {(() => {
-                  switch (page) {
-                    case Page.Engine:
-                      return <Engine />;
-                    case Page.Tire:
-                      return <Tire />;
-                    case Page.Tachometer:
-                      return <Tachometer />;
-                    case Page.Detail:
-                      return <Detail />;
-                    case Page.SpeedMeter:
-                      return <SpeedMeter />;
-                    case Page.Control:
-                      return <Control />;
-                  }
-                })()}
-              </SharedAxis>
-            </ReactStreamAppContext.Provider>
-          </NavigationDrawerPadding>
-        </div>
+        {getWindow(appWindowMode, streamAppContext)}
         <Network opened={isOpenNetwork} close={closeNetwork} />
         <Settings opened={isOpenSettings} close={closeSettings} />
       </Theme>
@@ -217,43 +173,14 @@ export default function App() {
   );
 }
 
-function LapTime({ messageData }: { messageData: CircularBuffer<MessageData>; }) {
-  const lastData = messageData.isEmpty() ? dummyMessageData : messageData.getLastUnsafe();
-  return <ListItem supportingText={toTimeString(lastData.currentLapTime)} trailingSupportingText={
-    (slotName) => <div slot={slotName} className='flex-column' style={{ justifyContent: "center", alignItems: "end" }}>
-      <div>Best: {toTimeString(lastData.bestLapTime)}</div>
-      <div>Last: {toTimeString(lastData.lastLapTime)}</div>
-    </div>
-  }>Lap Time</ListItem>;
-}
-
-function toTimeString(seconds: number) {
-  const s = seconds % 60;
-  const m = seconds / 60;
-  return `${m.toFixed(0).padStart(2, "0")}:${s.toFixed(3).replace(".", ":").padStart(6, "0")}`;
-}
-
-function toIcon(socketStats: SocketStats) {
-  switch (socketStats) {
-    case SocketStats.opening:
-      return "settings_input_antenna";
-    case SocketStats.opened:
-      return "wifi_tethering";
-    case SocketStats.error:
-      return "error";
-    case SocketStats.closed:
-      return "warning";
+function getWindow(mode: AppWindowMode, streamAppContext: StreamAppContext) {
+  switch (mode) {
+    case AppWindowMode.Single:
+      return <SinglePageApp streamAppContext={streamAppContext} />;
+    case AppWindowMode.Multi:
+      return <MultiPageApp streamAppContext={streamAppContext} />;
   }
 }
-
-enum Page {
-  Engine = "Engine",
-  Tire = "Tire & Wheel",
-  Tachometer = "Tachometer",
-  SpeedMeter = "SpeedMeter",
-  Control = "Control",
-  Detail = "Detail",
-};
 
 function isNeedToReset(messageData: CircularBuffer<MessageData>, newData: MessageData) {
   if (messageData.isEmpty()) {
@@ -269,7 +196,6 @@ function isNeedToReset(messageData: CircularBuffer<MessageData>, newData: Messag
   }
   return true;
 }
-
 
 function parseIntSafe(value: string | null, defaultValue = 256) {
   if (value === null) {
