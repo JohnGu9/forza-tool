@@ -191,7 +191,6 @@ function IndicatorLights({ lower, upper, current }: { lower: number, upper: numb
   const over = progress >= 1;
   React.useEffect(() => {
     if (over) {
-      setShow(false);
       const timer = setInterval(() => setShow(value => !value), 300);
       return () => {
         clearInterval(timer);

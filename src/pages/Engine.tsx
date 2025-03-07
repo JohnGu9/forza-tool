@@ -199,10 +199,10 @@ function SimpleRow({ title, value, active }: { title: string; value: number; act
   </div>;
 }
 
-function wsTo(value: number/* unit: w/h */, unit: UnitSystem) {
+function wsTo(value: number/* unit: W */, unit: UnitSystem) {
   switch (unit) {
     case UnitSystem.International:
-      return Math.max(0, value) / 1000;// unit: kw/h
+      return Math.max(0, value) / 1000;// unit: kW
     case UnitSystem.Imperial:
       return Math.max(0, value) / 745.699872;// unit: hp
   }
@@ -220,7 +220,7 @@ function nmTo(value: number/* unit: N/m */, unit: UnitSystem) {
 function getPowerUnit(unit: UnitSystem) {
   switch (unit) {
     case UnitSystem.International:
-      return "KW/H";
+      return "kW";
     case UnitSystem.Imperial:
       return "HP";
   }
