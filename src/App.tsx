@@ -10,6 +10,7 @@ import Network from './pages/Network';
 import { listen } from '@tauri-apps/api/event';
 import SinglePageApp from './SinglePageApp';
 import MultiPageApp from './MultiPageApp';
+import { Page } from './common/Page';
 
 export default function App() {
   const [isOpenSettings, setOpenSettings] = React.useState(false);
@@ -94,6 +95,20 @@ export default function App() {
     _setAppWindowMode(newState);
   }, []);
 
+  function recoverLastOpenedPage() {
+    const lastOpenedPage = localStorage.getItem("last-opened-page");
+    const availablePage = new Set<unknown>(Object.values(Page));
+    if (availablePage.has(lastOpenedPage)) {
+      return lastOpenedPage as Page;
+    }
+    return Page.Engine;
+  }
+  const [lastOpenedPage, _setLastOpenedPage] = React.useState(recoverLastOpenedPage);
+  const setLastOpenedPage = React.useCallback((value: Page) => {
+    _setLastOpenedPage(value);
+    localStorage.setItem("last-opened-page", value);
+  }, []);
+
   const appContext = React.useMemo<AppContext>(() => {
     return {
       openNetwork, openSettings,
@@ -103,9 +118,10 @@ export default function App() {
       unitSystem, setUnitSystem,
       dataBufferLength, setDataBufferLength,
       errorMessage, setErrorMessage,
+      lastOpenedPage, setLastOpenedPage,
       appWindowMode, setAppWindowMode,
     };
-  }, [openNetwork, openSettings, resetData, socketStats, listenAddress, setListenAddress, enableDarkTheme, unitSystem, dataBufferLength, setDataBufferLength, errorMessage, appWindowMode, setAppWindowMode]);
+  }, [openNetwork, openSettings, resetData, socketStats, listenAddress, setListenAddress, enableDarkTheme, unitSystem, dataBufferLength, setDataBufferLength, errorMessage, lastOpenedPage, setLastOpenedPage, appWindowMode, setAppWindowMode]);
 
   const streamAppContext = React.useMemo<StreamAppContext>(() => {
     return { messageData, messageDataAnalysis, tick };

@@ -1,6 +1,7 @@
 import React from "react";
 import CircularBuffer from "./CircularBuffer";
 import { MessageData, MessageDataAnalysis } from "./MessageData";
+import { Page } from "./Page";
 
 export type ListenAddress = [
     string/* address */,
@@ -55,6 +56,8 @@ export type AppContext = {
     setErrorMessage: (v: string[]) => unknown,
     socketStats: SocketStats,
 
+    lastOpenedPage: Page,
+    setLastOpenedPage: (v: Page) => unknown,
     appWindowMode: AppWindowMode,
     setAppWindowMode: (v: AppWindowMode) => unknown,
 };

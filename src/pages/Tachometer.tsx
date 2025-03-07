@@ -40,7 +40,7 @@ export default function Tachometer() {
       </ResponsiveContainer>
       <div className="flex-column flex-space-evenly" style={{ position: "absolute", inset: 0, pointerEvents: "none", paddingTop: 32 }}>
         <Typography.Display.Large tag="span" title="Gear" style={{
-          fontSize: "12vmax",
+          fontSize: "10vmax",
           color: isRange ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)",
           transition: "color 200ms",
         }}>{lastData.gear}</Typography.Display.Large>
@@ -187,7 +187,7 @@ function IndicatorLights({ lower, upper, current }: { lower: number, upper: numb
     return current > lower;
   }
   const [show, setShow] = React.useState(true);
-  const over = progress > 1;
+  const over = progress >= 1;
   React.useEffect(() => {
     if (over) {
       setShow(false);

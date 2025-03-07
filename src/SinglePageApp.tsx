@@ -9,9 +9,13 @@ import socketStatsToIcon from "./common/SocketStatsToIcon";
 import getPage from "./pages";
 
 export default function SinglePageApp({ streamAppContext }: { streamAppContext: StreamAppContext; }) {
-  const [page, setPage] = React.useState(Page.Engine);
-  const { socketStats, openNetwork, openSettings } = React.useContext(ReactAppContext);
+  const { socketStats, openNetwork, openSettings, lastOpenedPage, setLastOpenedPage } = React.useContext(ReactAppContext);
   const { messageData } = streamAppContext;
+  const [page, _setPage] = React.useState(lastOpenedPage);
+  const setPage = React.useCallback((value: Page) => {
+    _setPage(value);
+    setLastOpenedPage(value);
+  }, [setLastOpenedPage]);
 
   const [showEnginePowerCurve, setShowEnginePowerCurve] = React.useState(true);
   const [detailOption, setDetailOption] = React.useState("timestampMs");
