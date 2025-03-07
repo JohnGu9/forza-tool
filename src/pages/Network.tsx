@@ -34,20 +34,20 @@ export default function Network({ opened, close }: {
         setDataBufferLength(parseInt(newDataBufferLength));
       }}>Submit</Button>
     </>}>
-    <div style={{ width: 360, display: "flex", flexDirection: "column" }}>
-      <TextField style={{ width: "100%" }} type="text" label="Address" required value={newAddress} onChange={e => setNewAddress(e.target.value)} />
+    <div className="flex-column" style={{ width: 360 }}>
+      <TextField type="text" label="Address" required value={newAddress} onChange={e => setNewAddress(e.target.value)} />
       <div style={{ height: 16 }} aria-hidden />
-      <TextField style={{ width: "100%" }} type="number" min="1" max="65535" label="Port" required value={newPort} onChange={e => setNewPort(e.target.value)}
+      <TextField type="number" min="1" max="65535" label="Port" required value={newPort} onChange={e => setNewPort(e.target.value)}
         supportingText={getSocketInformation(socketStats, address, port)} />
       <div style={{ height: 16 }} aria-hidden />
       <ListItem type="button" supportingText="Send all received data to another port" trailingSupportingText={<Switch selected={forward}></Switch>} onClick={() => setForward(!forward)}>Forward</ListItem>
       <div style={{ height: 16 }} aria-hidden />
-      <TextField disabled={!forward} style={{ width: "100%" }} type="text" label="Forward Address" value={newForwardAddress} onChange={e => setNewForwardAddress(e.target.value)} />
+      <TextField disabled={!forward} type="text" label="Forward Address" value={newForwardAddress} onChange={e => setNewForwardAddress(e.target.value)} />
       <div style={{ height: 16 }} aria-hidden />
-      <TextField disabled={!forward} style={{ width: "100%" }} type="number" label="Forward Port" value={newForwardPort} onChange={e => setNewForwardPort(e.target.value)}
+      <TextField disabled={!forward} type="number" label="Forward Port" value={newForwardPort} onChange={e => setNewForwardPort(e.target.value)}
         supportingText={`Current forwarding: ${currentForwarding}`} />
       <div style={{ height: 16 }} aria-hidden />
-      <TextField style={{ width: "100%" }} type="number" min="1" label="Data Buffer Length" value={newDataBufferLength} onChange={e => setNewDataBufferLength(e.target.value)}
+      <TextField type="number" min="1" label="Data Buffer Length" value={newDataBufferLength} onChange={e => setNewDataBufferLength(e.target.value)}
         supportingText={`Determines how much data is displayed in the charts. Current: ${dataBufferLength}. (Recommend: 200 ~ 500)`} />
       <div style={{ height: 32 }} aria-hidden />
       <Button onClick={() => {

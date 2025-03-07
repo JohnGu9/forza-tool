@@ -20,7 +20,7 @@ export default function Tachometer() {
   const powerLevel = messageDataAnalysis.maxPower.value === 0 ? 0 : Math.max(lastData.power / messageDataAnalysis.maxPower.value, 0);
   const isRange = lastData.currentEngineRpm >= lower && lastData.currentEngineRpm < upper;
   return <div className="fill-parent flex-column" style={{ padding: "16px 32px", gap: 16 }}>
-    <div style={{ flex: "1 1", minHeight: 0, width: "100%", position: "relative" }}>
+    <div className="flex-child" style={{ position: "relative" }}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart margin={{ bottom: -48 }}>
           {showPowerLevel ? <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="60%" outerRadius="65%" fill={powerLevel > 0.97 ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)"} startAngle={startAngle} endAngle={getAngle(powerLevel, startAngle, endAngle)}
@@ -48,7 +48,7 @@ export default function Tachometer() {
       </div>
     </div>
     <IndicatorLights lower={lower} upper={upper} current={lastData.currentEngineRpm} />
-    <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-around", gap: 16, padding: "0 0 16px" }}>
+    <div className="flex-row flex-space-between" style={{ height: columnHeight, alignItems: "stretch", gap: 16, padding: "0 0 16px" }}>
       <SimpleCard title="RPM" content={lastData.currentEngineRpm.toFixed(0)} tooltip={`Rev / Min`} onClick={() => setShowPowerLevel(!showPowerLevel)} />
       <SimpleCard title="High Power RPM Range" content={`${lower.toFixed(0)} - ${upper.toFixed(0)}`} tooltip={`Rev / Min`} onClick={() => setShowPowerLevel(!showPowerLevel)} />
       {showPowerLevel ? <SimpleCard title="Power Level" content={`${(powerLevel * 100).toFixed(1)}%`} tooltip={``} onClick={() => setShowPowerLevel(!showPowerLevel)} /> : undefined}
@@ -161,7 +161,7 @@ function getBound(sorted: { x: number, y: number; }[], maxIndex: number, thresho
 }
 
 function SimpleCard({ title, tooltip, content, onClick }: { title: string, tooltip: string, content: React.ReactNode; onClick: () => unknown; }) {
-  return <Card style={{ flex: "1 1", maxWidth: 280, height: "100%", textWrap: "nowrap" }}>
+  return <Card className="flex-child" style={{ maxWidth: 280, textWrap: "nowrap" }}>
     <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: "var(--_container-shape, 12px)", padding: "0 32px", overflow: "clip" }}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
       <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
@@ -181,12 +181,7 @@ function IndicatorLights({ lower, upper, current }: { lower: number, upper: numb
     return (current - lower) / (upper - lower);
   }
   const progress = getProgress(lower, upper, current);
-  function isInRange(lower: number, current: number) {
-    if (lower === upper) {
-      return false;
-    }
-    return current > lower;
-  }
+
   const [show, setShow] = React.useState(true);
   const over = progress >= 1;
   React.useEffect(() => {
@@ -198,16 +193,23 @@ function IndicatorLights({ lower, upper, current }: { lower: number, upper: numb
       };
     }
   }, [over]);
-  return <div className="flex-row" style={{ gap: 16, justifyContent: "space-around" }}>
-    {[{ lower: 0, upper: 1 }, { lower: 0.2, upper: 1 }, { lower: 0.4, upper: 1 }, { lower: 0.6, upper: 1 }, { lower: 0.8, upper: 1 }].map(({ lower }, index) =>
-      <Card key={index} style={{
-        flex: "1 1", maxWidth: 120, height: 32,
-        "--md-elevated-card-container-color": show && isInRange(lower, progress) ? (over ? "var(--md-sys-color-primary)" : "var(--md-sys-color-tertiary)") : undefined,
-      } as React.CSSProperties}></Card>
+
+  function getContainerColor(lower: number, upper: number) {
+    if (!show ||
+      lower === upper ||
+      progress <= lower) {
+      return undefined;
+    }
+    return progress < upper && !over ? "var(--md-sys-color-primary)" : "var(--md-sys-color-tertiary)";
+  }
+
+  return <div className="flex-row flex-space-between" style={{ gap: 16, height: 32, alignItems: "stretch" }}>
+    {[{ lower: 0, upper: 0.2 }, { lower: 0.2, upper: 0.4 }, { lower: 0.4, upper: 0.6 }, { lower: 0.6, upper: 0.8 }, { lower: 0.8, upper: 1 }].map(({ lower, upper }, index) =>
+      <Card key={index} className="flex-child" style={{
+        maxWidth: 120,
+        "--md-elevated-card-container-color": getContainerColor(lower, upper),
+        "--md-elevated-card-container-shadow-color": over ? "var(--md-sys-color-tertiary)" : undefined,
+      } as React.CSSProperties} />
     )}
   </div>;
 }
-
-
-
-

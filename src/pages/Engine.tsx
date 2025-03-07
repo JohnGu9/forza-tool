@@ -24,7 +24,7 @@ export default function Engine() {
     }
   }, [setUnitSystem, unitSystem]);
   return <div className="fill-parent flex-column">
-    <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-between", alignItems: "center", gap: 8, padding: "16px 32px" }}>
+    <div className="flex-row flex-space-between" style={{ height: columnHeight, gap: 8, padding: "16px 32px" }}>
       <SimpleCard title="RPM" content={lastMessageData.currentEngineRpm.toFixed(0)}
         tooltip="unit: REV/MIN"
         onClick={changeUnitSystem} />
@@ -37,7 +37,7 @@ export default function Engine() {
         tooltip={`unit: ${getPowerUnit(unitSystem)}`}
         onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)} />
     </div>
-    <SharedAxis keyId={showEnginePowerCurve ? 1 : 0} style={{ flex: "1 1", minHeight: 0, width: "100%", overflow: "clip" }}
+    <SharedAxis className="flex-child" keyId={showEnginePowerCurve ? 1 : 0} style={{ overflow: "clip" }}
       transform={SharedAxisTransform.fromLeftToRight}>
       {showEnginePowerCurve ?
         <PowerCurveChart messageDataAnalysis={messageDataAnalysis} lastMessageData={lastMessageData} /> :
@@ -177,7 +177,7 @@ function getTicks(max: number, min: number, gap: number) {
 }
 
 function SimpleCard({ title, content, tooltip, onClick }: { title: string, content: string; tooltip: string; onClick: () => unknown; }) {
-  return <Card style={{ flex: "1 1", maxWidth: 240, height: "100%", textWrap: "nowrap" }}>
+  return <Card className="flex-child" style={{ maxWidth: 240, height: "100%", textWrap: "nowrap" }}>
     <Ripple className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: "var(--_container-shape, 12px)", overflow: "clip" }}
       onClick={onClick}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
@@ -188,11 +188,10 @@ function SimpleCard({ title, content, tooltip, onClick }: { title: string, conte
 
 function SimpleRow({ title, value, active }: { title: string; value: number; active?: boolean; }) {
   return <div className="flex-column" style={{ justifyContent: "space-around", padding: "8px 32px" }}>
-    <div className="flex-row" style={{ justifyContent: "space-between", alignItems: "center", padding: "4px 0" }}>
+    <div className="flex-row flex-space-between" style={{ padding: "4px 0" }}>
       <span>{title}</span>{(value * 100).toFixed(1)}%
     </div>
     <LinearProgress value={value} style={{
-      width: "100%",
       "--md-linear-progress-active-indicator-color": active ? "var(--md-sys-color-tertiary)" : undefined,
       "--rmcw-linear-progress-transition": "none"
     } as React.CSSProperties} />

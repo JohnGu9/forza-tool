@@ -41,7 +41,7 @@ export default function MultiPageApp({ streamAppContext }: { streamAppContext: S
   return <div className="fill-parent flex-row">
     <div className="flex-column" style={{ width: 48, alignItems: "center", padding: "12px 0", gap: 16 }}>
       <IconButton onClick={() => setWindows([{ id: windows[0].id + 1, page: getUnusedPage(windows) }, ...windows])}><Icon>add</Icon></IconButton>
-      <div style={{ flex: "1 1", minHeight: 0 }} />
+      <div className="flex-child" />
       <FadeThrough keyId={socketStats}>
         <span title={`Socket: ${socketStats}`}>
           <IconButton onClick={openNetwork}><Icon>{socketStatsToIcon(socketStats)}</Icon></IconButton>
@@ -49,7 +49,7 @@ export default function MultiPageApp({ streamAppContext }: { streamAppContext: S
       </FadeThrough>
       <IconButton onClick={openSettings}><Icon>settings</Icon></IconButton>
     </div>
-    <div className="flex-row" style={{ flex: "1 1", minWidth: 0 }}>
+    <div className="flex-row flex-child">
       <ReactStreamAppContext.Provider value={streamAppContext}>
         {windows.map((value) =>
           <SingleWindow key={value.id}
@@ -94,11 +94,11 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
       showDetailDelta, setShowDetailDelta
     };
   }, [detailOption, showDetailDelta, showEnginePowerCurve]);
-  return <div className="flex-column" style={{ flex: "1 1", minWidth: 0, overflow: "clip" }}>
+  return <div className="flex-column flex-child" style={{ overflow: "clip" }}>
     <ListItem trailingSupportingText={<Icon>swap_horiz</Icon>} type="button"
       onClick={() => setOpenDialog(true)}>{page}</ListItem>
     <ReactWindowContext.Provider value={windowContext}>
-      <SharedAxis style={{ flex: "1 1", minHeight: 0 }} keyId={page}
+      <SharedAxis className="flex-child" keyId={page}
         transform={SharedAxisTransform.fromLeftToRight}>
         {getPage(page)}
       </SharedAxis>

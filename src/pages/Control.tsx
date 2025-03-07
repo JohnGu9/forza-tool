@@ -50,8 +50,8 @@ function getTargetData(messageData: CircularBuffer<MessageData>) {
 
 function SimpleCard({ title, data }: { title: string, data: DataType[]; }) {
   const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1].value);
-  return <Card className="flex-column flex-space-evenly" style={{ gridArea: title, minHeight: 0, minWidth: 0, padding: 16 }}>
-    <div style={{ flex: "1 1", width: "100%", overflow: "hidden" }}>
+  return <Card className="flex-column flex-space-evenly crushable" style={{ gridArea: title, alignItems: "stretch", padding: 16 }}>
+    <div className="flex-child" style={{ overflow: "clip" }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data}
           margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>
@@ -64,9 +64,9 @@ function SimpleCard({ title, data }: { title: string, data: DataType[]; }) {
         </AreaChart>
       </ResponsiveContainer>
     </div>
-    <div className="flex-row" style={{ width: "100%", justifyContent: "space-between", alignItems: "center", padding: "4px 0" }}>
+    <div className="flex-row flex-space-between" style={{ padding: "4px 0" }}>
       <span>{title}</span>{(value).toFixed(1)}%
     </div>
-    <LinearProgress value={value / 100} style={{ width: "100%", "--rmcw-linear-progress-transition": "none" } as React.CSSProperties} />
+    <LinearProgress value={value / 100} style={{ "--rmcw-linear-progress-transition": "none" } as React.CSSProperties} />
   </Card>;
 }

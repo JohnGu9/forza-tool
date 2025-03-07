@@ -29,11 +29,10 @@ export default function SinglePageApp({ streamAppContext }: { streamAppContext: 
   }, [detailOption, showDetailDelta, showEnginePowerCurve]);
 
   return <div className="rmcw-drawer fill-parent">
-    <NavigationDrawer opened style={{
-      position: "absolute", display: "flex", flexDirection: "column",
-      "--md-navigation-drawer-container-shape": "0 8px 8px 0",
+    <NavigationDrawer opened className="flex-column" style={{
+      position: "absolute", "--md-navigation-drawer-container-shape": "0 8px 8px 0",
     } as React.CSSProperties}>
-      <List style={{ padding: 0, flex: "1 1" }}>
+      <List className="flex-child" style={{ padding: 0 }}>
         <Typography.Headline.Large tag='div' style={{ padding: 16 }}>Forza</Typography.Headline.Large>
         <Divider />
         {Object.values(Page).map(value =>

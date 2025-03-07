@@ -12,11 +12,11 @@ export default function Tire() {
   const { messageData } = React.useContext(ReactStreamAppContext);
   const { frontLeft, frontRight, rearLeft, rearRight } = getTargetData(messageData, tireOption);
   const displayText = React.useMemo(() => capitalizeFirstLetter(tireOption), [tireOption]);
-  return <div className="fill-parent flex-column" style={{ justifyContent: "space-between", padding: "16px 32px" }}>
+  return <div className="fill-parent flex-column flex-space-between" style={{ alignItems: "stretch", padding: "16px 32px" }}>
     <Select label="option" displayText={displayText}>
       {Object.values(Type).map(key => <SelectOption key={key} headline={key} selected={tireOption === key} onClick={() => setTireOption(key as Type)} style={{ textTransform: "capitalize" }} />)}
     </Select>
-    <div style={{ flex: "1 1", minHeight: 0, display: "grid", gridTemplateColumns: "50% 50%", gridTemplateRows: "50% 50%", gap: "16px", padding: "16px 16px 16px 0" }}>
+    <div className="flex-child" style={{ display: "grid", gridTemplateColumns: "50% 50%", gridTemplateRows: "50% 50%", gap: "16px", padding: "16px 16px 16px 0" }}>
       <SimpleCard title="FrontLeft" data={frontLeft} type={tireOption} />
       <SimpleCard title="FrontRight" data={frontRight} type={tireOption} />
       <SimpleCard title="RearLeft" data={rearLeft} type={tireOption} />
@@ -68,8 +68,8 @@ function SimpleCard({ title, data, type }: { title: string, data: DataType[]; ty
   const { unitSystem } = React.useContext(ReactAppContext);
   const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1].value);
   const { formatter, progress, domain, ticks, } = React.useMemo(() => getSettings(type, unitSystem), [type, unitSystem]);
-  return <Card className="flex-column flex-space-evenly" style={{ height: "100%", padding: 16 }}>
-    <div style={{ flex: "1 1", width: "100%", overflow: "hidden" }}>
+  return <Card className="flex-column flex-space-evenly" style={{ alignItems: "stretch", padding: 16 }}>
+    <div className="flex-child" style={{ overflow: "clip" }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, right: 0, left: -32, bottom: -10 }}>
           <CartesianGrid strokeDasharray="3 3" />
@@ -81,10 +81,10 @@ function SimpleCard({ title, data, type }: { title: string, data: DataType[]; ty
         </LineChart>
       </ResponsiveContainer>
     </div>
-    <div className="flex-row" style={{ width: "100%", justifyContent: "space-between", alignItems: "center", padding: "4px 0" }}>
+    <div className="flex-row flex-space-between" style={{ padding: "4px 0" }}>
       <span>{title}</span>{formatter(value)}
     </div>
-    <LinearProgress value={progress(value)} style={{ width: "100%", "--rmcw-linear-progress-transition": "none" } as React.CSSProperties} />
+    <LinearProgress value={progress(value)} style={{ "--rmcw-linear-progress-transition": "none" } as React.CSSProperties} />
   </Card>;
 }
 
