@@ -1,5 +1,5 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip, TooltipProps } from "recharts";
-import { ReactStreamAppContext } from "../common/AppContext";
+import { AppWindowMode, ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import React from "react";
 import { MessageDataAnalysis } from "../common/MessageData";
 import { Card, Ripple, Typography } from "rmcw/dist/components3";
@@ -10,8 +10,9 @@ const endAngle = -45;
 const columnHeight = 150;
 
 export default function Tachometer() {
+  const { appWindowMode } = React.useContext(ReactAppContext);
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
-  const [showPowerLevel, setShowPowerLevel] = React.useState(true);
+  const [showPowerLevel, setShowPowerLevel] = React.useState(appWindowMode === AppWindowMode.Single);
 
   const lastData = messageData.getLast() ?? { currentEngineRpm: 0, engineMaxRpm: 6000, power: 0, gear: 0 };
   const { lower, upper } = getRange(messageDataAnalysis);
@@ -49,7 +50,7 @@ export default function Tachometer() {
     <div className="flex-row" style={{ height: columnHeight, justifyContent: "space-around", gap: 16, padding: "0 0 16px" }}>
       <SimpleCard title="RPM" content={lastData.currentEngineRpm.toFixed(0)} tooltip={`Rev / Min`} onClick={() => setShowPowerLevel(!showPowerLevel)} />
       <SimpleCard title="High Power RPM Range" content={`${lower.toFixed(0)} - ${upper.toFixed(0)}`} tooltip={`Rev / Min`} onClick={() => setShowPowerLevel(!showPowerLevel)} />
-      <SimpleCard title="Power Level" content={`${(powerLevel * 100).toFixed(1)}%`} tooltip={``} onClick={() => setShowPowerLevel(!showPowerLevel)} />
+      {showPowerLevel ? <SimpleCard title="Power Level" content={`${(powerLevel * 100).toFixed(1)}%`} tooltip={``} onClick={() => setShowPowerLevel(!showPowerLevel)} /> : undefined}
     </div>
   </div>;
 }
@@ -201,7 +202,7 @@ function IndicatorLights({ lower, upper, current }: { lower: number, upper: numb
     {[{ lower: 0, upper: 1 }, { lower: 0.2, upper: 1 }, { lower: 0.4, upper: 1 }, { lower: 0.6, upper: 1 }, { lower: 0.8, upper: 1 }].map(({ lower }, index) =>
       <Card key={index} style={{
         flex: "1 1", maxWidth: 120, height: 32,
-        "--md-elevated-card-container-color": show && isInRange(lower, progress) ? "var(--md-sys-color-tertiary)" : undefined,
+        "--md-elevated-card-container-color": show && isInRange(lower, progress) ? (over ? "var(--md-sys-color-primary)" : "var(--md-sys-color-tertiary)") : undefined,
       } as React.CSSProperties}></Card>
     )}
   </div>;

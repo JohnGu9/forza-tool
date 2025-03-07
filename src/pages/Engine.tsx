@@ -45,7 +45,7 @@ export default function Engine() {
     </SharedAxis>
     <div style={{ height: 16 }} aria-hidden />
     <Ripple onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)}>
-      <SimpleRow title="Power Level" value={powerLevel} />
+      <SimpleRow title="Power Level" value={powerLevel} active={powerLevel > 0.97} />
       <SimpleRow title="Accelerator" value={lastMessageData.accelerator / 255} />
       <div style={{ height: 16 }} aria-hidden />
     </Ripple>
@@ -62,16 +62,6 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
   return <ResponsiveContainer width="100%" height="100%">
     <AreaChart title="PowerCurve" data={data}
       margin={{ top: 0, right: chartsPadding + 2, left: chartsPadding - 18 }}>
-      <defs>
-        <linearGradient id="colorPrimary" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="5%" stopColor="var(--md-sys-color-primary)" stopOpacity={0.8} />
-          <stop offset="95%" stopColor="var(--md-sys-color-primary)" stopOpacity={0} />
-        </linearGradient>
-        <linearGradient id="colorTertiary" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="5%" stopColor="var(--md-sys-color-tertiary)" stopOpacity={0.8} />
-          <stop offset="95%" stopColor="var(--md-sys-color-tertiary)" stopOpacity={0} />
-        </linearGradient>
-      </defs>
       <XAxis xAxisId={0} dataKey="rpm" type="number" domain={[lastMessageData.engineIdleRpm, lastMessageData.engineMaxRpm]} allowDataOverflow={false}
         ticks={getTicks(lastMessageData.engineMaxRpm, lastMessageData.engineIdleRpm, 1000)} />
       <YAxis yAxisId={1} type="number" domain={([, max]) => { return [0, max * 1.05]; }} hide />
@@ -87,8 +77,8 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
         }
       }} contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
       <Legend />
-      <Area yAxisId={1} type="monotone" dataKey="torque" stroke="var(--md-sys-color-primary)" fillOpacity={1} fill="url(#colorPrimary)" animationDuration={650} />
-      <Area yAxisId={0} type="monotone" dataKey="power" stroke="var(--md-sys-color-tertiary)" fillOpacity={1} fill="url(#colorTertiary)" animationDuration={650} />
+      <Area yAxisId={1} type="monotone" dataKey="torque" stroke="var(--md-sys-color-primary)" fillOpacity={0.6} fill="var(--md-sys-color-primary)" animationDuration={650} />
+      <Area yAxisId={0} type="monotone" dataKey="power" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" animationDuration={650} />
       <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeDasharray="3 3" y={maxPower} label={maxPower.toFixed(1)} ifOverflow="visible" isFront={true} />
       <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeDasharray="3 3" x={messageDataAnalysis.maxPower.rpm} label={messageDataAnalysis.maxPower.rpm.toFixed(1)} ifOverflow="visible" isFront={true} />
       {/* <ReferenceLine stroke="var(--md-sys-color-tertiary)" x={lastMessageData.currentEngineRpm} ifOverflow="visible" isFront={true} /> */}
@@ -196,12 +186,16 @@ function SimpleCard({ title, content, tooltip, onClick }: { title: string, conte
   </Card>;
 }
 
-function SimpleRow({ title, value }: { title: string; value: number; }) {
+function SimpleRow({ title, value, active }: { title: string; value: number; active?: boolean; }) {
   return <div className="flex-column" style={{ justifyContent: "space-around", padding: "8px 32px" }}>
     <div className="flex-row" style={{ justifyContent: "space-between", alignItems: "center", padding: "4px 0" }}>
       <span>{title}</span>{(value * 100).toFixed(1)}%
     </div>
-    <LinearProgress value={value} style={{ width: "100%", "--rmcw-linear-progress-transition": "none" } as React.CSSProperties} />
+    <LinearProgress value={value} style={{
+      width: "100%",
+      "--md-linear-progress-active-indicator-color": active ? "var(--md-sys-color-tertiary)" : undefined,
+      "--rmcw-linear-progress-transition": "none"
+    } as React.CSSProperties} />
   </div>;
 }
 

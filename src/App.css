@@ -5,3 +5,7 @@ div[data-dark-mode="rmcw3-dark-mode-off"] {
 div[data-dark-mode="rmcw3-dark-mode-on"] {
   color: #fff;
 }
+
+div.app-theme[data-dark-mode] {
+  --md-sys-color-tertiary: #82ca9d; /* @TODO: complete the color scheme (follow the material design color rule https://m3.material.io/styles/color/system/overview) */
+}

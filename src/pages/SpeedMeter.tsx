@@ -31,24 +31,14 @@ export default function SpeedMeter() {
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data}
           margin={{ top: 4, right: 2, left: 0, bottom: 8 }}>
-          <defs>
-            <linearGradient id="colorPrimary" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--md-sys-color-primary)" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="var(--md-sys-color-primary)" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="colorTertiary" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--md-sys-color-tertiary)" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="var(--md-sys-color-tertiary)" stopOpacity={0} />
-            </linearGradient>
-          </defs>
           <XAxis dataKey="index" type="number" hide />
           <YAxis tickFormatter={value => value.toFixed(1)} />
           <CartesianGrid strokeDasharray="3 3" />
           <Tooltip formatter={(value) => { return (value as number).toFixed(3); }}
             contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
           <Legend />
-          <Area type="monotone" dataKey="speed" stroke="var(--md-sys-color-primary)" fillOpacity={1} fill="url(#colorPrimary)" animationDuration={350} />
-          <Area type="monotone" dataKey="velocity" stroke="var(--md-sys-color-tertiary)" fillOpacity={1} fill="url(#colorTertiary)" animationDuration={350} />
+          <Area type="monotone" dataKey="speed" stroke="var(--md-sys-color-primary)" fillOpacity={0.6} fill="var(--md-sys-color-primary)" animationDuration={350} />
+          <Area type="monotone" dataKey="velocity" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" animationDuration={350} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

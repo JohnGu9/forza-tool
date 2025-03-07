@@ -164,7 +164,7 @@ export default function App() {
 
   return (
     <ReactAppContext.Provider value={appContext}>
-      <Theme className='fill-parent' withBackgroundColor enableDarkTheme={enableDarkTheme} style={{ "--md-sys-color-tertiary": "#82ca9d" } as React.CSSProperties}>
+      <Theme className='fill-parent app-theme' withBackgroundColor enableDarkTheme={enableDarkTheme}>
         {getWindow(appWindowMode, streamAppContext)}
         <Network opened={isOpenNetwork} close={closeNetwork} />
         <Settings opened={isOpenSettings} close={closeSettings} />

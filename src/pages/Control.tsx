@@ -55,18 +55,12 @@ function SimpleCard({ title, data }: { title: string, data: DataType[]; }) {
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data}
           margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>
-          <defs>
-            <linearGradient id={`color${title}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--md-sys-color-tertiary)" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="var(--md-sys-color-tertiary)" stopOpacity={0} />
-            </linearGradient>
-          </defs>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="index" type="number" tick={false} />
           <YAxis domain={[0, 50, 100]} ticks={[0, 100]} />
           <Tooltip formatter={(value) => { return `${(value as number).toFixed(1)}%`; }}
             contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-          <Area type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" fillOpacity={1} fill={`url(#color${title})`} animationDuration={650} />
+          <Area type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" animationDuration={650} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
