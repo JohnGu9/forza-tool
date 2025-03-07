@@ -43,8 +43,9 @@ export default function Tachometer() {
           fontSize: "10vmax",
           color: isRange ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)",
           transition: "color 200ms, text-shadow 100ms",
-          textShadow: powerLevel > 0.99 ? "var(--md-sys-color-on-background) 0 0 20px" : undefined,
-        }}>{lastData.gear}</Typography.Display.Large>
+          textShadow: powerLevel > 0.99 ? "var(--md-sys-color-tertiary) 0 0 20px" : undefined,
+          "-webkit-text-stroke": "1px var(--md-sys-color-on-background)",
+        } as React.CSSProperties}>{lastData.gear}</Typography.Display.Large>
       </div>
     </div>
     <IndicatorLights lower={lower} upper={upper} current={lastData.currentEngineRpm} />
