@@ -137,24 +137,56 @@ function getRange(messageDataAnalysis: MessageDataAnalysis) {
   }
   const threshold97 = messageDataAnalysis.maxPower.value * 0.97;
   const { lower, upper } = getBound(sorted, maxIndex, threshold97);
-  console.log(maxIndex, threshold97, lower, upper);
   return { lower: sorted[lower].x, upper: sorted[upper].x };
 }
 
-function getBound(sorted: { x: number, y: number; }[], maxIndex: number, threshold: number) {
+function getBound(sorted: { x: number, y: number; }[], maxIndex: number, threshold: number, bundleRange = 200) {
   let upper = sorted.length - 1;
-  for (let i = maxIndex + 1; i < sorted.length; i++) {
-    const data = sorted[i];
-    if (data.y < threshold) {
-      upper = i;
+  function filterNoise(bundle: number[]) {
+    if (bundle.length < 8) {
+      return bundle;
+    }
+    const sorted = bundle.sort(function (a, b) { return a - b; });
+    function getFilterPre() {
+      if (bundle.length > 64) {
+        return 0.4;
+      }
+      if (bundle.length > 32) {
+        return 0.3;
+      }
+      if (bundle.length > 16) {
+        return 0.2;
+      }
+      return 0.1;
+    }
+    const filterPre = getFilterPre();
+    return sorted.slice(Math.round(bundle.length * filterPre), Math.round(bundle.length * (1 - filterPre)));
+  }
+  function getAverage(bundle: number[]) {
+    return bundle.reduce(function (sum, value) { return sum + value; }, 0) / bundle.length;
+  }
+  for (let i = maxIndex + 1; i < sorted.length;) {
+    const bundle = [sorted[i]];
+    const startIndex = i;
+    for (i++; i < sorted.length && sorted[i].x - bundle[0].x < bundleRange; i++) {
+      bundle.push(sorted[i]);
+    }
+    const average = getAverage(filterNoise(bundle.map(v => v.y)));
+    if (average < threshold) {
+      upper = startIndex;
       break;
     }
   }
   let lower = 0;
-  for (let i = maxIndex - 1; i >= 0; i--) {
-    const data = sorted[i];
-    if (data.y < threshold) {
-      lower = i;
+  for (let i = maxIndex - 1; i >= 0;) {
+    const bundle = [sorted[i]];
+    const startIndex = i;
+    for (i--; i >= 0 && bundle[0].x - sorted[i].x < bundleRange; i--) {
+      bundle.push(sorted[i]);
+    }
+    const average = getAverage(filterNoise(bundle.map(v => v.y)));
+    if (average < threshold) {
+      lower = startIndex;
       break;
     }
   }
@@ -187,7 +219,8 @@ function IndicatorLights({ lower, upper, current }: { lower: number, upper: numb
   const over = progress >= 1;
   React.useEffect(() => {
     if (over) {
-      const timer = setInterval(() => setShow(value => !value), 300);
+      setShow(false);
+      const timer = setInterval(() => setShow(value => !value), 200);
       return () => {
         clearInterval(timer);
         setShow(true);

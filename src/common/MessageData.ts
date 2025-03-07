@@ -356,7 +356,7 @@ function isValidData(analysis: MessageDataAnalysis, lastMessageData: MessageData
         const { sorted, position } = getClosestPositions(currentEngineRpm, analysis.powerCurve);
 
         const toleration = isFullAcceleratorForAWhile ?
-            3 : // full accelerator for a while, more likely to accept this data
+            2 : // full accelerator for a while, more likely to accept this data
             (isDataTooDense(lastMessageData.currentEngineRpm, sorted, position) ? 0.9 : 0.95);
 
         if (position === 0) {
@@ -407,7 +407,7 @@ function isValidData(analysis: MessageDataAnalysis, lastMessageData: MessageData
                 const aaRpm = sorted[position - 2];
                 const aaKey = aaRpm.toFixed(1);
                 const aaValue = analysis.powerCurve.get(aaKey)!;
-                const toleration = aValue.isFullAcceleratorForAWhile ? 3 : 0.8;
+                const toleration = aValue.isFullAcceleratorForAWhile ? 2 : 0.8;
 
                 if (aKey !== maxPowerRecordRpmKey &&
                     !isConvex({ x: aaRpm, y: aaValue.power },
@@ -420,7 +420,7 @@ function isValidData(analysis: MessageDataAnalysis, lastMessageData: MessageData
                 const ccRpm = sorted[position + 1];
                 const ccKey = ccRpm.toFixed(1);
                 const ccValue = analysis.powerCurve.get(ccKey)!;
-                const toleration = cValue.isFullAcceleratorForAWhile ? 3 : 0.8;
+                const toleration = cValue.isFullAcceleratorForAWhile ? 2 : 0.8;
 
                 if (cKey !== maxPowerRecordRpmKey &&
                     !isConvex({ x: lastMessageData.currentEngineRpm, y: lastMessageData.power },
