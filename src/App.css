@@ -1,8 +1,8 @@
-div[data-dark-mode="rmcw3-dark-mode-off"] {
+div.app-theme[data-dark-mode="rmcw3-dark-mode-off"] {
   color: #000;
 }
 
-div[data-dark-mode="rmcw3-dark-mode-on"] {
+div.app-theme[data-dark-mode="rmcw3-dark-mode-on"] {
   color: #fff;
 }
 

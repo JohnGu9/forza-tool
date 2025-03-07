@@ -42,7 +42,8 @@ export default function Tachometer() {
         <Typography.Display.Large tag="span" title="Gear" style={{
           fontSize: "10vmax",
           color: isRange ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)",
-          transition: "color 200ms",
+          transition: "color 200ms, text-shadow 100ms",
+          textShadow: powerLevel > 0.99 ? "var(--md-sys-color-on-background) 0 0 20px" : undefined,
         }}>{lastData.gear}</Typography.Display.Large>
       </div>
     </div>
@@ -160,8 +161,8 @@ function getBound(sorted: { x: number, y: number; }[], maxIndex: number, thresho
 }
 
 function SimpleCard({ title, tooltip, content, onClick }: { title: string, tooltip: string, content: React.ReactNode; onClick: () => unknown; }) {
-  return <Card style={{ flex: "1 1", maxWidth: 280, height: "100%", overflow: "clip", textWrap: "nowrap" }}>
-    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: "var(--_container-shape, 12px)", padding: "0 32px" }}>
+  return <Card style={{ flex: "1 1", maxWidth: 280, height: "100%", textWrap: "nowrap" }}>
+    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: "var(--_container-shape, 12px)", padding: "0 32px", overflow: "clip" }}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
       <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
     </Ripple>

@@ -177,8 +177,8 @@ function getTicks(max: number, min: number, gap: number) {
 }
 
 function SimpleCard({ title, content, tooltip, onClick }: { title: string, content: string; tooltip: string; onClick: () => unknown; }) {
-  return <Card style={{ flex: "1 1", maxWidth: 240, height: "100%", overflow: "clip", textWrap: "nowrap" }}>
-    <Ripple className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: "var(--_container-shape, 12px)" }}
+  return <Card style={{ flex: "1 1", maxWidth: 240, height: "100%", textWrap: "nowrap" }}>
+    <Ripple className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: "var(--_container-shape, 12px)", overflow: "clip" }}
       onClick={onClick}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
       <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
