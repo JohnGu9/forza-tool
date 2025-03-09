@@ -22,7 +22,7 @@ export default function App() {
   const closeNetwork = React.useCallback(() => setOpenNetwork(false), []);
 
   const [enableDarkTheme, setEnableDarkTheme] = React.useState(undefined as undefined | boolean);
-  const [unitSystem, setUnitSystem] = React.useState(UnitSystem.International);
+  const [unitSystem, setUnitSystem] = React.useState(UnitSystem.Metric);
 
   const [listenAddress, _setListenAddress] = React.useState<ListenAddress>(() => {
     const address = localStorage.getItem("address") ?? "127.0.0.1";

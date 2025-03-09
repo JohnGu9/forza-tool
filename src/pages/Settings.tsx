@@ -64,8 +64,8 @@ function getNextWindowModeName(mode: AppWindowMode) {
 
 function getUnitSystemName(unit: UnitSystem) {
   switch (unit) {
-    case UnitSystem.International:
-      return "International";
+    case UnitSystem.Metric:
+      return "Metric";
     case UnitSystem.Imperial:
       return "Imperial";
   }
@@ -73,10 +73,10 @@ function getUnitSystemName(unit: UnitSystem) {
 
 function getNextUnitSystem(unit: UnitSystem) {
   switch (unit) {
-    case UnitSystem.International:
+    case UnitSystem.Metric:
       return UnitSystem.Imperial;
     case UnitSystem.Imperial:
-      return UnitSystem.International;
+      return UnitSystem.Metric;
   }
 }
 

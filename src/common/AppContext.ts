@@ -13,7 +13,7 @@ export type ListenAddress = [
 ];
 
 export enum UnitSystem {
-    International,
+    Metric,
     Imperial,
 };
 

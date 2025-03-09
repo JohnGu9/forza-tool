@@ -14,11 +14,27 @@ export default function Tachometer() {
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const [showPowerLevel, setShowPowerLevel] = React.useState(appWindowMode === AppWindowMode.Single);
 
-  const lastData = messageData.getLast() ?? { currentEngineRpm: 0, engineMaxRpm: 6000, power: 0, gear: 0 };
+  const lastData = messageData.getLast() ?? { currentEngineRpm: 0, engineMaxRpm: 6000, power: 0, gear: 0, accelerator: 0 };
   const { lower, upper } = getRange(messageDataAnalysis);
   const markData = React.useMemo(() => getMarkData(lastData.engineMaxRpm, { lower, upper }), [lastData.engineMaxRpm, lower, upper]);
   const powerLevel = messageDataAnalysis.maxPower.value === 0 ? 0 : Math.max(lastData.power / messageDataAnalysis.maxPower.value, 0);
   const isRange = lastData.currentEngineRpm >= lower && lastData.currentEngineRpm < upper;
+  const lowPowerLevel = powerLevel < 0.9 && lastData.accelerator === 255;
+  function getTextColor() {
+    if (lowPowerLevel) {
+      return "var(--md-sys-color-error)";
+    }
+    if (isRange) {
+      return "var(--md-sys-color-tertiary)";
+    }
+    return "var(--md-sys-color-primary)";
+  }
+  function getTextShadow() {
+    if (powerLevel > 0.99) {
+      return "var(--md-sys-color-tertiary) 0 0 20px";
+    }
+    return undefined;
+  }
   return <div className="fill-parent flex-column" style={{ padding: "16px 32px", gap: 16 }}>
     <div className="flex-child" style={{ position: "relative" }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -41,14 +57,14 @@ export default function Tachometer() {
       <div className="flex-column flex-space-evenly" style={{ position: "absolute", inset: 0, pointerEvents: "none", paddingTop: 32 }}>
         <Typography.Display.Large tag="span" title="Gear" style={{
           fontSize: "10vmax",
-          color: isRange ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)",
           transition: "color 200ms, text-shadow 100ms",
-          textShadow: powerLevel > 0.99 ? "var(--md-sys-color-tertiary) 0 0 20px" : undefined,
           "-webkit-text-stroke": "1px var(--md-sys-color-on-background)",
+          color: getTextColor(),
+          textShadow: getTextShadow(),
         } as React.CSSProperties}>{lastData.gear}</Typography.Display.Large>
       </div>
     </div>
-    <IndicatorLights lower={lower} upper={upper} current={lastData.currentEngineRpm} />
+    <IndicatorLights lower={lower} upper={upper} current={lastData.currentEngineRpm} lowPowerLevel={lowPowerLevel} />
     <div className="flex-row flex-space-between" style={{ height: columnHeight, alignItems: "stretch", gap: 16, padding: "0 0 16px" }}>
       <SimpleCard title="RPM" content={lastData.currentEngineRpm.toFixed(0)} tooltip={`Rev / Min`} onClick={() => setShowPowerLevel(!showPowerLevel)} />
       <SimpleCard title="High Power RPM Range" content={`${lower.toFixed(0)} - ${upper.toFixed(0)}`} tooltip={`Rev / Min`} onClick={() => setShowPowerLevel(!showPowerLevel)} />
@@ -140,27 +156,20 @@ function getRange(messageDataAnalysis: MessageDataAnalysis) {
   return { lower: sorted[lower].x, upper: sorted[upper].x };
 }
 
-function getBound(sorted: { x: number, y: number; }[], maxIndex: number, threshold: number, bundleRange = 200) {
+function getBound(sorted: { x: number, y: number; }[], maxIndex: number, threshold: number, bundleRange = 100) {
   let upper = sorted.length - 1;
   function filterNoise(bundle: number[]) {
     if (bundle.length < 8) {
       return bundle;
     }
     const sorted = bundle.sort(function (a, b) { return a - b; });
-    function getFilterPre() {
-      if (bundle.length > 64) {
-        return 0.4;
+    function filter(bundle: number[]) {
+      if (bundle.length < 8) {
+        return bundle.slice(Math.floor(bundle.length / 2));
       }
-      if (bundle.length > 32) {
-        return 0.3;
-      }
-      if (bundle.length > 16) {
-        return 0.2;
-      }
-      return 0.1;
+      return bundle.slice(Math.ceil(bundle.length / 2), Math.floor(0.9 * bundle.length));
     }
-    const filterPre = getFilterPre();
-    return sorted.slice(Math.round(bundle.length * filterPre), Math.round(bundle.length * (1 - filterPre)));
+    return filter(sorted);
   }
   function getAverage(bundle: number[]) {
     return bundle.reduce(function (sum, value) { return sum + value; }, 0) / bundle.length;
@@ -203,7 +212,7 @@ function SimpleCard({ title, tooltip, content, onClick }: { title: string, toolt
 }
 
 
-function IndicatorLights({ lower, upper, current }: { lower: number, upper: number, current: number; }) {
+function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: number, upper: number, current: number; lowPowerLevel: boolean; }) {
   function getProgress(lower: number, upper: number, current: number) {
     if (lower === upper) {
       return 0;
@@ -219,7 +228,6 @@ function IndicatorLights({ lower, upper, current }: { lower: number, upper: numb
   const over = progress >= 1;
   React.useEffect(() => {
     if (over) {
-      setShow(false);
       const timer = setInterval(() => setShow(value => !value), 200);
       return () => {
         clearInterval(timer);
@@ -230,15 +238,20 @@ function IndicatorLights({ lower, upper, current }: { lower: number, upper: numb
 
   function getContainerColor(lower: number, upper: number) {
     if (!show ||
-      lower === upper ||
-      progress <= lower) {
+      lower === upper) {
       return undefined;
     }
-    return progress < upper && !over ? "var(--md-sys-color-primary)" : "var(--md-sys-color-tertiary)";
+    if (lowPowerLevel) {
+      return "var(--md-sys-color-error)";
+    }
+    if (progress <= lower) {
+      return undefined;
+    }
+    return over ? "var(--md-sys-color-primary)" : "var(--md-sys-color-tertiary)";
   }
 
   return <div className="flex-row flex-space-between" style={{ gap: 16, height: 32, alignItems: "stretch" }}>
-    {[{ lower: 0, upper: 0.2 }, { lower: 0.2, upper: 0.4 }, { lower: 0.4, upper: 0.6 }, { lower: 0.6, upper: 0.8 }, { lower: 0.8, upper: 1 }].map(({ lower, upper }, index) =>
+    {[{ lower: 0, upper: 0.2 }, { lower: 0.2, upper: 0.4 }, { lower: 0.4, upper: 0.6 }, { lower: 0.6, upper: 0.8 }, { lower: 0.8, upper: 0.9 }].map(({ lower, upper }, index) =>
       <Card key={index} className="flex-child" style={{
         maxWidth: 120,
         "--md-elevated-card-container-color": getContainerColor(lower, upper),

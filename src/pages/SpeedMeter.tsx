@@ -12,10 +12,10 @@ export default function SpeedMeter() {
   const { unitSystem, setUnitSystem } = React.useContext(ReactAppContext);
   const changeUnitSystem = React.useCallback(() => {
     switch (unitSystem) {
-      case UnitSystem.International:
+      case UnitSystem.Metric:
         return setUnitSystem(UnitSystem.Imperial);
       case UnitSystem.Imperial:
-        return setUnitSystem(UnitSystem.International);
+        return setUnitSystem(UnitSystem.Metric);
     }
   }, [setUnitSystem, unitSystem]);
   const data = toData(messageData, messageDataAnalysis, unitSystem);

@@ -17,10 +17,10 @@ export default function Engine() {
   const powerLevel = messageDataAnalysis.maxPower.value === 0 ? 0 : Math.max(lastMessageData.power / messageDataAnalysis.maxPower.value, 0);
   const changeUnitSystem = React.useCallback(() => {
     switch (unitSystem) {
-      case UnitSystem.International:
+      case UnitSystem.Metric:
         return setUnitSystem(UnitSystem.Imperial);
       case UnitSystem.Imperial:
-        return setUnitSystem(UnitSystem.International);
+        return setUnitSystem(UnitSystem.Metric);
     }
   }, [setUnitSystem, unitSystem]);
   return <div className="fill-parent flex-column">
@@ -200,7 +200,7 @@ function SimpleRow({ title, value, active }: { title: string; value: number; act
 
 function wsTo(value: number/* unit: W */, unit: UnitSystem) {
   switch (unit) {
-    case UnitSystem.International:
+    case UnitSystem.Metric:
       return Math.max(0, value) / 1000;// unit: kW
     case UnitSystem.Imperial:
       return Math.max(0, value) / 745.699872;// unit: hp
@@ -209,7 +209,7 @@ function wsTo(value: number/* unit: W */, unit: UnitSystem) {
 
 function nmTo(value: number/* unit: N/m */, unit: UnitSystem) {
   switch (unit) {
-    case UnitSystem.International:
+    case UnitSystem.Metric:
       return Math.max(0, value);// unit: N/m
     case UnitSystem.Imperial:
       return Math.max(0, value) * 0.73756;// unit: lb/ft
@@ -218,7 +218,7 @@ function nmTo(value: number/* unit: N/m */, unit: UnitSystem) {
 
 function getPowerUnit(unit: UnitSystem) {
   switch (unit) {
-    case UnitSystem.International:
+    case UnitSystem.Metric:
       return "kW";
     case UnitSystem.Imperial:
       return "HP";
@@ -227,7 +227,7 @@ function getPowerUnit(unit: UnitSystem) {
 
 function getTorqueUnit(unit: UnitSystem) {
   switch (unit) {
-    case UnitSystem.International:
+    case UnitSystem.Metric:
       return "N/M";
     case UnitSystem.Imperial:
       return "LB/FT";
