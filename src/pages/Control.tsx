@@ -1,12 +1,12 @@
+import { SharedAxis, SharedAxisTransform } from "material-design-transform";
+import React from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, LinearProgress, Ripple } from "rmcw/dist/components3";
-import React from "react";
+
 import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
 import { MessageData } from "../common/MessageData";
 import { getPowerUnit, UnitSystem, wTo } from "../common/UnitConvert";
-import { ElevatedCardContainerShape } from "../common/Other";
-import { SharedAxis, SharedAxisTransform } from "material-design-transform";
 
 export default function Control() {
   const { unitSystem } = React.useContext(ReactAppContext);
@@ -53,7 +53,7 @@ function getTargetData(messageData: CircularBuffer<MessageData>, unitSystem: Uni
 function SimpleCard({ title, data, onClick }: { title: string, data: DataType[]; onClick: () => unknown; }) {
   const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1].value);
   return <Card className="flex-child" style={{ flex: "2 2" }}>
-    <Ripple className="fill-parent flex-column flex-space-evenly" style={{ alignItems: "stretch", padding: 16, borderRadius: ElevatedCardContainerShape }} onClick={onClick}>
+    <Ripple className="fill-parent flex-column flex-space-evenly fit-elevated-card-container-shape" style={{ alignItems: "stretch", padding: 16 }} onClick={onClick}>
       <div className="flex-child" style={{ overflow: "clip" }}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}

@@ -1,4 +1,5 @@
 import React from "react";
+
 import { Page } from "../common/Page";
 import Control from "./Control";
 import Detail from "./Detail";

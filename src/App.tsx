@@ -1,17 +1,19 @@
 import './App.css';
-import { Theme } from 'rmcw/dist/components3';
-import Settings from './pages/Settings';
-import React from 'react';
-import { listenData } from './ipc';
-import { analyzeMessageData, MessageData, MessageDataAnalysis, newMessageDataAnalysis, parseMessageData, resetMessageDataAnalysis } from './common/MessageData';
-import CircularBuffer from './common/CircularBuffer';
-import { AppContext, AppWindowMode, ListenAddress, ReactAppContext, SocketStats, StreamAppContext } from './common/AppContext';
-import Network from './pages/Network';
+
 import { listen } from '@tauri-apps/api/event';
-import SinglePageApp from './SinglePageApp';
-import MultiPageApp from './MultiPageApp';
+import React from 'react';
+import { Theme } from 'rmcw/dist/components3';
+
+import { AppContext, AppWindowMode, ListenAddress, ReactAppContext, SocketStats, StreamAppContext } from './common/AppContext';
+import CircularBuffer from './common/CircularBuffer';
+import { analyzeMessageData, MessageData, MessageDataAnalysis, newMessageDataAnalysis, parseMessageData, resetMessageDataAnalysis } from './common/MessageData';
 import { Page } from './common/Page';
 import { UnitSystem } from './common/UnitConvert';
+import { listenData } from './ipc';
+import MultiPageApp from './MultiPageApp';
+import Network from './pages/Network';
+import Settings from './pages/Settings';
+import SinglePageApp from './SinglePageApp';
 
 export default function App() {
   const [isOpenSettings, setOpenSettings] = React.useState(false);

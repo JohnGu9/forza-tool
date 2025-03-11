@@ -9,3 +9,11 @@ div.app-theme[data-dark-mode="rmcw3-dark-mode-on"] {
 div.app-theme[data-dark-mode] {
   --md-sys-color-tertiary: #82ca9d; /* @TODO: complete the color scheme (follow the material design color rule https://m3.material.io/styles/color/system/overview) */
 }
+
+.fit-elevated-card-container-shape {
+  border-radius: var(
+    --md-elevated-card-container-shape,
+    var(--md-sys-shape-corner-medium, 12px)
+  );
+  overflow: clip;
+}

@@ -1,10 +1,10 @@
 import React from "react";
-import { Card, Ripple, Typography } from "rmcw/dist/components3";
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Card, Ripple, Typography } from "rmcw/dist/components3";
+
 import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
 import { MessageData, MessageDataAnalysis } from "../common/MessageData";
-import { ElevatedCardContainerShape } from "../common/Other";
 import { UnitSystem } from "../common/UnitConvert";
 
 const columnHeight = 150;
@@ -49,7 +49,7 @@ export default function SpeedMeter() {
 
 function SimpleCard({ title, tooltip, content, onClick }: { title: string, tooltip: string, content: string; onClick: () => unknown; }) {
   return <Card className="flex-child" style={{ maxWidth: 240, textWrap: "nowrap" }}>
-    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: ElevatedCardContainerShape, overflow: "clip" }}>
+    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly fit-elevated-card-container-shape">
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
       <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
     </Ripple>

@@ -1,11 +1,12 @@
 import React from "react";
-import { Card, LinearProgress, Select, SelectOption } from "rmcw/dist/components3";
-import { MessageData } from "../common/MessageData";
-import CircularBuffer from "../common/CircularBuffer";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import { AxisDomain } from "recharts/types/util/types";
+import { Card, LinearProgress, Select, SelectOption } from "rmcw/dist/components3";
+
+import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
+import CircularBuffer from "../common/CircularBuffer";
+import { MessageData } from "../common/MessageData";
 import { UnitSystem } from "../common/UnitConvert";
 
 export default function Tire() {

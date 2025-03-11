@@ -1,0 +1,19 @@
+.tachometer-gear-position{
+    position: absolute;
+    inset: 0px;
+    pointer-events: none;
+    padding-top: 32px;
+}
+
+.tachometer-gear {
+    font-size: 10vmax;
+    transition:
+        color 200ms,
+        text-shadow 100ms;
+    -webkit-text-stroke: 1px var(--md-sys-color-on-background);
+}
+
+.demo-card{
+    height: 32px;
+    width: 32px;
+}

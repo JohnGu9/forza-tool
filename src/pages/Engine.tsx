@@ -1,12 +1,12 @@
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, ReferenceDot, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import React from "react";
-import { Card, LinearProgress, Ripple, Typography } from "rmcw/dist/components3";
-import { dummyMessageData, MessageData, MessageDataAnalysis } from "../common/MessageData";
-import CircularBuffer from "../common/CircularBuffer";
-import { ReactAppContext, ReactStreamAppContext, ReactWindowContext } from "../common/AppContext";
 import { SharedAxis, SharedAxisTransform } from "material-design-transform";
+import React from "react";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, ReferenceDot, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Card, LinearProgress, Ripple, Typography } from "rmcw/dist/components3";
+
+import { ReactAppContext, ReactStreamAppContext, ReactWindowContext } from "../common/AppContext";
+import CircularBuffer from "../common/CircularBuffer";
+import { dummyMessageData,MessageData, MessageDataAnalysis } from "../common/MessageData";
 import { getPowerUnit, getTorqueUnit, nmTo, UnitSystem, wTo } from "../common/UnitConvert";
-import { ElevatedCardContainerShape } from "../common/Other";
 
 const columnHeight = 150;
 const chartsPadding = 32;
@@ -190,7 +190,7 @@ function getTicks(max: number, min: number, gap: number) {
 
 function SimpleCard({ title, content, tooltip, onClick }: { title: string, content: string; tooltip: string; onClick: () => unknown; }) {
   return <Card className="flex-child" style={{ maxWidth: 240, height: "100%", textWrap: "nowrap" }}>
-    <Ripple className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: ElevatedCardContainerShape, overflow: "clip" }}
+    <Ripple className="fill-parent flex-column flex-space-evenly fit-elevated-card-container-shape"
       onClick={onClick}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
       <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>

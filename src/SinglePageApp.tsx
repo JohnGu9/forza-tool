@@ -1,10 +1,11 @@
 import { FadeThrough, SharedAxis, SharedAxisTransform } from "material-design-transform";
-import { Divider, Icon, List, ListItem, NavigationDrawer, NavigationDrawerPadding, Typography } from "rmcw/dist/components3";
-import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, WindowContext } from "./common/AppContext";
-import { Page } from "./common/Page";
-import CircularBuffer from "./common/CircularBuffer";
-import { dummyMessageData, MessageData } from "./common/MessageData";
 import React from "react";
+import { Divider, Icon, List, ListItem, NavigationDrawer, NavigationDrawerPadding, Typography } from "rmcw/dist/components3";
+
+import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, WindowContext } from "./common/AppContext";
+import CircularBuffer from "./common/CircularBuffer";
+import { dummyMessageData,MessageData } from "./common/MessageData";
+import { Page } from "./common/Page";
 import socketStatsToIcon from "./common/SocketStatsToIcon";
 import getPage from "./pages";
 

@@ -1,10 +1,14 @@
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip, TooltipProps } from "recharts";
-import { AppWindowMode, ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
+import "./Tachometer.scss";
+
+import { SharedAxis, SharedAxisTransform } from "material-design-transform";
 import React from "react";
-import { MessageDataAnalysis } from "../common/MessageData";
-import { Card, Ripple, Typography } from "rmcw/dist/components3";
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis } from "recharts";
 import { NameType, Payload, ValueType } from "recharts/types/component/DefaultTooltipContent";
-import { ElevatedCardContainerShape } from "../common/Other";
+import { Button, Card, Dialog, Divider, ListItem, Ripple, Typography } from "rmcw/dist/components3";
+
+import { AppWindowMode, ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
+import CircularBuffer from "../common/CircularBuffer";
+import { MessageData, MessageDataAnalysis } from "../common/MessageData";
 
 const startAngle = 225;
 const endAngle = -45;
@@ -12,9 +16,10 @@ const columnHeight = 150;
 
 export default function Tachometer() {
   const { appWindowMode } = React.useContext(ReactAppContext);
+  const showMore = appWindowMode === AppWindowMode.Single;
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
-  const [showPowerLevel, setShowPowerLevel] = React.useState(appWindowMode === AppWindowMode.Single);
-
+  const [showPowerLevel, setShowPowerLevel] = React.useState(false);
+  const switchDisplay = React.useCallback(() => setShowPowerLevel(value => !value), []);
   const lastData = messageData.getLast() ?? { currentEngineRpm: 0, engineMaxRpm: 6000, power: 0, gear: 0, accelerator: 0 };
   const { lower, upper } = getRange(messageDataAnalysis);
   const markData = React.useMemo(() => getMarkData(lastData.engineMaxRpm, { lower, upper }), [lastData.engineMaxRpm, lower, upper]);
@@ -40,7 +45,7 @@ export default function Tachometer() {
     <div className="flex-child" style={{ position: "relative" }}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart margin={{ bottom: -48 }}>
-          {showPowerLevel ? <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="60%" outerRadius="65%" fill={powerLevel > 0.97 ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)"} startAngle={startAngle} endAngle={getAngle(powerLevel, startAngle, endAngle)}
+          {showMore && !showPowerLevel ? <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="60%" outerRadius="65%" fill={powerLevel > 0.97 ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)"} startAngle={startAngle} endAngle={getAngle(powerLevel, startAngle, endAngle)}
             stroke="var(--md-sys-color-on-background)"
             data={[{ name: "PowerLevel", value: powerLevel }]} /> : undefined}
           <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="70%" outerRadius="80%" fill="var(--md-sys-color-primary)" startAngle={startAngle} endAngle={endAngle} paddingAngle={1}
@@ -55,22 +60,24 @@ export default function Tachometer() {
           <Tooltip content={<CustomTooltip />} />
         </PieChart>
       </ResponsiveContainer>
-      <div className="flex-column flex-space-evenly" style={{ position: "absolute", inset: 0, pointerEvents: "none", paddingTop: 32 }}>
-        <Typography.Display.Large tag="span" title="Gear" style={{
-          fontSize: "10vmax",
-          transition: "color 200ms, text-shadow 100ms",
-          "-webkit-text-stroke": "1px var(--md-sys-color-on-background)",
+      <div className="flex-column flex-space-evenly tachometer-gear-position">
+        <Typography.Display.Large tag="span" title="Gear" className="tachometer-gear" style={{
           color: getColor(),
           textShadow: getTextShadow(),
         } as React.CSSProperties}>{lastData.gear}</Typography.Display.Large>
       </div>
     </div>
     <IndicatorLights lower={lower} upper={upper} current={lastData.currentEngineRpm} lowPowerLevel={lowPowerLevel} />
-    <div className="flex-row flex-space-between" style={{ height: columnHeight, alignItems: "stretch", gap: 16, padding: "0 0 16px" }}>
-      <SimpleCard title="RPM" content={lastData.currentEngineRpm.toFixed(0)} tooltip={`Rev / Min`} onClick={() => setShowPowerLevel(!showPowerLevel)} />
-      <SimpleCard title="High Power RPM Range" content={`${lower.toFixed(0)} - ${upper.toFixed(0)}`} tooltip={`Rev / Min`} onClick={() => setShowPowerLevel(!showPowerLevel)} />
-      {showPowerLevel ? <SimpleCard title="Power Level" content={`${(powerLevel * 100).toFixed(1)}%`} tooltip={``} onClick={() => setShowPowerLevel(!showPowerLevel)} /> : undefined}
-    </div>
+    <SharedAxis keyId={showPowerLevel ? 1 : 0} transform={SharedAxisTransform.fromLeftToRight}
+      className="flex-row flex-space-between" style={{ height: columnHeight, alignItems: "stretch", gap: 16 }}>
+      {showPowerLevel ?
+        <PowerLevelChart messageData={messageData} messageDataAnalysis={messageDataAnalysis} onClick={switchDisplay} /> :
+        <>
+          <SimpleCard title="RPM" content={lastData.currentEngineRpm.toFixed(0)} tooltip={`Rev / Min`} onClick={switchDisplay} />
+          <SimpleCard title="High Power RPM Range" content={`${lower.toFixed(0)} - ${upper.toFixed(0)}`} tooltip={`Rev / Min`} onClick={switchDisplay} />
+          {showMore ? <SimpleCard title="Power Level" content={`${(powerLevel * 100).toFixed(1)}%`} tooltip={``} onClick={switchDisplay} /> : undefined}
+        </>}
+    </SharedAxis>
   </div>;
 }
 
@@ -202,7 +209,7 @@ function getBound(sorted: { x: number, y: number; }[], maxIndex: number, thresho
 
 function SimpleCard({ title, tooltip, content, onClick }: { title: string, tooltip: string, content: React.ReactNode; onClick: () => unknown; }) {
   return <Card className="flex-child" style={{ maxWidth: 280, textWrap: "nowrap" }}>
-    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: ElevatedCardContainerShape, padding: "0 32px", overflow: "clip" }}>
+    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly fit-elevated-card-container-shape" style={{ padding: "0 32px" }}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
       <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
     </Ripple>
@@ -222,6 +229,9 @@ function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: numb
   }
   const progress = getProgress(lower, upper, current);
 
+  const [isOpenDialog, setOpenDialog] = React.useState(false);
+  const openDialog = React.useCallback(() => setOpenDialog(true), []);
+  const closeDialog = React.useCallback(() => setOpenDialog(false), []);
   const [isMainSwitchOn, setMainSwitchOn] = React.useState(true);
   const overProgress = progress >= 1;
   React.useEffect(() => {
@@ -247,17 +257,59 @@ function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: numb
     return overProgress ? "var(--md-sys-color-primary)" : "var(--md-sys-color-tertiary)";
   }
 
-  return <div className="flex-row flex-space-between" style={{ gap: 16, height: 32, alignItems: "stretch" }}>
-    {[{ lower: 0, upper: 0.2 },
-    { lower: 0.2, upper: 0.4 },
-    { lower: 0.4, upper: 0.6 },
-    { lower: 0.6, upper: 0.8 },
-    { lower: 0.8, upper: 0.9 }].map(({ lower, upper }, index) =>
-      <Card key={index} className="flex-child" style={{
-        maxWidth: 120,
-        "--md-elevated-card-container-color": getContainerColor(lower, upper),
-        "--md-elevated-card-container-shadow-color": overProgress ? "var(--md-sys-color-tertiary)" : undefined,
-      } as React.CSSProperties} />
-    )}
-  </div>;
+  return <>
+    <div className="flex-row flex-space-between" style={{ gap: 16, height: 32, alignItems: "stretch" }}>
+      {[{ lower: 0, upper: 0.2 },
+      { lower: 0.2, upper: 0.4 },
+      { lower: 0.4, upper: 0.6 },
+      { lower: 0.6, upper: 0.8 },
+      { lower: 0.8, upper: 0.9 }].map(({ lower, upper }, index) =>
+        <Card key={index} className="flex-child" style={{
+          maxWidth: 120,
+          "--md-elevated-card-container-color": getContainerColor(lower, upper),
+          "--md-elevated-card-container-shadow-color": overProgress ? "var(--md-sys-color-tertiary)" : undefined,
+        } as React.CSSProperties} >
+          <Ripple className="fill-parent fit-elevated-card-container-shape" onClick={openDialog} />
+        </Card>
+      )}
+    </div>
+    <Dialog open={isOpenDialog}
+      headline="Explanation"
+      actions={<Button buttonStyle="text" onClick={closeDialog}>close</Button>}
+      onScrimClick={closeDialog}>
+      <ListItem trailingSupportingText={
+        <Card className="demo-card" style={{ "--md-elevated-card-container-color": "var(--md-sys-color-tertiary)" } as React.CSSProperties} />
+      }>High Power <span style={{ opacity: 0.5 }}>(97% 🔼)</span></ListItem>
+      <Divider />
+      <ListItem trailingSupportingText={
+        <Card className="demo-card" style={{ "--md-elevated-card-container-color": "var(--md-sys-color-primary)" } as React.CSSProperties} />
+      }>Normal Power <span style={{ opacity: 0.5 }}>(90% 🔼)</span></ListItem>
+      <Divider />
+      <ListItem trailingSupportingText={
+        <Card className="demo-card" style={{ "--md-elevated-card-container-color": "var(--md-sys-color-error)" } as React.CSSProperties} />
+      }>Low Power <span style={{ opacity: 0.5 }}>(90% 🔽)</span></ListItem>
+    </Dialog>
+  </>;
+}
+
+function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messageDataAnalysis: MessageDataAnalysis; messageData: CircularBuffer<MessageData>; onClick: () => unknown; }) {
+  const data = messageData.map((data, index) => {
+    return { index, "power level": Math.max(data.power / messageDataAnalysis.maxPower.value, 0) * 100 };
+  });
+  return <Card className="flex-child">
+    <Ripple className="fill-parent fit-elevated-card-container-shape" style={{ padding: 8 }} onClick={onClick}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart title="PowerLevel" data={data} margin={{ left: -56, bottom: -24, top: 4, right: 4 }}>
+          <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
+          <YAxis yAxisId={1} type="number" domain={[0, 100]} tick={false} allowDataOverflow={false} />
+          <CartesianGrid strokeDasharray="3 3" />
+          <Tooltip formatter={(value) => { return (value as number).toFixed(1); }}
+            contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
+          <Bar yAxisId={1} dataKey="power level" fill="var(--md-sys-color-tertiary)" unit="%" isAnimationActive={false} >
+            {data.map((value) => <Cell key={value.index} fill={value["power level"] < 97 ? "var(--md-sys-color-primary)" : "var(--md-sys-color-tertiary)"} />)}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </Ripple>
+  </Card>;
 }

@@ -3,7 +3,7 @@ use std::sync::LazyLock;
 use futures::FutureExt;
 use serde::Serialize;
 use tauri::Emitter;
-use tauri::{ipc::Channel, AppHandle};
+use tauri::{ipc::Channel, App, AppHandle};
 use tokio::net::UdpSocket;
 use tokio::sync::{oneshot, Mutex};
 
@@ -18,9 +18,7 @@ pub fn run() {
                         .level(log::LevelFilter::Info)
                         .build(),
                 )?;
-                // use tauri::Manager;
-                // let window = app.get_webview_window("main").unwrap();
-                // window.open_devtools();
+                open_devtools(app);
             }
             Ok(())
         })
@@ -28,6 +26,16 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+#[cfg(debug_assertions)]
+fn open_devtools(app: &mut App) {
+    use tauri::Manager;
+    let window = app.get_webview_window("main").unwrap();
+    window.open_devtools();
+}
+
+#[cfg(not(debug_assertions))]
+fn open_devtools(app: &mut App) {}
 
 #[tauri::command]
 fn my_custom_command(message: String) {
@@ -148,12 +156,14 @@ static END_SIGNAL: LazyLock<(
     (Mutex::new(tx), Mutex::new(rx.shared()))
 });
 
+// @TODO: replace tauri `Channel` with tauri global event.
+
 #[tauri::command]
 async fn listen_data(
     app: AppHandle,
     url: String,
     forward: Option<String>,
-    on_event: Channel<ListenEvent<'_>>, // warning: `Channel` not working in async, use `AppHandle` to send message
+    on_event: Channel<ListenEvent<'_>>, // warning: `Channel` may not working in async, use `AppHandle` to send message
 ) {
     let end_signal_lock = {
         let (mut new_tx, new_rx) = oneshot::channel();

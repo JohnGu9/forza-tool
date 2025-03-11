@@ -1,10 +1,11 @@
-import { ListItem, Select, SelectOption, Switch } from "rmcw/dist/components3";
-import { dummyMessageData, MessageData } from "../common/MessageData";
 import React from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { ListItem, Select, SelectOption, Switch } from "rmcw/dist/components3";
+
 import { ReactStreamAppContext, ReactWindowContext } from "../common/AppContext";
-import CircularBuffer from "../common/CircularBuffer";
 import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
+import CircularBuffer from "../common/CircularBuffer";
+import { dummyMessageData,MessageData } from "../common/MessageData";
 
 const keys = Object.keys(dummyMessageData).filter(value => {
   switch (value) {

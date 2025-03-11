@@ -1,10 +1,11 @@
-import { Button, Dialog, Divider, Icon, IconButton, ListItem } from "rmcw/dist/components3";
-import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, WindowContext } from "./common/AppContext";
 import { FadeThrough, SharedAxis, SharedAxisTransform } from "material-design-transform";
 import React from "react";
+import { Button, Dialog, Divider, Icon, IconButton, ListItem } from "rmcw/dist/components3";
+
+import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, WindowContext } from "./common/AppContext";
+import { Page } from "./common/Page";
 import socketStatsToIcon from "./common/SocketStatsToIcon";
 import getPage, { MultiPageAppContext, ReactMultiPageAppContext } from "./pages";
-import { Page } from "./common/Page";
 
 type WindowTag = { id: number; page: Page; };
 
