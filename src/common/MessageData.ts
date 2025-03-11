@@ -287,11 +287,12 @@ export type MessageDataAnalysis = {
     powerCurve: Map<string/* (rpm: number).toFixed(1) */, { rpm: number, power: number, torque: number; isFullAcceleratorForAWhile: boolean; }>;
     distance: CircularBuffer<number>,
     speed: CircularBuffer<number>,
+    isFullAcceleratorForAWhile: boolean,
     stamp: number;
 };
 
 export function newMessageDataAnalysis(capacity: number): MessageDataAnalysis {
-    return { maxPower: { value: 0, rpm: 0, torque: 0 }, powerCurve: new Map(), distance: new CircularBuffer<number>(capacity), speed: new CircularBuffer<number>(capacity), stamp: 0 };
+    return { maxPower: { value: 0, rpm: 0, torque: 0 }, powerCurve: new Map(), distance: new CircularBuffer<number>(capacity), speed: new CircularBuffer<number>(capacity), isFullAcceleratorForAWhile: false, stamp: 0 };
 }
 
 export function resetMessageDataAnalysis(analysis: MessageDataAnalysis) {
@@ -299,15 +300,16 @@ export function resetMessageDataAnalysis(analysis: MessageDataAnalysis) {
     analysis.powerCurve = new Map();
     analysis.distance = new CircularBuffer(analysis.distance.getCapacity());
     analysis.speed = new CircularBuffer(analysis.speed.getCapacity());
+    analysis.isFullAcceleratorForAWhile = false;
     analysis.stamp = 0;
 }
 
-export function analyzeMessageData(messageData: CircularBuffer<MessageData>, analysis: MessageDataAnalysis) {
+export function analyzeMessageData(messageData: CircularBuffer<MessageData>/* not empty ensure */, analysis: MessageDataAnalysis) {
     let changed = false;
     const lastData = messageData.slice(-6);
     const lastMessageData = lastData[lastData.length - 1];
-    const isFullAcceleratorForAWhile = lastData.every(v => v.accelerator > 248);
-    const isMaxPower = analysis.maxPower.value < lastMessageData.power;
+    const isFullAcceleratorForAWhile = lastData.every(v => v.accelerator > 248 && v.gear === lastData[0].gear);
+    const isMaxPower = lastMessageData.power > 0 && analysis.maxPower.value < lastMessageData.power;
 
     if (isMaxPower) {
         analysis.maxPower = { value: lastMessageData.power, rpm: lastMessageData.currentEngineRpm, torque: lastMessageData.torque };
@@ -327,6 +329,11 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>, ana
         changed = true;
     } else {
         analysis.distance.push(0);
+    }
+
+    if (analysis.isFullAcceleratorForAWhile !== isFullAcceleratorForAWhile) {
+        analysis.isFullAcceleratorForAWhile = isFullAcceleratorForAWhile;
+        changed = true;
     }
 
     if (changed) {

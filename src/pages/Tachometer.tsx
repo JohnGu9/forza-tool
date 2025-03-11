@@ -4,6 +4,7 @@ import React from "react";
 import { MessageDataAnalysis } from "../common/MessageData";
 import { Card, Ripple, Typography } from "rmcw/dist/components3";
 import { NameType, Payload, ValueType } from "recharts/types/component/DefaultTooltipContent";
+import { ElevatedCardContainerShape } from "../common/Other";
 
 const startAngle = 225;
 const endAngle = -45;
@@ -19,8 +20,8 @@ export default function Tachometer() {
   const markData = React.useMemo(() => getMarkData(lastData.engineMaxRpm, { lower, upper }), [lastData.engineMaxRpm, lower, upper]);
   const powerLevel = messageDataAnalysis.maxPower.value === 0 ? 0 : Math.max(lastData.power / messageDataAnalysis.maxPower.value, 0);
   const isRange = lastData.currentEngineRpm >= lower && lastData.currentEngineRpm < upper;
-  const lowPowerLevel = powerLevel < 0.9 && lastData.accelerator === 255;
-  function getTextColor() {
+  const lowPowerLevel = powerLevel < 0.9 && messageDataAnalysis.isFullAcceleratorForAWhile;
+  function getColor() {
     if (lowPowerLevel) {
       return "var(--md-sys-color-error)";
     }
@@ -35,7 +36,7 @@ export default function Tachometer() {
     }
     return undefined;
   }
-  return <div className="fill-parent flex-column" style={{ padding: "16px 32px", gap: 16 }}>
+  return <div className="fill-parent flex-column" style={{ padding: "16px", gap: 16 }}>
     <div className="flex-child" style={{ position: "relative" }}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart margin={{ bottom: -48 }}>
@@ -48,7 +49,7 @@ export default function Tachometer() {
             {markData.map((data, index) =>
               <Cell key={index} fill={data.mark ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)"} />)}
           </Pie>
-          <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="85%" outerRadius="90%" fill={isRange ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)"} startAngle={startAngle} endAngle={getAngle(lastData.engineMaxRpm === 0 ? 0 : lastData.currentEngineRpm / lastData.engineMaxRpm, startAngle, endAngle)}
+          <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="85%" outerRadius="90%" fill={getColor()} startAngle={startAngle} endAngle={getAngle(lastData.engineMaxRpm === 0 ? 0 : lastData.currentEngineRpm / lastData.engineMaxRpm, startAngle, endAngle)}
             stroke="var(--md-sys-color-on-background)"
             data={[{ name: "CurrentEngineRpm", value: lastData.currentEngineRpm }]} />
           <Tooltip content={<CustomTooltip />} />
@@ -59,7 +60,7 @@ export default function Tachometer() {
           fontSize: "10vmax",
           transition: "color 200ms, text-shadow 100ms",
           "-webkit-text-stroke": "1px var(--md-sys-color-on-background)",
-          color: getTextColor(),
+          color: getColor(),
           textShadow: getTextShadow(),
         } as React.CSSProperties}>{lastData.gear}</Typography.Display.Large>
       </div>
@@ -159,9 +160,6 @@ function getRange(messageDataAnalysis: MessageDataAnalysis) {
 function getBound(sorted: { x: number, y: number; }[], maxIndex: number, threshold: number, bundleRange = 100) {
   let upper = sorted.length - 1;
   function filterNoise(bundle: number[]) {
-    if (bundle.length < 8) {
-      return bundle;
-    }
     const sorted = bundle.sort(function (a, b) { return a - b; });
     function filter(bundle: number[]) {
       if (bundle.length < 8) {
@@ -204,7 +202,7 @@ function getBound(sorted: { x: number, y: number; }[], maxIndex: number, thresho
 
 function SimpleCard({ title, tooltip, content, onClick }: { title: string, tooltip: string, content: React.ReactNode; onClick: () => unknown; }) {
   return <Card className="flex-child" style={{ maxWidth: 280, textWrap: "nowrap" }}>
-    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: "var(--_container-shape, 12px)", padding: "0 32px", overflow: "clip" }}>
+    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: ElevatedCardContainerShape, padding: "0 32px", overflow: "clip" }}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
       <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
     </Ripple>
@@ -224,21 +222,20 @@ function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: numb
   }
   const progress = getProgress(lower, upper, current);
 
-  const [show, setShow] = React.useState(true);
-  const over = progress >= 1;
+  const [isMainSwitchOn, setMainSwitchOn] = React.useState(true);
+  const overProgress = progress >= 1;
   React.useEffect(() => {
-    if (over) {
-      const timer = setInterval(() => setShow(value => !value), 200);
+    if (overProgress) {
+      const timer = setInterval(() => setMainSwitchOn(value => !value), 200);
       return () => {
         clearInterval(timer);
-        setShow(true);
+        setMainSwitchOn(true);
       };
     }
-  }, [over]);
+  }, [overProgress]);
 
   function getContainerColor(lower: number, upper: number) {
-    if (!show ||
-      lower === upper) {
+    if (!isMainSwitchOn || lower === upper) {
       return undefined;
     }
     if (lowPowerLevel) {
@@ -247,15 +244,19 @@ function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: numb
     if (progress <= lower) {
       return undefined;
     }
-    return over ? "var(--md-sys-color-primary)" : "var(--md-sys-color-tertiary)";
+    return overProgress ? "var(--md-sys-color-primary)" : "var(--md-sys-color-tertiary)";
   }
 
   return <div className="flex-row flex-space-between" style={{ gap: 16, height: 32, alignItems: "stretch" }}>
-    {[{ lower: 0, upper: 0.2 }, { lower: 0.2, upper: 0.4 }, { lower: 0.4, upper: 0.6 }, { lower: 0.6, upper: 0.8 }, { lower: 0.8, upper: 0.9 }].map(({ lower, upper }, index) =>
+    {[{ lower: 0, upper: 0.2 },
+    { lower: 0.2, upper: 0.4 },
+    { lower: 0.4, upper: 0.6 },
+    { lower: 0.6, upper: 0.8 },
+    { lower: 0.8, upper: 0.9 }].map(({ lower, upper }, index) =>
       <Card key={index} className="flex-child" style={{
         maxWidth: 120,
         "--md-elevated-card-container-color": getContainerColor(lower, upper),
-        "--md-elevated-card-container-shadow-color": over ? "var(--md-sys-color-tertiary)" : undefined,
+        "--md-elevated-card-container-shadow-color": overProgress ? "var(--md-sys-color-tertiary)" : undefined,
       } as React.CSSProperties} />
     )}
   </div>;

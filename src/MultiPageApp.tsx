@@ -1,15 +1,15 @@
-import { Button, Dialog, Icon, IconButton, ListItem } from "rmcw/dist/components3";
+import { Button, Dialog, Divider, Icon, IconButton, ListItem } from "rmcw/dist/components3";
 import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, WindowContext } from "./common/AppContext";
 import { FadeThrough, SharedAxis, SharedAxisTransform } from "material-design-transform";
 import React from "react";
 import socketStatsToIcon from "./common/SocketStatsToIcon";
-import getPage from "./pages";
+import getPage, { MultiPageAppContext, ReactMultiPageAppContext } from "./pages";
 import { Page } from "./common/Page";
 
 type WindowTag = { id: number; page: Page; };
 
 export default function MultiPageApp({ streamAppContext }: { streamAppContext: StreamAppContext; }) {
-  const { socketStats, openNetwork, openSettings, lastOpenedPage, setLastOpenedPage, errorMessage, setErrorMessage } = React.useContext(ReactAppContext);
+  const { resetData, socketStats, openNetwork, openSettings, lastOpenedPage, setLastOpenedPage, errorMessage, setErrorMessage } = React.useContext(ReactAppContext);
   function recoveryPages(): WindowTag[] {
     const value = localStorage.getItem("multi-page"); // only storage page, no id
     if (value !== null) {
@@ -37,37 +37,48 @@ export default function MultiPageApp({ streamAppContext }: { streamAppContext: S
     _setWindows(newValue);
     localStorage.setItem("multi-page", JSON.stringify(newValue.map(v => v.page))); // only storage page, no id
   }, []);
+  const usedPages = React.useMemo(() => { return new Set(windows.map(v => v.page)); }, [windows]);
+  const multiPageAppContext = React.useMemo<MultiPageAppContext>(() => { return { usedPages }; }, [usedPages]);
 
-  return <div className="fill-parent flex-row">
-    <div className="flex-column" style={{ width: 48, alignItems: "center", padding: "12px 0", gap: 16 }}>
-      <IconButton onClick={() => setWindows([{ id: windows[0].id + 1, page: getUnusedPage(windows) }, ...windows])}><Icon>add</Icon></IconButton>
-      <div className="flex-child" />
-      <FadeThrough keyId={socketStats}>
-        <span title={`Socket: ${socketStats}`}>
-          <IconButton onClick={openNetwork}><Icon>{socketStatsToIcon(socketStats)}</Icon></IconButton>
+  return <ReactMultiPageAppContext.Provider value={multiPageAppContext}>
+    <div className="fill-parent flex-row">
+      <div className="flex-column" style={{ width: 48, alignItems: "center", padding: "12px 0", gap: 16 }}>
+        <span title="add window">
+          <IconButton onClick={() => setWindows([{ id: windows[0].id + 1, page: getUnusedPage(windows) }, ...windows])}><Icon>add</Icon></IconButton>
         </span>
-      </FadeThrough>
-      <IconButton onClick={openSettings}><Icon>settings</Icon></IconButton>
+        <div className="flex-child" />
+        <span title="reset data">
+          <IconButton onClick={resetData}><Icon>clear_all</Icon></IconButton>
+        </span>
+        <span title={`Socket: ${socketStats}`}>
+          <FadeThrough keyId={socketStats}>
+            <IconButton onClick={openNetwork}><Icon>{socketStatsToIcon(socketStats)}</Icon></IconButton>
+          </FadeThrough>
+        </span>
+        <span title="settings">
+          <IconButton onClick={openSettings}><Icon>settings</Icon></IconButton>
+        </span>
+      </div>
+      <div className="flex-row flex-child">
+        <ReactStreamAppContext.Provider value={streamAppContext}>
+          {windows.map((value) =>
+            <SingleWindow key={value.id}
+              page={value.page}
+              setPage={(page) => {
+                const index = windows.findIndex(v => v.id === value.id);
+                if (index === -1) return;
+                setWindows([...windows.slice(0, index), { id: value.id, page }, ...windows.slice(index + 1)]);
+                setLastOpenedPage(page);
+              }}
+              closeWindow={() => {
+                const index = windows.findIndex(v => v.id === value.id);
+                if (index === -1) return;
+                setWindows([...windows.slice(0, index), ...windows.slice(index + 1)]);
+              }} />)}
+        </ReactStreamAppContext.Provider>
+      </div>
     </div>
-    <div className="flex-row flex-child">
-      <ReactStreamAppContext.Provider value={streamAppContext}>
-        {windows.map((value) =>
-          <SingleWindow key={value.id}
-            page={value.page}
-            setPage={(page) => {
-              const index = windows.findIndex(v => v.id === value.id);
-              if (index === -1) return;
-              setWindows([...windows.slice(0, index), { id: value.id, page }, ...windows.slice(index + 1)]);
-              setLastOpenedPage(page);
-            }}
-            closeWindow={() => {
-              const index = windows.findIndex(v => v.id === value.id);
-              if (index === -1) return;
-              setWindows([...windows.slice(0, index), ...windows.slice(index + 1)]);
-            }} />)}
-      </ReactStreamAppContext.Provider>
-    </div>
-  </div>;
+  </ReactMultiPageAppContext.Provider>;
 }
 
 function getUnusedPage(windows: WindowTag[]) {
@@ -86,7 +97,7 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
   const [showEnginePowerCurve, setShowEnginePowerCurve] = React.useState(true);
   const [detailOption, setDetailOption] = React.useState("timestampMs");
   const [showDetailDelta, setShowDetailDelta] = React.useState(false);
-
+  const { usedPages } = React.useContext(ReactMultiPageAppContext);
   const windowContext = React.useMemo<WindowContext>(() => {
     return {
       showEnginePowerCurve, setShowEnginePowerCurve,
@@ -108,12 +119,12 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
       onScrimClick={closeDialog}
       onEscapeKey={closeDialog}
       headline="Swap Page"
-      actions={<Button buttonStyle='text' onClick={closeDialog}>Close</Button>}>
+      actions={<Button buttonStyle="text" onClick={closeDialog}>Close</Button>}>
       <li className="flex-column" style={{ width: 360, gap: 16 }}>
         {Object.values(Page).map(value =>
-          <Button key={value} buttonStyle="outlined" onClick={() => { setPage(value); closeDialog(); }}>{value}</Button>)}
-        <div aria-hidden />
-        <Button onClick={closeWindow}>Close Window</Button>
+          <Button key={value} buttonStyle={usedPages.has(value) ? "outlined" : "elevated"} disabled={page === value} onClick={() => { setPage(value); closeDialog(); }}>{value}</Button>)}
+        <Divider />
+        <Button buttonStyle="filled" onClick={closeWindow} style={{ "--md-sys-color-primary": "var(--md-sys-color-error)" } as React.CSSProperties} icon={<Icon>close</Icon>}>Remove This Page</Button>
       </li>
     </Dialog>
   </div>;

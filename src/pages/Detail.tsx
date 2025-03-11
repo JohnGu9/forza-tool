@@ -25,7 +25,7 @@ export default function Detail() {
   const lastData = messageData.getLast();
   const currentDataType = lastData ? (lastData.isDashData ? "Dash" : "Sled") : "unknown";
   const displayText = React.useMemo(() => capitalizeFirstLetter(detailOption), [detailOption]);
-  return <div className="fill-parent flex-column" style={{ padding: "16px 32px" }}>
+  return <div className="fill-parent flex-column" style={{ padding: "16px 16px 0" }}>
     <Select label="option" displayText={displayText} supportingText={`Current Data Type: ${currentDataType}`}>
       {keys.map(key => <SelectOption key={key} headline={key} selected={detailOption === key} onClick={() => setDetailOption(key)} style={{ textTransform: "capitalize" }} />)}
     </Select>

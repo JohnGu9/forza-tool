@@ -1,9 +1,11 @@
 import React from "react";
 import { Card, Ripple, Typography } from "rmcw/dist/components3";
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ReactAppContext, ReactStreamAppContext, UnitSystem } from "../common/AppContext";
+import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
 import { MessageData, MessageDataAnalysis } from "../common/MessageData";
+import { ElevatedCardContainerShape } from "../common/Other";
+import { UnitSystem } from "../common/UnitConvert";
 
 const columnHeight = 150;
 
@@ -21,7 +23,7 @@ export default function SpeedMeter() {
   const data = toData(messageData, messageDataAnalysis, unitSystem);
   const lastData = data.length === 0 ? { index: 0, speed: 0, velocity: 0 } : data[data.length - 1];
   const ratio = lastData.speed === 0 ? 0 : lastData.velocity / lastData.speed;
-  return <div className="fill-parent flex-column" style={{ padding: "16px 32px" }}>
+  return <div className="fill-parent flex-column" style={{ padding: "16px" }}>
     <div className="flex-row flex-space-between" style={{ height: columnHeight, alignItems: "stretch", gap: 16, padding: "0 0 16px" }}>
       <SimpleCard title="Speed" content={lastData.speed.toFixed(1)} tooltip={`car speed meter value; unit: ${getSpeedUnit(unitSystem)}`} onClick={changeUnitSystem} />
       <SimpleCard title="Velocity" content={lastData.velocity.toFixed(1)} tooltip={`velocity = (position delta) / (time delta); unit: ${getSpeedUnit(unitSystem)}`} onClick={changeUnitSystem} />
@@ -47,7 +49,7 @@ export default function SpeedMeter() {
 
 function SimpleCard({ title, tooltip, content, onClick }: { title: string, tooltip: string, content: string; onClick: () => unknown; }) {
   return <Card className="flex-child" style={{ maxWidth: 240, textWrap: "nowrap" }}>
-    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: "var(--_container-shape, 12px)", overflow: "clip" }}>
+    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: ElevatedCardContainerShape, overflow: "clip" }}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
       <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
     </Ripple>

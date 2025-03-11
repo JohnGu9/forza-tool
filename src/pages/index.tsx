@@ -1,3 +1,4 @@
+import React from "react";
 import { Page } from "../common/Page";
 import Control from "./Control";
 import Detail from "./Detail";
@@ -22,3 +23,9 @@ export default function getPage(page: Page) {
             return <Control />;
     }
 }
+
+export type MultiPageAppContext = {
+    usedPages: Set<Page>,
+};
+
+export const ReactMultiPageAppContext = React.createContext(undefined as unknown as MultiPageAppContext);

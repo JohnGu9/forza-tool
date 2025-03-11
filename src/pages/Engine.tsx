@@ -3,8 +3,10 @@ import React from "react";
 import { Card, LinearProgress, Ripple, Typography } from "rmcw/dist/components3";
 import { dummyMessageData, MessageData, MessageDataAnalysis } from "../common/MessageData";
 import CircularBuffer from "../common/CircularBuffer";
-import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, UnitSystem } from "../common/AppContext";
+import { ReactAppContext, ReactStreamAppContext, ReactWindowContext } from "../common/AppContext";
 import { SharedAxis, SharedAxisTransform } from "material-design-transform";
+import { getPowerUnit, getTorqueUnit, nmTo, UnitSystem, wTo } from "../common/UnitConvert";
+import { ElevatedCardContainerShape } from "../common/Other";
 
 const columnHeight = 150;
 const chartsPadding = 32;
@@ -23,18 +25,28 @@ export default function Engine() {
         return setUnitSystem(UnitSystem.Metric);
     }
   }, [setUnitSystem, unitSystem]);
+  function getPowerLevelProgressColor() {
+    if (powerLevel < 0.9 && messageDataAnalysis.isFullAcceleratorForAWhile) {
+      return "var(--md-sys-color-error)";
+    }
+    if (powerLevel > 0.99) {
+      return "var(--md-sys-color-tertiary)";
+    }
+    return undefined;
+  }
+  const powerUnitName = getPowerUnit(unitSystem);
   return <div className="fill-parent flex-column">
-    <div className="flex-row flex-space-between" style={{ height: columnHeight, gap: 8, padding: "16px 32px" }}>
+    <div className="flex-row flex-space-between" style={{ height: columnHeight, gap: 8, padding: "16px" }}>
       <SimpleCard title="RPM" content={lastMessageData.currentEngineRpm.toFixed(0)}
-        tooltip="unit: REV/MIN"
+        tooltip="unit: Rev/Min"
         onClick={changeUnitSystem} />
       *
-      <SimpleCard title="Torque" content={nmTo(lastMessageData.torque, unitSystem).toFixed(1)}
+      <SimpleCard title="Torque" content={nmTo(Math.max(lastMessageData.torque, 0), unitSystem).toFixed(1)}
         tooltip={`unit: ${getTorqueUnit(unitSystem)}`}
         onClick={changeUnitSystem} />
       =
-      <SimpleCard title="Power" content={wsTo(lastMessageData.power, unitSystem).toFixed(1)}
-        tooltip={`unit: ${getPowerUnit(unitSystem)}`}
+      <SimpleCard title="Power" content={wTo(Math.max(lastMessageData.power, 0), unitSystem).toFixed(1)}
+        tooltip={`unit: ${powerUnitName}`}
         onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)} />
     </div>
     <SharedAxis className="flex-child" keyId={showEnginePowerCurve ? 1 : 0} style={{ overflow: "clip" }}
@@ -45,7 +57,7 @@ export default function Engine() {
     </SharedAxis>
     <div style={{ height: 16 }} aria-hidden />
     <Ripple onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)}>
-      <SimpleRow title="Power Level" value={powerLevel} active={powerLevel > 0.97} />
+      <SimpleRow title={`Power Level (Max Power ${wTo(messageDataAnalysis.maxPower.value, unitSystem).toFixed(1)} ${powerUnitName} - RPM ${messageDataAnalysis.maxPower.rpm.toFixed(1)})`} value={powerLevel} color={getPowerLevelProgressColor()} />
       <SimpleRow title="Accelerator" value={lastMessageData.accelerator / 255} />
       <div style={{ height: 16 }} aria-hidden />
     </Ripple>
@@ -56,8 +68,8 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
   const { unitSystem } = React.useContext(ReactAppContext);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const data = React.useMemo(() => toData(messageDataAnalysis, unitSystem), [unitSystem, messageDataAnalysis.stamp]);
-  const maxPower = wsTo(messageDataAnalysis.maxPower.value, unitSystem);
-  const currentPower = wsTo(lastMessageData.power, unitSystem);
+  const maxPower = wTo(messageDataAnalysis.maxPower.value, unitSystem);
+  const currentPower = wTo(Math.max(lastMessageData.power, 0), unitSystem);
   const powerLevel = maxPower === 0 ? 0 : currentPower / maxPower;
   return <ResponsiveContainer width="100%" height="100%">
     <AreaChart title="PowerCurve" data={data}
@@ -128,7 +140,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
 function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
   const data: { rpm: number; torque: number; power: number; }[] = [];
   for (const [rpm, { power, torque }] of messageAnalysis.powerCurve.entries()) {
-    data.push({ rpm: parseFloat(rpm), power: wsTo(power, unit), torque: nmTo(torque, unit) });
+    data.push({ rpm: parseFloat(rpm), power: wTo(Math.max(power, 0), unit), torque: nmTo(Math.max(torque, 0), unit) });
   }
   if (data.length === 0) {
     return [];
@@ -178,7 +190,7 @@ function getTicks(max: number, min: number, gap: number) {
 
 function SimpleCard({ title, content, tooltip, onClick }: { title: string, content: string; tooltip: string; onClick: () => unknown; }) {
   return <Card className="flex-child" style={{ maxWidth: 240, height: "100%", textWrap: "nowrap" }}>
-    <Ripple className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: "var(--_container-shape, 12px)", overflow: "clip" }}
+    <Ripple className="fill-parent flex-column flex-space-evenly" style={{ borderRadius: ElevatedCardContainerShape, overflow: "clip" }}
       onClick={onClick}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
       <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
@@ -186,50 +198,14 @@ function SimpleCard({ title, content, tooltip, onClick }: { title: string, conte
   </Card>;
 }
 
-function SimpleRow({ title, value, active }: { title: string; value: number; active?: boolean; }) {
+function SimpleRow({ title, value, color }: { title: string; value: number; color?: string; }) {
   return <div className="flex-column" style={{ justifyContent: "space-around", padding: "8px 32px" }}>
     <div className="flex-row flex-space-between" style={{ padding: "4px 0" }}>
       <span>{title}</span>{(value * 100).toFixed(1)}%
     </div>
     <LinearProgress value={value} style={{
-      "--md-linear-progress-active-indicator-color": active ? "var(--md-sys-color-tertiary)" : undefined,
+      "--md-linear-progress-active-indicator-color": color,
       "--rmcw-linear-progress-transition": "none"
     } as React.CSSProperties} />
   </div>;
-}
-
-function wsTo(value: number/* unit: W */, unit: UnitSystem) {
-  switch (unit) {
-    case UnitSystem.Metric:
-      return Math.max(0, value) / 1000;// unit: kW
-    case UnitSystem.Imperial:
-      return Math.max(0, value) / 745.699872;// unit: hp
-  }
-}
-
-function nmTo(value: number/* unit: N/m */, unit: UnitSystem) {
-  switch (unit) {
-    case UnitSystem.Metric:
-      return Math.max(0, value);// unit: N/m
-    case UnitSystem.Imperial:
-      return Math.max(0, value) * 0.73756;// unit: lb/ft
-  }
-}
-
-function getPowerUnit(unit: UnitSystem) {
-  switch (unit) {
-    case UnitSystem.Metric:
-      return "kW";
-    case UnitSystem.Imperial:
-      return "HP";
-  }
-}
-
-function getTorqueUnit(unit: UnitSystem) {
-  switch (unit) {
-    case UnitSystem.Metric:
-      return "N/M";
-    case UnitSystem.Imperial:
-      return "LB/FT";
-  }
 }

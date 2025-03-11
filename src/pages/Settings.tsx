@@ -1,7 +1,8 @@
 import React from "react";
 import { Button, Dialog } from "rmcw/dist/components3";
-import { AppWindowMode, ReactAppContext, UnitSystem } from "../common/AppContext";
+import { AppWindowMode, ReactAppContext } from "../common/AppContext";
 import ErrorMessage from "./ErrorMessage";
+import { getUnitSystemName, UnitSystem } from "../common/UnitConvert";
 
 export default function Settings({ opened, close }: {
   opened: boolean;
@@ -59,15 +60,6 @@ function getNextWindowModeName(mode: AppWindowMode) {
       return "Multi Window";
     case AppWindowMode.Multi:
       return "Single Window";
-  }
-}
-
-function getUnitSystemName(unit: UnitSystem) {
-  switch (unit) {
-    case UnitSystem.Metric:
-      return "Metric";
-    case UnitSystem.Imperial:
-      return "Imperial";
   }
 }
 

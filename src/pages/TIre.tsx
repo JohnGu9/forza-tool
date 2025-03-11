@@ -3,16 +3,17 @@ import { Card, LinearProgress, Select, SelectOption } from "rmcw/dist/components
 import { MessageData } from "../common/MessageData";
 import CircularBuffer from "../common/CircularBuffer";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { ReactAppContext, ReactStreamAppContext, UnitSystem } from "../common/AppContext";
+import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import { AxisDomain } from "recharts/types/util/types";
 import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
+import { UnitSystem } from "../common/UnitConvert";
 
 export default function Tire() {
   const [tireOption, setTireOption] = React.useState(Type.SlipAngle);
   const { messageData } = React.useContext(ReactStreamAppContext);
   const { frontLeft, frontRight, rearLeft, rearRight } = getTargetData(messageData, tireOption);
   const displayText = React.useMemo(() => capitalizeFirstLetter(tireOption), [tireOption]);
-  return <div className="fill-parent flex-column flex-space-between" style={{ alignItems: "stretch", padding: "16px 32px" }}>
+  return <div className="fill-parent flex-column flex-space-between" style={{ alignItems: "stretch", padding: "16px " }}>
     <Select label="option" displayText={displayText}>
       {Object.values(Type).map(key => <SelectOption key={key} headline={key} selected={tireOption === key} onClick={() => setTireOption(key as Type)} style={{ textTransform: "capitalize" }} />)}
     </Select>

@@ -3,17 +3,22 @@
   "private": true,
   "version": "0.1.5",
   "type": "module",
+  "license": "MIT",
+  "author": "johngu",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "tauri": "tauri"
-  },
+    "tauri": "tauri",
+    "tauri-dev": "tauri dev",
+    "tauri-build": "tauri build"
+
+    },
   "dependencies": {
     "@fontsource/roboto": "^5.1.1",
     "@tauri-apps/api": "^2.2.0",
-    "material-design-transform": "^2.1.4",
+    "material-design-transform": "^2.1.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "recharts": "^2.15.1",

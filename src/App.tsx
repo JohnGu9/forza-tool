@@ -5,12 +5,13 @@ import React from 'react';
 import { listenData } from './ipc';
 import { analyzeMessageData, MessageData, MessageDataAnalysis, newMessageDataAnalysis, parseMessageData, resetMessageDataAnalysis } from './common/MessageData';
 import CircularBuffer from './common/CircularBuffer';
-import { AppContext, AppWindowMode, ListenAddress, ReactAppContext, SocketStats, StreamAppContext, UnitSystem } from './common/AppContext';
+import { AppContext, AppWindowMode, ListenAddress, ReactAppContext, SocketStats, StreamAppContext } from './common/AppContext';
 import Network from './pages/Network';
 import { listen } from '@tauri-apps/api/event';
 import SinglePageApp from './SinglePageApp';
 import MultiPageApp from './MultiPageApp';
 import { Page } from './common/Page';
+import { UnitSystem } from './common/UnitConvert';
 
 export default function App() {
   const [isOpenSettings, setOpenSettings] = React.useState(false);
