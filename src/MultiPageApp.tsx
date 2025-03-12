@@ -1,6 +1,8 @@
+import "./MultiPageApp.scss";
+
 import { FadeThrough, SharedAxis, SharedAxisTransform } from "material-design-transform";
 import React from "react";
-import { Button, Dialog, Divider, Icon, IconButton, ListItem } from "rmcw/dist/components3";
+import { Button, Dialog, Divider, Fab, Icon, IconButton, ListItem } from "rmcw/dist/components3";
 
 import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, WindowContext } from "./common/AppContext";
 import { Page } from "./common/Page";
@@ -41,11 +43,18 @@ export default function MultiPageApp({ streamAppContext }: { streamAppContext: S
   const usedPages = React.useMemo(() => { return new Set(windows.map(v => v.page)); }, [windows]);
   const multiPageAppContext = React.useMemo<MultiPageAppContext>(() => { return { usedPages }; }, [usedPages]);
 
+  function getNewWindowId() {
+    if (windows.length === 0) {
+      return 0;
+    }
+    return windows[0].id + 1;
+  }
+
   return <ReactMultiPageAppContext.Provider value={multiPageAppContext}>
     <div className="fill-parent flex-row">
-      <div className="flex-column" style={{ width: 48, alignItems: "center", padding: "12px 0", gap: 16 }}>
+      <div className="flex-column app-navigation-rails">
         <span title="add window">
-          <IconButton onClick={() => setWindows([{ id: windows[0].id + 1, page: getUnusedPage(windows) }, ...windows])}><Icon>add</Icon></IconButton>
+          <Fab icon={<Icon>add</Icon>} onClick={() => setWindows([{ id: getNewWindowId(), page: getUnusedPage(windows) }, ...windows])} />
         </span>
         <div className="flex-child" />
         <span title="reset data">
@@ -106,7 +115,7 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
       showDetailDelta, setShowDetailDelta
     };
   }, [detailOption, showDetailDelta, showEnginePowerCurve]);
-  return <div className="flex-column flex-child" style={{ overflow: "clip" }}>
+  return <div className="flex-column flex-child window-divider" style={{ overflow: "clip" }}>
     <ListItem trailingSupportingText={<Icon>swap_horiz</Icon>} type="button"
       onClick={() => setOpenDialog(true)}>{page}</ListItem>
     <ReactWindowContext.Provider value={windowContext}>
