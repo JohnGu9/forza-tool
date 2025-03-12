@@ -89,8 +89,8 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
         }
       }} contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
       <Legend />
-      <Area yAxisId={1} type="monotone" dataKey="torque" stroke="var(--md-sys-color-primary)" fillOpacity={0.6} fill="var(--md-sys-color-primary)" animationDuration={650} />
-      <Area yAxisId={0} type="monotone" dataKey="power" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" animationDuration={650} />
+      <Area yAxisId={1} type="monotone" dataKey="torque" stroke="var(--md-sys-color-primary)" fillOpacity={0.6} fill="var(--md-sys-color-primary)" isAnimationActive={false} />
+      <Area yAxisId={0} type="monotone" dataKey="power" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" isAnimationActive={false} />
       <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeDasharray="3 3" y={maxPower} label={maxPower.toFixed(1)} ifOverflow="visible" isFront={true} />
       <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeDasharray="3 3" x={messageDataAnalysis.maxPower.rpm} label={messageDataAnalysis.maxPower.rpm.toFixed(1)} ifOverflow="visible" isFront={true} />
       {/* <ReferenceLine stroke="var(--md-sys-color-tertiary)" x={lastMessageData.currentEngineRpm} ifOverflow="visible" isFront={true} /> */}

@@ -244,8 +244,8 @@ function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: numb
     }
   }, [overProgress]);
 
-  function getContainerColor(lower: number, upper: number) {
-    if (!isMainSwitchOn || lower === upper) {
+  function getContainerColor(lower: number) {
+    if (!isMainSwitchOn) {
       return undefined;
     }
     if (lowPowerLevel) {
@@ -263,10 +263,10 @@ function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: numb
       { lower: 0.2, upper: 0.4 },
       { lower: 0.4, upper: 0.6 },
       { lower: 0.6, upper: 0.8 },
-      { lower: 0.8, upper: 0.9 }].map(({ lower, upper }, index) =>
+      { lower: 0.8, upper: 1 }].map(({ lower }, index) =>
         <Card key={index} className="flex-child" style={{
           maxWidth: 120,
-          "--md-elevated-card-container-color": getContainerColor(lower, upper),
+          "--md-elevated-card-container-color": getContainerColor(lower),
           "--md-elevated-card-container-shadow-color": overProgress ? "var(--md-sys-color-tertiary)" : undefined,
         } as React.CSSProperties} >
           <Ripple className="fill-parent fit-elevated-card-container-shape" onClick={openDialog} />
@@ -279,15 +279,15 @@ function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: numb
       onScrimClick={closeDialog}>
       <ListItem trailingSupportingText={
         <Card className="demo-card" style={{ "--md-elevated-card-container-color": "var(--md-sys-color-tertiary)" } as React.CSSProperties} />
-      }>High Power <span style={{ opacity: 0.5 }}>(97% 🔼)</span></ListItem>
+      } supportingText="97% or higher">High Power</ListItem>
       <Divider />
       <ListItem trailingSupportingText={
         <Card className="demo-card" style={{ "--md-elevated-card-container-color": "var(--md-sys-color-primary)" } as React.CSSProperties} />
-      }>Normal Power <span style={{ opacity: 0.5 }}>(90% 🔼)</span></ListItem>
+      } supportingText="90% or higher">Normal Power</ListItem>
       <Divider />
       <ListItem trailingSupportingText={
         <Card className="demo-card" style={{ "--md-elevated-card-container-color": "var(--md-sys-color-error)" } as React.CSSProperties} />
-      }>Low Power <span style={{ opacity: 0.5 }}>(90% 🔽)</span></ListItem>
+      } supportingText="below 90%">Low Power</ListItem>
     </Dialog>
   </>;
 }
