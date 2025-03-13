@@ -4,7 +4,7 @@ import { Divider, Icon, List, ListItem, NavigationDrawer, NavigationDrawerPaddin
 
 import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, WindowContext } from "./common/AppContext";
 import CircularBuffer from "./common/CircularBuffer";
-import { dummyMessageData,MessageData } from "./common/MessageData";
+import { dummyMessageData, MessageData } from "./common/MessageData";
 import { Page } from "./common/Page";
 import socketStatsToIcon from "./common/SocketStatsToIcon";
 import getPage from "./pages";
@@ -48,7 +48,7 @@ export default function SinglePageApp({ streamAppContext }: { streamAppContext: 
       <List style={{ padding: 0 }}>
         <LapTime messageData={messageData} />
         <ListItem type='button' trailingSupportingText={
-          <FadeThrough keyId={socketStats}>
+          <FadeThrough keyId={socketStats} transitionStyle="M3">
             <span title={`Socket: ${socketStats}`}><Icon>{socketStatsToIcon(socketStats)}</Icon></span>
           </FadeThrough>}
           onClick={openNetwork}>Network</ListItem>
@@ -59,8 +59,8 @@ export default function SinglePageApp({ streamAppContext }: { streamAppContext: 
     <NavigationDrawerPadding opened style={{ height: "100%" }}>
       <ReactWindowContext.Provider value={windowContext}>
         <ReactStreamAppContext.Provider value={streamAppContext}>
-          <SharedAxis className="fill-parent" keyId={page}
-            transform={SharedAxisTransform.fromLeftToRight}>
+          <SharedAxis className="fill-parent" keyId={`${page} ${streamAppContext.messageDataAnalysis.id}`}
+            transform={SharedAxisTransform.fromLeftToRightM3}>
             {getPage(page)}
           </SharedAxis>
         </ReactStreamAppContext.Provider>

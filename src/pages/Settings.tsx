@@ -1,8 +1,8 @@
 import React from "react";
-import { Button, Dialog } from "rmcw/dist/components3";
+import { Button, Dialog, Icon } from "rmcw/dist/components3";
 
 import { AppWindowMode, ReactAppContext } from "../common/AppContext";
-import { getUnitSystemName,UnitSystem } from "../common/UnitConvert";
+import { getUnitSystemName, UnitSystem } from "../common/UnitConvert";
 import ErrorMessage from "./ErrorMessage";
 
 export default function Settings({ opened, close }: {
@@ -25,19 +25,19 @@ export default function Settings({ opened, close }: {
       actions={<Button buttonStyle='text' onClick={close}>Close</Button>}>
       <div className="flex-column" style={{ width: 360 }}>
         <div style={{ height: 8 }} aria-hidden />
-        <Button onClick={() => setAppWindowMode(getNextWindowMode(appWindowMode))}>Switch to {getNextWindowModeName(appWindowMode)}</Button>
+        <Button icon={<Icon>grid_view</Icon>} onClick={() => setAppWindowMode(getNextWindowMode(appWindowMode))}>Switch to {getNextWindowModeName(appWindowMode)}</Button>
         <div style={{ height: 32 }} aria-hidden />
 
-        <Button onClick={resetData}>Reset Data</Button>
+        <Button icon={<Icon>clear_all</Icon>} onClick={resetData}>Clear Data</Button>
         <div style={{ height: 16 }} aria-hidden />
-        <Button onClick={() => localStorage.clear()}>Reset Localstorage</Button>
+        <Button icon={<Icon>medical_services</Icon>} onClick={() => localStorage.clear()}>Clear Cache</Button>
         <div style={{ height: 32 }} aria-hidden />
 
-        <Button onClick={() => setEnableDarkTheme(getNextThemeStats(enableDarkTheme))}>Theme: {getThemeName(enableDarkTheme)}</Button>
+        <Button icon={<Icon>contrast</Icon>} onClick={() => setEnableDarkTheme(getNextThemeStats(enableDarkTheme))}>Theme: {getThemeName(enableDarkTheme)}</Button>
         <div style={{ height: 16 }} aria-hidden />
-        <Button onClick={() => setUnitSystem(getNextUnitSystem(unitSystem))}>UnitSystem: {getUnitSystemName(unitSystem)}</Button>
+        <Button icon={<Icon>straighten</Icon>} onClick={() => setUnitSystem(getNextUnitSystem(unitSystem))}>UnitSystem: {getUnitSystemName(unitSystem)}</Button>
         <div style={{ height: 32 }} aria-hidden />
-        <Button onClick={() => setOpenErrorMessage(true)}>Error Message ({errorMessage.length})</Button>
+        <Button icon={<Icon>error</Icon>} onClick={() => setOpenErrorMessage(true)}>Error Message ({errorMessage.length})</Button>
         {/* <div style={{ height: 16 }} aria-hidden />
          <Button onClick={() => log("Test")}>Test</Button> */}
       </div>

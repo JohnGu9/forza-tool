@@ -283,19 +283,21 @@ export function parseMessageData(buffer: number[]): MessageData {
 }
 
 export type MessageDataAnalysis = {
+    id: number,
     maxPower: { value: number, rpm: number, torque: number; };
     powerCurve: Map<string/* (rpm: number).toFixed(1) */, { rpm: number, power: number, torque: number; isFullAcceleratorForAWhile: boolean; }>;
-    distance: CircularBuffer<number>,
-    speed: CircularBuffer<number>,
-    isFullAcceleratorForAWhile: boolean,
+    distance: CircularBuffer<number>;
+    speed: CircularBuffer<number>;
+    isFullAcceleratorForAWhile: boolean;
     stamp: number;
 };
 
 export function newMessageDataAnalysis(capacity: number): MessageDataAnalysis {
-    return { maxPower: { value: 0, rpm: 0, torque: 0 }, powerCurve: new Map(), distance: new CircularBuffer<number>(capacity), speed: new CircularBuffer<number>(capacity), isFullAcceleratorForAWhile: false, stamp: 0 };
+    return { id: 0, maxPower: { value: 0, rpm: 0, torque: 0 }, powerCurve: new Map(), distance: new CircularBuffer<number>(capacity), speed: new CircularBuffer<number>(capacity), isFullAcceleratorForAWhile: false, stamp: 0 };
 }
 
 export function resetMessageDataAnalysis(analysis: MessageDataAnalysis) {
+    analysis.id += 1;
     analysis.maxPower = { value: 0, rpm: 0, torque: 0 };
     analysis.powerCurve = new Map();
     analysis.distance = new CircularBuffer(analysis.distance.getCapacity());

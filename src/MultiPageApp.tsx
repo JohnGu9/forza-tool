@@ -57,11 +57,11 @@ export default function MultiPageApp({ streamAppContext }: { streamAppContext: S
           <Fab icon={<Icon>add</Icon>} onClick={() => setWindows([{ id: getNewWindowId(), page: getUnusedPage(windows) }, ...windows])} />
         </span>
         <div className="flex-child" />
-        <span title="reset data">
+        <span title="clear data">
           <IconButton onClick={resetData}><Icon>clear_all</Icon></IconButton>
         </span>
         <span title={`Socket: ${socketStats}`}>
-          <FadeThrough keyId={socketStats}>
+          <FadeThrough keyId={socketStats} transitionStyle="M3">
             <IconButton onClick={openNetwork}><Icon>{socketStatsToIcon(socketStats)}</Icon></IconButton>
           </FadeThrough>
         </span>
@@ -108,6 +108,7 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
   const [detailOption, setDetailOption] = React.useState("timestampMs");
   const [showDetailDelta, setShowDetailDelta] = React.useState(false);
   const { usedPages } = React.useContext(ReactMultiPageAppContext);
+  const { messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const windowContext = React.useMemo<WindowContext>(() => {
     return {
       showEnginePowerCurve, setShowEnginePowerCurve,
@@ -115,12 +116,12 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
       showDetailDelta, setShowDetailDelta
     };
   }, [detailOption, showDetailDelta, showEnginePowerCurve]);
-  return <div className="flex-column flex-child window-divider" style={{ overflow: "clip" }}>
+  return <div className="flex-column flex-child window-divider">
     <ListItem trailingSupportingText={<Icon>swap_horiz</Icon>} type="button"
       onClick={() => setOpenDialog(true)}>{page}</ListItem>
     <ReactWindowContext.Provider value={windowContext}>
-      <SharedAxis className="flex-child" keyId={page}
-        transform={SharedAxisTransform.fromLeftToRight}>
+      <SharedAxis className="flex-child" keyId={`${page} ${messageDataAnalysis.id}`}
+        transform={SharedAxisTransform.fromLeftToRightM3}>
         {getPage(page)}
       </SharedAxis>
     </ReactWindowContext.Provider>

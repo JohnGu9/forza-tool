@@ -18,7 +18,7 @@ export default function Control() {
     <SimpleCard title="Accelerator" data={accelerator} onClick={switchCard} />
     <SimpleCard title="Brake" data={brake} onClick={switchCard} />
     <SharedAxis keyId={showEngineBraking ? 1 : 0}
-      transform={SharedAxisTransform.fromLeftToRight}
+      transform={SharedAxisTransform.fromLeftToRightM3}
       className="flex-child flex-row" style={{ flex: "3 3", gap: 16 }} onClick={() => setShowEngineBraking(!showEngineBraking)}>
       {showEngineBraking ?
         <EngineBraking data={engineBraking} /> : <>

@@ -5,7 +5,7 @@ import { Card, LinearProgress, Ripple, Typography } from "rmcw/dist/components3"
 
 import { ReactAppContext, ReactStreamAppContext, ReactWindowContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
-import { dummyMessageData,MessageData, MessageDataAnalysis } from "../common/MessageData";
+import { dummyMessageData, MessageData, MessageDataAnalysis } from "../common/MessageData";
 import { getPowerUnit, getTorqueUnit, nmTo, UnitSystem, wTo } from "../common/UnitConvert";
 
 const columnHeight = 150;
@@ -26,11 +26,11 @@ export default function Engine() {
     }
   }, [setUnitSystem, unitSystem]);
   function getPowerLevelProgressColor() {
-    if (powerLevel < 0.9 && messageDataAnalysis.isFullAcceleratorForAWhile) {
-      return "var(--md-sys-color-error)";
-    }
     if (powerLevel > 0.99) {
       return "var(--md-sys-color-tertiary)";
+    }
+    if (powerLevel < 0.9) {
+      return "var(--md-sys-color-error)";
     }
     return undefined;
   }
@@ -50,7 +50,7 @@ export default function Engine() {
         onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)} />
     </div>
     <SharedAxis className="flex-child" keyId={showEnginePowerCurve ? 1 : 0} style={{ overflow: "clip" }}
-      transform={SharedAxisTransform.fromLeftToRight}>
+      transform={SharedAxisTransform.fromLeftToRightM3}>
       {showEnginePowerCurve ?
         <PowerCurveChart messageDataAnalysis={messageDataAnalysis} lastMessageData={lastMessageData} /> :
         <PowerLevelChart messageDataAnalysis={messageDataAnalysis} messageData={messageData} />}
@@ -121,6 +121,15 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
   const data = messageData.map((data, index) => {
     return { index, "power level": Math.max(data.power / messageDataAnalysis.maxPower.value, 0) * 100 };
   });
+  function getColor(value: { "power level": number; }) {
+    if (value["power level"] >= 97) {
+      return "var(--md-sys-color-tertiary)";
+    };
+    if (value["power level"] >= 90) {
+      return "var(--md-sys-color-primary)";
+    };
+    return "var(--md-sys-color-error)";
+  }
   return <ResponsiveContainer width="100%" height="100%">
     <BarChart title="PowerLevel" data={data}
       margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
@@ -131,7 +140,8 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
         contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
       <Legend />
       <Bar yAxisId={1} dataKey="power level" fill="var(--md-sys-color-tertiary)" unit="%" isAnimationActive={false} >
-        {data.map((value) => <Cell key={value.index} fill={value["power level"] < 97 ? "var(--md-sys-color-primary)" : "var(--md-sys-color-tertiary)"} />)}
+        {data.map((value) =>
+          <Cell key={value.index} fill={getColor(value)} />)}
       </Bar>
     </BarChart>
   </ResponsiveContainer>;

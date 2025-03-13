@@ -1,4 +1,4 @@
-import './App.css';
+import './App.scss';
 
 import { listen } from '@tauri-apps/api/event';
 import React from 'react';

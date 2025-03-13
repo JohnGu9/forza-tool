@@ -1,14 +1,14 @@
-div.app-theme[data-dark-mode="rmcw3-dark-mode-off"] {
-  color: #000;
-}
-
-div.app-theme[data-dark-mode="rmcw3-dark-mode-on"] {
-  color: #fff;
-}
-
-div.app-theme[data-dark-mode] {
-  --md-sys-color-tertiary: #82ca9d; /* @TODO: complete the color scheme (follow the material design color rule https://m3.material.io/styles/color/system/overview) */
-  transition: background-color 650ms;
+div.app-theme {
+  &[data-dark-mode="rmcw3-dark-mode-off"] {
+    color: #000;
+  }
+  &[data-dark-mode="rmcw3-dark-mode-on"] {
+    color: #fff;
+  }
+  &[data-dark-mode] {
+    --md-sys-color-tertiary: #82ca9d; /* @TODO: complete the color scheme (follow the material design color rule https://m3.material.io/styles/color/system/overview) */
+    transition: background-color 650ms;
+  }
 }
 
 .fill-parent {
@@ -21,10 +21,7 @@ div.app-theme[data-dark-mode] {
 }
 
 .fit-elevated-card-container-shape {
-  border-radius: var(
-    --md-elevated-card-container-shape,
-    var(--md-sys-shape-corner-medium, 12px)
-  );
+  border-radius: var(--md-elevated-card-container-shape, var(--md-sys-shape-corner-medium, 12px));
   overflow: clip;
 }
 

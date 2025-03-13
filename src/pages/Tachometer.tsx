@@ -1,6 +1,6 @@
 import "./Tachometer.scss";
 
-import { SharedAxis, SharedAxisTransform } from "material-design-transform";
+import { FadeThrough, SharedAxis, SharedAxisTransform } from "material-design-transform";
 import React from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis } from "recharts";
 import { NameType, Payload, ValueType } from "recharts/types/component/DefaultTooltipContent";
@@ -60,15 +60,15 @@ export default function Tachometer() {
           <Tooltip content={<CustomTooltip />} />
         </PieChart>
       </ResponsiveContainer>
-      <div className="flex-column flex-space-evenly tachometer-gear-position">
+      <FadeThrough keyId={lastData.gear} className="flex-column flex-space-evenly tachometer-gear-position">
         <Typography.Display.Large tag="span" title="Gear" className="tachometer-gear" style={{
           color: getColor(),
           textShadow: getTextShadow(),
         } as React.CSSProperties}>{lastData.gear}</Typography.Display.Large>
-      </div>
+      </FadeThrough>
     </div>
     <IndicatorLights lower={lower} upper={upper} current={lastData.currentEngineRpm} lowPowerLevel={lowPowerLevel} />
-    <SharedAxis keyId={showPowerLevel ? 1 : 0} transform={SharedAxisTransform.fromLeftToRight}
+    <SharedAxis keyId={showPowerLevel ? 1 : 0} transform={SharedAxisTransform.fromLeftToRightM3}
       className="flex-row flex-space-between" style={{ height: columnHeight, alignItems: "stretch", gap: 16 }}>
       {showPowerLevel ?
         <PowerLevelChart messageData={messageData} messageDataAnalysis={messageDataAnalysis} onClick={switchDisplay} /> :
@@ -296,6 +296,15 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
   const data = messageData.map((data, index) => {
     return { index, "power level": Math.max(data.power / messageDataAnalysis.maxPower.value, 0) * 100 };
   });
+  function getColor(value: { "power level": number; }) {
+    if (value["power level"] >= 97) {
+      return "var(--md-sys-color-tertiary)";
+    };
+    if (value["power level"] >= 90) {
+      return "var(--md-sys-color-primary)";
+    };
+    return "var(--md-sys-color-error)";
+  }
   return <Card className="flex-child">
     <Ripple className="fill-parent fit-elevated-card-container-shape" style={{ padding: 8 }} onClick={onClick}>
       <ResponsiveContainer width="100%" height="100%">
@@ -306,7 +315,8 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
           <Tooltip formatter={(value) => { return (value as number).toFixed(1); }}
             contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
           <Bar yAxisId={1} dataKey="power level" fill="var(--md-sys-color-tertiary)" unit="%" isAnimationActive={false} >
-            {data.map((value) => <Cell key={value.index} fill={value["power level"] < 97 ? "var(--md-sys-color-primary)" : "var(--md-sys-color-tertiary)"} />)}
+            {data.map((value) =>
+              <Cell key={value.index} fill={getColor(value)} />)}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
