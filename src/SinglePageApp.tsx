@@ -1,4 +1,4 @@
-import { FadeThrough, SharedAxis, SharedAxisTransform } from "material-design-transform";
+import { FadeThrough, SharedAxis } from "material-design-transform";
 import React from "react";
 import { Divider, Icon, List, ListItem, NavigationDrawer, NavigationDrawerPadding, Typography } from "rmcw/dist/components3";
 
@@ -59,8 +59,7 @@ export default function SinglePageApp({ streamAppContext }: { streamAppContext: 
     <NavigationDrawerPadding opened style={{ height: "100%" }}>
       <ReactWindowContext.Provider value={windowContext}>
         <ReactStreamAppContext.Provider value={streamAppContext}>
-          <SharedAxis className="fill-parent" keyId={`${page} ${streamAppContext.messageDataAnalysis.id}`}
-            transform={SharedAxisTransform.fromLeftToRightM3}>
+          <SharedAxis className="fill-parent" keyId={`${page} ${streamAppContext.messageDataAnalysis.id}`}>
             {getPage(page)}
           </SharedAxis>
         </ReactStreamAppContext.Provider>

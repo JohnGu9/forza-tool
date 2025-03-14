@@ -1,6 +1,6 @@
 import "./MultiPageApp.scss";
 
-import { FadeThrough, SharedAxis, SharedAxisTransform } from "material-design-transform";
+import { FadeThrough, SharedAxis } from "material-design-transform";
 import React from "react";
 import { Button, Dialog, Divider, Fab, Icon, IconButton, ListItem } from "rmcw/dist/components3";
 
@@ -120,8 +120,7 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
     <ListItem trailingSupportingText={<Icon>swap_horiz</Icon>} type="button"
       onClick={() => setOpenDialog(true)}>{page}</ListItem>
     <ReactWindowContext.Provider value={windowContext}>
-      <SharedAxis className="flex-child" keyId={`${page} ${messageDataAnalysis.id}`}
-        transform={SharedAxisTransform.fromLeftToRightM3}>
+      <SharedAxis className="flex-child" keyId={`${page} ${messageDataAnalysis.id}`}>
         {getPage(page)}
       </SharedAxis>
     </ReactWindowContext.Provider>

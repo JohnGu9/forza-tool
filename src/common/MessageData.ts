@@ -359,7 +359,7 @@ function isValidData(analysis: MessageDataAnalysis, lastMessageData: MessageData
             return true;
         }
         // to reduce power data noise
-        // assume power curve is a convex function
+        // assume power curve is a convex function f(x)
         // so it's second derivative f''(x) is always < 0
         // also if a < b < c, then f(a) + f(c) < 2 * f(b)
         const { sorted, position } = getClosestPositions(currentEngineRpm, analysis.powerCurve);
@@ -448,7 +448,6 @@ function isValidData(analysis: MessageDataAnalysis, lastMessageData: MessageData
 
     return false;
 }
-
 
 type AxisPosition = { x: number, y: number; };
 function isConvex(a: AxisPosition, b: AxisPosition, c: AxisPosition, toleration: number) {

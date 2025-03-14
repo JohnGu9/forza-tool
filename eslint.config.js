@@ -24,6 +24,7 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      'no-multiple-empty-lines': 'error',
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },

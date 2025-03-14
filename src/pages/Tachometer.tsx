@@ -57,7 +57,8 @@ export default function Tachometer() {
       <FadeThrough keyId={lastData.gear} transitionStyle="M2" className="flex-column flex-space-evenly tachometer-gear-position">
         <Typography.Display.Large tag="span" title="Gear" className="tachometer-gear" style={{
           color: getColor(),
-          outline: powerLevel > 0.99 ? "1rem solid" : undefined,
+          fontSize: powerLevel > 0.99 ? "8vmax" : undefined,
+          outline: powerLevel > 0.99 ? "1rem solid" : "0rem solid",
         } as React.CSSProperties}>{lastData.gear}</Typography.Display.Large>
       </FadeThrough>
     </div>

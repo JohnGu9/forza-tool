@@ -12,8 +12,8 @@
     line-height: var(--text-size);
     transition:
         color 200ms,
-        text-shadow 100ms,
-        outline 300ms;
+        outline 200ms,
+        font-size 200ms;
     -webkit-text-stroke: 1px var(--md-sys-color-on-background);
     width: var(--text-size);
     height: var(--text-size);
