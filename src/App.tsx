@@ -1,6 +1,7 @@
 import './App.scss';
 
 import { listen } from '@tauri-apps/api/event';
+import { MaterialDesignTransformContext, MaterialDesignTransformContextType, SharedAxisTransform } from 'material-design-transform';
 import React from 'react';
 import { Theme } from 'rmcw/dist/components3';
 
@@ -182,15 +183,19 @@ export default function App() {
   }, [listenAddress, messageData, messageDataAnalysis, resetData, updateTick]);
 
   return (
-    <ReactAppContext.Provider value={appContext}>
-      <Theme className='fill-parent app-theme' withBackgroundColor enableDarkTheme={enableDarkTheme}>
-        {getWindow(appWindowMode, streamAppContext)}
-        <Network opened={isOpenNetwork} close={closeNetwork} />
-        <Settings opened={isOpenSettings} close={closeSettings} />
-      </Theme>
-    </ReactAppContext.Provider >
+    <MaterialDesignTransformContext.Provider value={materialDesignTransformContext}>
+      <ReactAppContext.Provider value={appContext}>
+        <Theme className='fill-parent app-theme' withBackgroundColor enableDarkTheme={enableDarkTheme}>
+          {getWindow(appWindowMode, streamAppContext)}
+          <Network opened={isOpenNetwork} close={closeNetwork} />
+          <Settings opened={isOpenSettings} close={closeSettings} />
+        </Theme>
+      </ReactAppContext.Provider>
+    </MaterialDesignTransformContext.Provider>
   );
 }
+
+const materialDesignTransformContext: MaterialDesignTransformContextType = { transitionStyle: "M3", sharedAxis: { transform: SharedAxisTransform.fromLeftToRight, unit: "px" } };
 
 function getWindow(mode: AppWindowMode, streamAppContext: StreamAppContext) {
   switch (mode) {
@@ -209,8 +214,7 @@ function isNeedToReset(messageData: CircularBuffer<MessageData>, newData: Messag
   if (lastData.carOrdinal === newData.carOrdinal &&
     lastData.carPerformanceIndex === newData.carPerformanceIndex &&
     lastData.drivetrainType === newData.drivetrainType &&
-    lastData.numCylinders === newData.numCylinders
-  ) {
+    lastData.numCylinders === newData.numCylinders) {
     return false;
   }
   return true;

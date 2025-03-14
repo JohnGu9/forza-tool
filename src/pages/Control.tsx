@@ -1,4 +1,4 @@
-import { SharedAxis, SharedAxisTransform } from "material-design-transform";
+import { SharedAxis } from "material-design-transform";
 import React from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, LinearProgress, Ripple } from "rmcw/dist/components3";
@@ -18,7 +18,6 @@ export default function Control() {
     <SimpleCard title="Accelerator" data={accelerator} onClick={switchCard} />
     <SimpleCard title="Brake" data={brake} onClick={switchCard} />
     <SharedAxis keyId={showEngineBraking ? 1 : 0}
-      transform={SharedAxisTransform.fromLeftToRightM3}
       className="flex-child flex-row" style={{ flex: "3 3", gap: 16 }} onClick={() => setShowEngineBraking(!showEngineBraking)}>
       {showEngineBraking ?
         <EngineBraking data={engineBraking} /> : <>

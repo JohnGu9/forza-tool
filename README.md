@@ -12,6 +12,10 @@ Reasonable recommendation for engine rpm control.
 
 <img src="./doc/1.png">
 
+# Caution
+
+Set your game data out to `Dash`.
+
 # System requirement
 
 Webview2 support.

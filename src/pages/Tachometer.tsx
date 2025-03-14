@@ -1,6 +1,6 @@
 import "./Tachometer.scss";
 
-import { FadeThrough, SharedAxis, SharedAxisTransform } from "material-design-transform";
+import { FadeThrough, SharedAxis } from "material-design-transform";
 import React from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis } from "recharts";
 import { NameType, Payload, ValueType } from "recharts/types/component/DefaultTooltipContent";
@@ -60,7 +60,7 @@ export default function Tachometer() {
           <Tooltip content={<CustomTooltip />} />
         </PieChart>
       </ResponsiveContainer>
-      <FadeThrough keyId={lastData.gear} className="flex-column flex-space-evenly tachometer-gear-position">
+      <FadeThrough keyId={lastData.gear} transitionStyle="M2" className="flex-column flex-space-evenly tachometer-gear-position">
         <Typography.Display.Large tag="span" title="Gear" className="tachometer-gear" style={{
           color: getColor(),
           textShadow: getTextShadow(),
@@ -68,7 +68,7 @@ export default function Tachometer() {
       </FadeThrough>
     </div>
     <IndicatorLights lower={lower} upper={upper} current={lastData.currentEngineRpm} lowPowerLevel={lowPowerLevel} />
-    <SharedAxis keyId={showPowerLevel ? 1 : 0} transform={SharedAxisTransform.fromLeftToRightM3}
+    <SharedAxis keyId={showPowerLevel ? 1 : 0}
       className="flex-row flex-space-between" style={{ height: columnHeight, alignItems: "stretch", gap: 16 }}>
       {showPowerLevel ?
         <PowerLevelChart messageData={messageData} messageDataAnalysis={messageDataAnalysis} onClick={switchDisplay} /> :

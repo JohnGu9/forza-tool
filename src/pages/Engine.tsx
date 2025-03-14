@@ -1,4 +1,4 @@
-import { SharedAxis, SharedAxisTransform } from "material-design-transform";
+import { SharedAxis } from "material-design-transform";
 import React from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, ReferenceDot, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, LinearProgress, Ripple, Typography } from "rmcw/dist/components3";
@@ -49,8 +49,7 @@ export default function Engine() {
         tooltip={`unit: ${powerUnitName}`}
         onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)} />
     </div>
-    <SharedAxis className="flex-child" keyId={showEnginePowerCurve ? 1 : 0} style={{ overflow: "clip" }}
-      transform={SharedAxisTransform.fromLeftToRightM3}>
+    <SharedAxis className="flex-child" keyId={showEnginePowerCurve ? 1 : 0} style={{ overflow: "clip" }}>
       {showEnginePowerCurve ?
         <PowerCurveChart messageDataAnalysis={messageDataAnalysis} lastMessageData={lastMessageData} /> :
         <PowerLevelChart messageDataAnalysis={messageDataAnalysis} messageData={messageData} />}

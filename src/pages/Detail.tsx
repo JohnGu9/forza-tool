@@ -5,7 +5,7 @@ import { ListItem, Select, SelectOption, Switch } from "rmcw/dist/components3";
 import { ReactStreamAppContext, ReactWindowContext } from "../common/AppContext";
 import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
 import CircularBuffer from "../common/CircularBuffer";
-import { dummyMessageData,MessageData } from "../common/MessageData";
+import { dummyMessageData, MessageData } from "../common/MessageData";
 
 const keys = Object.keys(dummyMessageData).filter(value => {
   switch (value) {
