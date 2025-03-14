@@ -35,12 +35,6 @@ export default function Tachometer() {
     }
     return "var(--md-sys-color-primary)";
   }
-  function getTextShadow() {
-    if (powerLevel > 0.99) {
-      return "var(--md-sys-color-tertiary) 0 0 20px";
-    }
-    return undefined;
-  }
   return <div className="fill-parent flex-column" style={{ padding: "16px", gap: 16 }}>
     <div className="flex-child" style={{ position: "relative" }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -63,7 +57,7 @@ export default function Tachometer() {
       <FadeThrough keyId={lastData.gear} transitionStyle="M2" className="flex-column flex-space-evenly tachometer-gear-position">
         <Typography.Display.Large tag="span" title="Gear" className="tachometer-gear" style={{
           color: getColor(),
-          textShadow: getTextShadow(),
+          outline: powerLevel > 0.99 ? "1rem solid" : undefined,
         } as React.CSSProperties}>{lastData.gear}</Typography.Display.Large>
       </FadeThrough>
     </div>
