@@ -12,3 +12,14 @@ export default function socketStatsToIcon(socketStats: SocketStats) {
             return "warning";
     }
 }
+
+export function isSocketError(socketStats: SocketStats) {
+    switch (socketStats) {
+        case SocketStats.opening:
+        case SocketStats.opened:
+            return false;
+        case SocketStats.error:
+        case SocketStats.closed:
+            return true;
+    }
+}

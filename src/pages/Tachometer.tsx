@@ -253,7 +253,7 @@ function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: numb
   }
 
   return <>
-    <div className="flex-row flex-space-between" style={{ gap: 16, height: 32, alignItems: "stretch" }}>
+    <div className="flex-row flex-space-between" style={{ gap: 32, height: 32, alignItems: "stretch" }}>
       {[{ lower: 0, upper: 0.2 },
       { lower: 0.2, upper: 0.4 },
       { lower: 0.4, upper: 0.6 },

@@ -6,7 +6,7 @@ import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppCo
 import CircularBuffer from "./common/CircularBuffer";
 import { dummyMessageData, MessageData } from "./common/MessageData";
 import { Page } from "./common/Page";
-import socketStatsToIcon from "./common/SocketStatsToIcon";
+import socketStatsToIcon, { isSocketError } from "./common/SocketStatsToIcon";
 import getPage from "./pages";
 
 export default function SinglePageApp({ streamAppContext }: { streamAppContext: StreamAppContext; }) {
@@ -49,7 +49,9 @@ export default function SinglePageApp({ streamAppContext }: { streamAppContext: 
         <LapTime messageData={messageData} />
         <ListItem type='button' trailingSupportingText={
           <FadeThrough keyId={socketStats} transitionStyle="M3">
-            <span title={`Socket: ${socketStats}`}><Icon>{socketStatsToIcon(socketStats)}</Icon></span>
+            <span title={`Socket: ${socketStats}`}>
+              <Icon style={{ color: isSocketError(socketStats) ? "--md-sys-color-error" : undefined, transition: "color 200ms" }}>{socketStatsToIcon(socketStats)}</Icon>
+            </span>
           </FadeThrough>}
           onClick={openNetwork}>Network</ListItem>
         <ListItem type='button' trailingSupportingText={(slotName) => <Icon slot={slotName}>settings</Icon>}

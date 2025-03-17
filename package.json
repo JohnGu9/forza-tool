@@ -1,7 +1,7 @@
 {
   "name": "forza-tool",
   "private": true,
-  "version": "0.1.6",
+  "version": "0.1.7",
   "type": "module",
   "license": "MIT",
   "author": "johngu",
@@ -21,7 +21,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "recharts": "^2.15.1",
-    "rmcw": "^0.3.17"
+    "rmcw": "^0.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
