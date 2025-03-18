@@ -2,11 +2,10 @@ import React from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, Select, SelectOption } from "rmcw/dist/components3";
 
-import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
+import { ReactStreamAppContext } from "../common/AppContext";
 import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
 import CircularBuffer from "../common/CircularBuffer";
 import { MessageData } from "../common/MessageData";
-import { UnitSystem } from "../common/UnitConvert";
 
 export default function Motion() {
   const [option, setOption] = React.useState(Type.Acceleration);
@@ -62,22 +61,18 @@ function getTargetData(messageData: CircularBuffer<MessageData>, type: Type) {
 
 
 function SimpleCard({ title, data, type }: { title: string, data: DataType[]; type: Type; }) {
-  const { unitSystem } = React.useContext(ReactAppContext);
   const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1].value);
   function formatter(value: number) {
     switch (type) {
       case Type.Acceleration:
+        return `${value.toFixed(1)} m/s²`;
       case Type.Velocity:
-      case Type.Position: {
-        switch (unitSystem) {
-          case UnitSystem.Imperial:
-            return `${(value * 2.23694).toFixed(1)} MPH`;
-        }
-        return `${(value * 3.6).toFixed(1)} KM/H`;
-      }
+        return `${value.toFixed(1)} m/s`;
       case Type.AngularVelocity:
       case Type.AngularVelocityGlobal:
         return `${value.toFixed(3)} RPS`;
+      case Type.Position:
+        return `${value.toFixed(1)} m`;
     }
   }
 
