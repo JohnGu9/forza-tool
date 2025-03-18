@@ -6,7 +6,7 @@ import { Button, Dialog, Divider, Fab, Icon, IconButton, ListItem } from "rmcw/d
 
 import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, WindowContext } from "./common/AppContext";
 import { Page } from "./common/Page";
-import socketStateToIcon, { isSocketError } from "./common/SocketState";
+import { isSocketError, socketStateToIcon } from "./common/SocketState";
 import getPage, { MultiPageAppContext, ReactMultiPageAppContext } from "./pages";
 
 type WindowTag = { id: number; page: Page; };
@@ -71,8 +71,9 @@ export default function MultiPageApp({ streamAppContext }: { streamAppContext: S
           <IconButton onClick={openSettings}><Icon>settings</Icon></IconButton>
         </span>
       </div>
-      <div className="flex-row flex-child">
-        <ReactStreamAppContext.Provider value={streamAppContext}>
+
+      <ReactStreamAppContext.Provider value={streamAppContext}>
+        <FadeThrough keyId={windows.length} className="flex-row flex-child">
           {windows.map((value) =>
             <SingleWindow key={value.id}
               page={value.page}
@@ -87,8 +88,9 @@ export default function MultiPageApp({ streamAppContext }: { streamAppContext: S
                 if (index === -1) return;
                 setWindows([...windows.slice(0, index), ...windows.slice(index + 1)]);
               }} />)}
-        </ReactStreamAppContext.Provider>
-      </div>
+        </FadeThrough>
+      </ReactStreamAppContext.Provider>
+
     </div>
   </ReactMultiPageAppContext.Provider>;
 }
@@ -132,12 +134,16 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
       onEscapeKey={closeDialog}
       headline="Swap Page"
       actions={<Button buttonStyle="text" onClick={closeDialog}>Close</Button>}>
-      <li className="flex-column" style={{ width: 360, gap: 16 }}>
+      <div className="flex-column" style={{ width: 360, gap: 16 }}>
         {Object.values(Page).map(value =>
           <Button key={value} buttonStyle={usedPages.has(value) ? "outlined" : "elevated"} disabled={page === value} onClick={() => { setPage(value); closeDialog(); }}>{value}</Button>)}
         <Divider />
-        <Button buttonStyle="filled" onClick={closeWindow} style={{ "--md-sys-color-primary": "var(--md-sys-color-error)" } as React.CSSProperties} icon={<Icon>close</Icon>}>Remove This Page</Button>
-      </li>
+        <Button buttonStyle="filled" onClick={async () => {
+          setOpenDialog(false);
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          closeWindow();
+        }} style={{ "--md-sys-color-primary": "var(--md-sys-color-error)" } as React.CSSProperties} icon={<Icon>close</Icon>}>Remove This Page</Button>
+      </div>
     </Dialog>
   </div>;
 }

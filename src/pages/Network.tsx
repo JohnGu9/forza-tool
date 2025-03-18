@@ -1,7 +1,8 @@
 import React from "react";
 import { Button, Dialog, ListItem, Switch, TextField } from "rmcw/dist/components3";
 
-import { ListenAddress, ReactAppContext, SocketState } from "../common/AppContext";
+import { ListenAddress, ReactAppContext } from "../common/AppContext";
+import { SocketState } from "../common/SocketState";
 
 export default function Network({ opened, close }: {
   opened: boolean;

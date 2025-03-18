@@ -6,7 +6,7 @@ import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppCo
 import CircularBuffer from "./common/CircularBuffer";
 import { dummyMessageData, MessageData } from "./common/MessageData";
 import { Page } from "./common/Page";
-import socketStateToIcon, { isSocketError } from "./common/SocketState";
+import { isSocketError, socketStateToIcon } from "./common/SocketState";
 import getPage from "./pages";
 
 export default function SinglePageApp({ streamAppContext }: { streamAppContext: StreamAppContext; }) {

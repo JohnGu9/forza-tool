@@ -3,6 +3,7 @@ import React from "react";
 import CircularBuffer from "./CircularBuffer";
 import { MessageData, MessageDataAnalysis } from "./MessageData";
 import { Page } from "./Page";
+import { SocketState } from "./SocketState";
 import { UnitSystem } from "./UnitConvert";
 
 export type ListenAddress = [
@@ -13,13 +14,6 @@ export type ListenAddress = [
     string/* forward port */,
     number/* stamp, for manually renew socket on the same address:port */,
 ];
-
-export enum SocketState {
-    opening = "Opening",
-    opened = "Opened",
-    error = "Error",
-    closed = "Closed",
-}
 
 export enum AppWindowMode {
     Single,

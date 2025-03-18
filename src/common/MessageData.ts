@@ -556,10 +556,10 @@ export const dummyMessageData: MessageData = {
     suspensionTravelMetersRearLeft: 0,
     suspensionTravelMetersRearRight: 0,
     carOrdinal: 0,           // Unique ID of the car make/model
-    carClass: 0, // Between 0 (D -- worst cars) and 7 (X class -- best cars) inclusive
-    carPerformanceIndex: 0, // Between 100 (slowest car) and 999 (fastest car) inclusive
-    drivetrainType: 0, // Corresponds to EDrivetrainType; 0 = FWD, 1 = RWD, 2 = AWD
-    numCylinders: 0, // Number of cylinders in the engine
+    carClass: 0,             // Between 0 (D -- worst cars) and 7 (X class -- best cars) inclusive
+    carPerformanceIndex: 0,  // Between 100 (slowest car) and 999 (fastest car) inclusive
+    drivetrainType: 0,       // Corresponds to EDrivetrainType; 0 = FWD, 1 = RWD, 2 = AWD
+    numCylinders: 0,         // Number of cylinders in the engine
 
     // Dash
     positionX: 0,

@@ -1,6 +1,11 @@
-import { SocketState } from "./AppContext";
+export enum SocketState {
+    opening = "Opening",
+    opened = "Opened",
+    error = "Error",
+    closed = "Closed",
+}
 
-export default function socketStateToIcon(socketStats: SocketState) {
+export function socketStateToIcon(socketStats: SocketState) {
     switch (socketStats) {
         case SocketState.opening:
             return "settings_input_antenna";

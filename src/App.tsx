@@ -5,10 +5,11 @@ import { MaterialDesignTransformContext, MaterialDesignTransformContextType, Sha
 import React from 'react';
 import { Theme } from 'rmcw/dist/components3';
 
-import { AppContext, AppWindowMode, ListenAddress, ReactAppContext, SocketState, StreamAppContext } from './common/AppContext';
+import { AppContext, AppWindowMode, ListenAddress, ReactAppContext, StreamAppContext } from './common/AppContext';
 import CircularBuffer from './common/CircularBuffer';
 import { analyzeMessageData, MessageData, MessageDataAnalysis, newMessageDataAnalysis, parseMessageData, resetMessageDataAnalysis } from './common/MessageData';
 import { Page } from './common/Page';
+import { SocketState } from './common/SocketState';
 import { UnitSystem } from './common/UnitConvert';
 import { listenData } from './ipc';
 import MultiPageApp from './MultiPageApp';
