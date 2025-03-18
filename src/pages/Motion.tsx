@@ -79,7 +79,6 @@ function SimpleCard({ title, data, type }: { title: string, data: DataType[]; ty
       case Type.AngularVelocityGlobal:
         return `${value.toFixed(3)} RPS`;
     }
-
   }
 
   return <Card className="flex-child flex-column" style={{ alignItems: "stretch", padding: 16 }}>
