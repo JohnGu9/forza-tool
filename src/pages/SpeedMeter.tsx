@@ -33,7 +33,7 @@ export default function SpeedMeter() {
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data}
           margin={{ top: 4, right: 2, left: 0, bottom: 8 }}>
-          <XAxis dataKey="index" type="number" hide />
+          <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} hide />
           <YAxis tickFormatter={value => value.toFixed(1)} />
           <CartesianGrid strokeDasharray="3 3" />
           <Tooltip formatter={(value) => { return (value as number).toFixed(3); }}

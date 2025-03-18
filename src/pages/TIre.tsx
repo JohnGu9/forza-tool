@@ -1,5 +1,5 @@
 import React from "react";
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AxisDomain } from "recharts/types/util/types";
 import { Card, LinearProgress, Select, SelectOption } from "rmcw/dist/components3";
 
@@ -73,14 +73,14 @@ function SimpleCard({ title, data, type }: { title: string, data: DataType[]; ty
   return <Card className="flex-column flex-space-evenly" style={{ alignItems: "stretch", padding: 16 }}>
     <div className="flex-child" style={{ overflow: "clip" }}>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 5, right: 0, left: -32, bottom: -10 }}>
+        <AreaChart data={data} margin={{ top: 5, right: 0, left: -32, bottom: -10 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="index" type="number" tick={false} />
+          <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
           <YAxis domain={domain} ticks={ticks} />
           <Tooltip formatter={(value) => { return formatter(value as number); }}
             contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-          <Line type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" dot={false} animationDuration={350} />
-        </LineChart>
+          <Area type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" animationDuration={350} />
+        </AreaChart>
       </ResponsiveContainer>
     </div>
     <div className="flex-row flex-space-between" style={{ padding: "4px 0" }}>

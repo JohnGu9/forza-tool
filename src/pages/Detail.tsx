@@ -36,8 +36,8 @@ export default function Detail() {
         <LineChart data={data}
           margin={{ top: 16, right: 2, left: 0, bottom: 24 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="index" type="number" hide />
-          <YAxis type="number" domain={([min, max]) => [min, max]} tickFormatter={value => value.toFixed(1)} />
+          <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} hide />
+          <YAxis dataKey="value" type="number" domain={['dataMin', 'dataMax']} tickFormatter={value => value.toFixed(1)} />
           <Tooltip formatter={(value) => (value as number).toFixed(6)}
             contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
           <Line type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" dot={false} animationDuration={350} strokeLinecap="round" />

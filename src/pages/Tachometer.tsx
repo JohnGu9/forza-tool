@@ -57,7 +57,7 @@ export default function Tachometer() {
       <FadeThrough keyId={lastData.gear} transitionStyle="M2" className="flex-column flex-space-evenly tachometer-gear-position">
         <Typography.Display.Large tag="span" title="Gear" className="tachometer-gear" style={{
           color: getColor(),
-          fontSize: powerLevel > 0.99 ? "8vmax" : undefined,
+          fontSize: powerLevel > 0.99 ? "16vmin" : undefined,
           outline: powerLevel > 0.99 ? "1rem solid" : "0rem solid",
         } as React.CSSProperties}>{lastData.gear}</Typography.Display.Large>
       </FadeThrough>
@@ -305,7 +305,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
       <ResponsiveContainer width="100%" height="100%">
         <BarChart title="PowerLevel" data={data} margin={{ left: -56, bottom: -24, top: 4, right: 4 }}>
           <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
-          <YAxis yAxisId={1} type="number" domain={[0, 100]} tick={false} allowDataOverflow={false} />
+          <YAxis dataKey="value" type="number" yAxisId={1} domain={[0, 100]} tick={false} allowDataOverflow={false} />
           <CartesianGrid strokeDasharray="3 3" />
           <Tooltip formatter={(value) => { return (value as number).toFixed(1); }}
             contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
