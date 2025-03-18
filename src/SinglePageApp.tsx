@@ -6,7 +6,7 @@ import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppCo
 import CircularBuffer from "./common/CircularBuffer";
 import { dummyMessageData, MessageData } from "./common/MessageData";
 import { Page } from "./common/Page";
-import socketStatsToIcon, { isSocketError } from "./common/SocketStatsToIcon";
+import socketStateToIcon, { isSocketError } from "./common/SocketState";
 import getPage from "./pages";
 
 export default function SinglePageApp({ streamAppContext }: { streamAppContext: StreamAppContext; }) {
@@ -50,7 +50,7 @@ export default function SinglePageApp({ streamAppContext }: { streamAppContext: 
         <ListItem type='button' trailingSupportingText={
           <FadeThrough keyId={socketStats} transitionStyle="M3">
             <span title={`Socket: ${socketStats}`}>
-              <Icon style={{ color: isSocketError(socketStats) ? "--md-sys-color-error" : undefined, transition: "color 200ms" }}>{socketStatsToIcon(socketStats)}</Icon>
+              <Icon style={{ color: isSocketError(socketStats) ? "--md-sys-color-error" : undefined, transition: "color 200ms" }}>{socketStateToIcon(socketStats)}</Icon>
             </span>
           </FadeThrough>}
           onClick={openNetwork}>Network</ListItem>

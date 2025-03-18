@@ -2,10 +2,11 @@ import React from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, Select, SelectOption } from "rmcw/dist/components3";
 
-import { ReactStreamAppContext } from "../common/AppContext";
+import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
 import CircularBuffer from "../common/CircularBuffer";
 import { MessageData } from "../common/MessageData";
+import { getSpeedUnit, msTo } from "../common/UnitConvert";
 
 export default function Motion() {
   const [option, setOption] = React.useState(Type.Acceleration);
@@ -17,9 +18,9 @@ export default function Motion() {
       {Object.values(Type).map(key => <SelectOption key={key} headline={key} selected={option === key} onClick={() => setOption(key as Type)} style={{ textTransform: "capitalize" }} />)}
     </Select>
     <div className="flex-child flex-column" style={{ gap: 16 }}>
-      <SimpleCard title={`${displayText} X`} data={x} type={option} />
-      <SimpleCard title={`${displayText} Y`} data={y} type={option} />
-      <SimpleCard title={`${displayText} Z`} data={z} type={option} />
+      <SimpleCard title="Axis X" data={x} type={option} />
+      <SimpleCard title="Axis Y" data={y} type={option} />
+      <SimpleCard title="Axis Z" data={z} type={option} />
     </div>
   </div>;
 }
@@ -61,13 +62,15 @@ function getTargetData(messageData: CircularBuffer<MessageData>, type: Type) {
 
 
 function SimpleCard({ title, data, type }: { title: string, data: DataType[]; type: Type; }) {
-  const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1].value);
+  const value = data.length === 0 ? 0 : data[data.length - 1].value;
+  const { unitSystem } = React.useContext(ReactAppContext);
+
   function formatter(value: number) {
     switch (type) {
       case Type.Acceleration:
         return `${value.toFixed(1)} m/s²`;
       case Type.Velocity:
-        return `${value.toFixed(1)} m/s`;
+        return `${msTo(value, unitSystem).toFixed(1)} ${getSpeedUnit(unitSystem)}`;
       case Type.AngularVelocity:
       case Type.AngularVelocityGlobal:
         return `${value.toFixed(3)} RPS`;

@@ -5,7 +5,7 @@ import { Card, Ripple, Typography } from "rmcw/dist/components3";
 import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
 import { MessageData, MessageDataAnalysis } from "../common/MessageData";
-import { UnitSystem } from "../common/UnitConvert";
+import { getSpeedUnit, msTo, UnitSystem } from "../common/UnitConvert";
 
 const columnHeight = 150;
 
@@ -39,8 +39,8 @@ export default function SpeedMeter() {
           <Tooltip formatter={(value) => { return (value as number).toFixed(3); }}
             contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
           <Legend />
-          <Area type="monotone" dataKey="speed" stroke="var(--md-sys-color-primary)" fillOpacity={0.6} fill="var(--md-sys-color-primary)" animationDuration={350} />
-          <Area type="monotone" dataKey="velocity" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" animationDuration={350} />
+          <Area type="monotone" dataKey="speed" stroke="var(--md-sys-color-primary)" fillOpacity={0.6} fill="var(--md-sys-color-primary)" isAnimationActive={false} />
+          <Area type="monotone" dataKey="velocity" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" isAnimationActive={false} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
@@ -64,22 +64,4 @@ function toData(messageData: CircularBuffer<MessageData>, messageDataAnalysis: M
   return messageData.map((data, index) => {
     return { index, speed: msTo(data.speed, unit), velocity: msTo(velocity[index], unit) };
   });
-}
-
-function msTo(value: number/* unit: m/s */, unit: UnitSystem) {
-  switch (unit) {
-    case UnitSystem.Imperial:
-      return value * 2.23694;
-    default:
-      return value * 3.6;
-  }
-}
-
-function getSpeedUnit(unit: UnitSystem) {
-  switch (unit) {
-    case UnitSystem.Imperial:
-      return "MPH";
-    default:
-      return "KMH";
-  }
 }

@@ -6,7 +6,7 @@ import { Button, Dialog, Divider, Fab, Icon, IconButton, ListItem } from "rmcw/d
 
 import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, WindowContext } from "./common/AppContext";
 import { Page } from "./common/Page";
-import socketStatsToIcon, { isSocketError } from "./common/SocketStatsToIcon";
+import socketStateToIcon, { isSocketError } from "./common/SocketState";
 import getPage, { MultiPageAppContext, ReactMultiPageAppContext } from "./pages";
 
 type WindowTag = { id: number; page: Page; };
@@ -63,7 +63,7 @@ export default function MultiPageApp({ streamAppContext }: { streamAppContext: S
         <span title={`Socket: ${socketStats}`}>
           <FadeThrough keyId={socketStats} transitionStyle="M3">
             <IconButton onClick={openNetwork}>
-              <Icon style={{ color: isSocketError(socketStats) ? "--md-sys-color-error" : undefined, transition: "color 200ms" }}>{socketStatsToIcon(socketStats)}</Icon>
+              <Icon style={{ color: isSocketError(socketStats) ? "--md-sys-color-error" : undefined, transition: "color 200ms" }}>{socketStateToIcon(socketStats)}</Icon>
             </IconButton>
           </FadeThrough>
         </span>

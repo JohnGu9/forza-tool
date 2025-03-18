@@ -14,7 +14,7 @@ export type ListenAddress = [
     number/* stamp, for manually renew socket on the same address:port */,
 ];
 
-export enum SocketStats {
+export enum SocketState {
     opening = "Opening",
     opened = "Opened",
     error = "Error",
@@ -51,7 +51,7 @@ export type AppContext = {
     setDataBufferLength: (v: number) => unknown,
     errorMessage: string[],
     setErrorMessage: (v: string[]) => unknown,
-    socketStats: SocketStats,
+    socketStats: SocketState,
 
     lastOpenedPage: Page,
     setLastOpenedPage: (v: Page) => unknown,

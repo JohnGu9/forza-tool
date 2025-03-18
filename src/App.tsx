@@ -5,7 +5,7 @@ import { MaterialDesignTransformContext, MaterialDesignTransformContextType, Sha
 import React from 'react';
 import { Theme } from 'rmcw/dist/components3';
 
-import { AppContext, AppWindowMode, ListenAddress, ReactAppContext, SocketStats, StreamAppContext } from './common/AppContext';
+import { AppContext, AppWindowMode, ListenAddress, ReactAppContext, SocketState, StreamAppContext } from './common/AppContext';
 import CircularBuffer from './common/CircularBuffer';
 import { analyzeMessageData, MessageData, MessageDataAnalysis, newMessageDataAnalysis, parseMessageData, resetMessageDataAnalysis } from './common/MessageData';
 import { Page } from './common/Page';
@@ -72,7 +72,7 @@ export default function App() {
     return value;
   }), []);
 
-  const [socketStats, setSocketStats] = React.useState(SocketStats.closed);
+  const [socketStats, setSocketStats] = React.useState(SocketState.closed);
 
   const resetData = React.useCallback(() => {
     messageData.clear();
@@ -132,7 +132,7 @@ export default function App() {
   }, [messageData, messageDataAnalysis, tick]);
 
   React.useEffect(() => {
-    setSocketStats(SocketStats.opening);
+    setSocketStats(SocketState.opening);
     const [address, port, forwardSwitch, forwardAddress, forwardPort] = listenAddress;
     const forward = forwardSwitch ? `${forwardAddress}:${forwardPort}` : null;
     const addErrorMessage = (errorMessage: string) => setErrorMessage((current) => {
@@ -161,7 +161,7 @@ export default function App() {
     listenData(`${address}:${port}`, forward, (event) => {
       switch (event.event) {
         case "error":
-          setSocketStats(SocketStats.error);
+          setSocketStats(SocketState.error);
           addErrorMessage(`[${new Date().toTimeString()}] ${event.data.reason}`);
           break;
         case "messageError":
@@ -171,10 +171,10 @@ export default function App() {
         //   onData(event);
         //   break;
         case "opened":
-          setSocketStats(SocketStats.opened);
+          setSocketStats(SocketState.opened);
           break;
         case "closed":
-          setSocketStats(SocketStats.closed);
+          setSocketStats(SocketState.closed);
           break;
       }
       updateTick();

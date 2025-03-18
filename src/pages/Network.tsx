@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, Dialog, ListItem, Switch, TextField } from "rmcw/dist/components3";
 
-import { ListenAddress, ReactAppContext, SocketStats } from "../common/AppContext";
+import { ListenAddress, ReactAppContext, SocketState } from "../common/AppContext";
 
 export default function Network({ opened, close }: {
   opened: boolean;
@@ -61,15 +61,15 @@ export default function Network({ opened, close }: {
 }
 
 
-function getSocketInformation(socketStats: SocketStats, address: string, port: string) {
+function getSocketInformation(socketStats: SocketState, address: string, port: string) {
   switch (socketStats) {
-    case SocketStats.opening:
+    case SocketState.opening:
       return `Opening socket: ${address}:${port}`;
-    case SocketStats.opened:
+    case SocketState.opened:
       return `Current listening: ${address}:${port}`;
-    case SocketStats.error:
+    case SocketState.error:
       return `Error socket: ${address}:${port} (Maybe port is occupied, please try another port)`;
-    case SocketStats.closed:
+    case SocketState.closed:
       return `Closed socket: ${address}:${port} (Socket is closed abnormally, please try resetting socket)`;
   }
 }
