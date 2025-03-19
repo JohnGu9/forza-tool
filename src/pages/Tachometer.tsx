@@ -39,18 +39,24 @@ export default function Tachometer() {
     <div className="flex-child" style={{ position: "relative" }}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart margin={{ bottom: -48 }}>
-          {showMore && !showPowerLevel ? <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="60%" outerRadius="65%" fill={powerLevel > 0.97 ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)"} startAngle={startAngle} endAngle={getAngle(powerLevel, startAngle, endAngle)}
+          {showMore && !showPowerLevel ? <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="60%" outerRadius="65%" startAngle={startAngle} endAngle={endAngle}
             stroke="var(--md-sys-color-on-background)"
-            data={[{ name: "PowerLevel", value: powerLevel }]} /> : undefined}
+            data={[{ name: "PowerLevel", value: powerLevel }, { name: "RemainingPowerCapacity", value: 1 - powerLevel }]} >
+            <Cell fill={getPowerLevelProgressColor(powerLevel)} />
+            <Cell fill="var(--md-sys-color-surface-dim)" />
+          </Pie> : undefined}
           <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="70%" outerRadius="80%" fill="var(--md-sys-color-primary)" startAngle={startAngle} endAngle={endAngle} paddingAngle={1}
             stroke="var(--md-sys-color-on-background)"
             data={markData}>
             {markData.map((data, index) =>
               <Cell key={index} fill={data.mark ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)"} />)}
           </Pie>
-          <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="85%" outerRadius="90%" fill={getColor()} startAngle={startAngle} endAngle={getAngle(lastData.engineMaxRpm === 0 ? 0 : lastData.currentEngineRpm / lastData.engineMaxRpm, startAngle, endAngle)}
+          <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="85%" outerRadius="90%" fill={getColor()} startAngle={startAngle} endAngle={endAngle}
             stroke="var(--md-sys-color-on-background)"
-            data={[{ name: "CurrentEngineRpm", value: lastData.currentEngineRpm }]} />
+            data={[{ name: "CurrentEngineRpm", value: lastData.currentEngineRpm }, { name: "RemainingRpmCapacity", value: lastData.engineMaxRpm - lastData.currentEngineRpm }]} >
+            <Cell fill={getColor()} />
+            <Cell fill="var(--md-sys-color-surface-dim)" />
+          </Pie>
           <Tooltip content={<CustomTooltip />} />
         </PieChart>
       </ResponsiveContainer>
@@ -74,6 +80,16 @@ export default function Tachometer() {
         </>}
     </SharedAxis>
   </div>;
+}
+
+function getPowerLevelProgressColor(powerLevel: number) {
+  if (powerLevel > 0.99) {
+    return "var(--md-sys-color-tertiary)";
+  }
+  if (powerLevel < 0.9) {
+    return "var(--md-sys-color-error)";
+  }
+  return "var(--md-sys-color-primary)";
 }
 
 function CustomTooltip({ active, payload }: TooltipProps<ValueType, NameType>) {
@@ -136,10 +152,6 @@ function getMarkData(max: number, range: { lower: number, upper: number; }) {
   }
 
   return res;
-}
-
-function getAngle(current: number/* 0~1 */, start: number, end: number) {
-  return start * (1 - current) + end * current;
 }
 
 function getRange(messageDataAnalysis: MessageDataAnalysis) {
