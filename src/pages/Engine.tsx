@@ -147,19 +147,17 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
 }
 
 function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
-  const data: { rpm: number; torque: number; power: number; }[] = [];
-  for (const [rpm, { power, torque }] of messageAnalysis.powerCurve.entries()) {
-    data.push({ rpm: parseFloat(rpm), power: wTo(Math.max(power, 0), unit), torque: nmTo(Math.max(torque, 0), unit) });
+  const res: { rpm: number; torque: number; power: number; }[] = [];
+  for (const { power, torque, rpm } of messageAnalysis.powerCurve) {
+    res.push({ rpm: rpm, power: wTo(Math.max(power, 0), unit), torque: nmTo(Math.max(torque, 0), unit) });
   }
-  if (data.length === 0) {
-    return [];
+  if (res.length === 0) {
+    return res;
   }
-  const res = data.sort((a, b) => a.rpm - b.rpm);
-
   // only show part of data, reduce render work
   const targetDrawPointAmount = 256;
-  const rpmGap = Math.max(20.0/* at least every 20 rpm show 1 data */, (data[data.length - 1].rpm - data[0].rpm) / targetDrawPointAmount);
-  const reduceItems = [data[0]];
+  const rpmGap = Math.max(20.0/* at least every 20 rpm show 1 data */, (res[res.length - 1].rpm - res[0].rpm) / targetDrawPointAmount);
+  const reduceItems = [res[0]];
   const endIndex = res.length - 1;
   for (let i = 1; i < endIndex;) {
     const data = res[i];
@@ -175,8 +173,7 @@ function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
       if (maxPowerIndex !== undefined) {
         return res[maxPowerIndex];
       }
-      const sorted = lastData.sort((a, b) => a.power - b.power);
-      return sorted[Math.floor(sorted.length * 3 / 4)];
+      return lastData[0];
     }
     const target = getTarget();
     reduceItems.push(target);

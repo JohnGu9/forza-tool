@@ -5,11 +5,11 @@ import { ListItem, Select, SelectOption, Switch } from "rmcw/dist/components3";
 import { ReactStreamAppContext, ReactWindowContext } from "../common/AppContext";
 import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
 import CircularBuffer from "../common/CircularBuffer";
-import { dummyMessageData, MessageData } from "../common/MessageData";
+import { DataType, dummyMessageData, MessageData } from "../common/MessageData";
 
 const keys = Object.keys(dummyMessageData).filter(value => {
   switch (value) {
-    case "isDashData":
+    case "dataType":
     case "isRaceOn":
       return false;
     default:
@@ -24,10 +24,10 @@ export default function Detail() {
     getDelta(messageData, detailOption as keyof MessageData) :
     messageData.map((data, index) => { return { index, value: data[detailOption as keyof MessageData] }; });
   const lastData = messageData.getLast();
-  const currentDataType = lastData ? (lastData.isDashData ? "Dash" : "Sled") : "unknown";
+  const currentDataType = lastData ? getDataTypeName(lastData.dataType) : "Unknown Data Type";
   const displayText = React.useMemo(() => capitalizeFirstLetter(detailOption), [detailOption]);
   return <div className="fill-parent flex-column" style={{ padding: "16px 16px 0" }}>
-    <Select label="option" displayText={displayText} supportingText={`Current Data Type: ${currentDataType}`}>
+    <Select label="option" displayText={displayText} supportingText={currentDataType}>
       {keys.map(key => <SelectOption key={key} headline={key} selected={detailOption === key} onClick={() => setDetailOption(key)} style={{ textTransform: "capitalize" }} />)}
     </Select>
     <div style={{ height: 16 }} aria-hidden />
@@ -46,6 +46,19 @@ export default function Detail() {
     </div>
     <ListItem type="button" end={<Switch selected={showDetailDelta} />} onClick={() => setShowDetailDelta(!showDetailDelta)}>Show Delta</ListItem>
   </div>;
+}
+
+function getDataTypeName(dataType: DataType) {
+  switch (dataType) {
+    case DataType.Sled:
+      return "Frza Sled";
+    case DataType.FH4Dash:
+      return "Forza Horizon Dash";
+    case DataType.FM7Dash:
+      return "Forza Motorsport 7 Dash";
+    case DataType.FM8Dash:
+      return "Forza Motorsport Dash";
+  }
 }
 
 function getDelta<T extends keyof MessageData>(messageData: CircularBuffer<MessageData>, option: T) {

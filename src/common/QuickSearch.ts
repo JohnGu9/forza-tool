@@ -1,9 +1,9 @@
 // quick search: the place of the target to insert
 export default function quickSearch(sorted: number[], target: number): number {
     if (sorted.length <= 2) {
-        if (sorted[sorted.length - 1] < target) {
+        if (sorted[sorted.length - 1] <= target) {
             return sorted.length;
-        } else if (sorted[0] < target) {
+        } else if (sorted[0] <= target) {
             return 1;
         } else {
             return 0;
@@ -11,7 +11,7 @@ export default function quickSearch(sorted: number[], target: number): number {
     }
     const midIndex = Math.floor(sorted.length / 2);
     const mid = sorted[midIndex];
-    if (mid < target) {
+    if (mid <= target) {
         const subSOrted = sorted.slice(midIndex);
         return midIndex + quickSearch(subSOrted, target);
     } else {

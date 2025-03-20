@@ -143,7 +143,7 @@ export default function App() {
     const onData = (event: { event: 'data'; data: { data: number[]; }; }) => {
       try {
         const data = parseMessageData(event.data.data);
-        if (!data.isRaceOn) {
+        if (data.isRaceOn === 0) {
           return;
         }
         // log(`${JSON.stringify(data)}`);

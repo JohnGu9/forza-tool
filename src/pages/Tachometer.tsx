@@ -155,9 +155,10 @@ function getMarkData(max: number, range: { lower: number, upper: number; }) {
 }
 
 function getRange(messageDataAnalysis: MessageDataAnalysis) {
-  const sorted = [...messageDataAnalysis.powerCurve.entries()]
-    .map(([key, { rpm, power }]) => { return { x: rpm, y: power, key }; })
-    .sort((a, b) => a.x - b.x);
+  const sorted = messageDataAnalysis.powerCurve.map(({ rpm, power }) => {
+    const key = rpm.toFixed(1);
+    return { x: rpm, y: power, key };
+  });
   if (sorted.length === 0) {
     return { lower: 0, upper: 0 };
   }

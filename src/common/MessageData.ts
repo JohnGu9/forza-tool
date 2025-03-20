@@ -1,10 +1,18 @@
 import CircularBuffer from "./CircularBuffer";
 import quickSearch from "./QuickSearch";
 
+export enum DataType {
+    Sled,
+    FH4Dash,
+    FM7Dash,
+    FM8Dash,
+};
+
 export type MessageData = {
-    isDashData: boolean,
+    dataType: DataType,
+
     // Sled
-    isRaceOn: boolean,
+    isRaceOn: number,   // = 1 when race is on. = 0 when in menus/race stopped
     timestampMs: number, // Can overflow to 0 eventually
     engineMaxRpm: number,
     engineIdleRpm: number,
@@ -91,27 +99,43 @@ export type MessageData = {
     steer: number,
     normalDrivingLine: number,
     normalAiBrakeDifference: number,
+
+    // FM8 extend
+    tireWearFrontLeft: number;
+    tireWearFrontRight: number;
+    tireWearRearLeft: number;
+    tireWearRearRight: number;
+    trackOrdinal: number;
 };
 
+function getBufferOffset(dataType: DataType) {
+    switch (dataType) {
+        case DataType.FH4Dash:
+            return 12;
+    }
+    return 0;
+}
+
 export function parseMessageData(buffer: number[]): MessageData {
-    let buffer_offset = 0;
-    let isDashData = false;
+    let dataType = DataType.Sled;
     switch (buffer.length) {
-        case 232:
-            // throw Error("Unsupported Data (FM7 sled)");
+        case 232: // Sled
+            dataType = DataType.Sled;
             break;
         case 324:// FH4
-            buffer_offset = 12;
-            isDashData = true;
+            dataType = DataType.FH4Dash;
             break;
         case 311:// FM7 dash
+            dataType = DataType.FM7Dash;
+            break;
         case 331:// FM8 dash
-            buffer_offset = 0;
-            isDashData = true;
+            dataType = DataType.FM8Dash;
             break;
         default:
             throw Error(`Unsupported Data (Unknown length: ${buffer.length})`);
     }
+    const buffer_offset = getBufferOffset(dataType);
+
 
     const array = new Uint8Array(buffer);
     const bytes = new DataView(array.buffer);
@@ -142,7 +166,7 @@ export function parseMessageData(buffer: number[]): MessageData {
 
     function getSled() {
         return {
-            isRaceOn: get_int32(bytes, 0) > 0,
+            isRaceOn: get_int32(bytes, 0),
             timestampMs: get_uint32(bytes, 4), // Can overflow to 0 eventually
             engineMaxRpm: get_float32(bytes, 8),
             engineIdleRpm: get_float32(bytes, 12),
@@ -204,41 +228,41 @@ export function parseMessageData(buffer: number[]): MessageData {
     }
 
     function getDash() {
+        switch (dataType) {
+            case DataType.FH4Dash:
+            case DataType.FM7Dash:
+            case DataType.FM8Dash:
+                return {
+                    positionX: get_float32(bytes, 232 + buffer_offset),
+                    positionY: get_float32(bytes, 236 + buffer_offset),
+                    positionZ: get_float32(bytes, 240 + buffer_offset),
+                    speed: get_float32(bytes, 244 + buffer_offset),
+                    power: get_float32(bytes, 248 + buffer_offset),
+                    torque: get_float32(bytes, 252 + buffer_offset),
+                    tireTempFrontLeft: get_float32(bytes, 256 + buffer_offset),
+                    tireTempFrontRight: get_float32(bytes, 260 + buffer_offset),
+                    tireTempRearLeft: get_float32(bytes, 264 + buffer_offset),
+                    tireTempRearRight: get_float32(bytes, 268 + buffer_offset),
+                    boost: get_float32(bytes, 272 + buffer_offset),
+                    fuel: get_float32(bytes, 276 + buffer_offset),
+                    distance: get_float32(bytes, 280 + buffer_offset),
+                    bestLapTime: get_float32(bytes, 284 + buffer_offset),
+                    lastLapTime: get_float32(bytes, 288 + buffer_offset),
+                    currentLapTime: get_float32(bytes, 292 + buffer_offset),
+                    currentRaceTime: get_float32(bytes, 296 + buffer_offset),
+                    lap: get_uint16(bytes, 300 + buffer_offset),
+                    racePosition: get_uint8(bytes, 302 + buffer_offset),
+                    accelerator: get_uint8(bytes, 303 + buffer_offset),
+                    brake: get_uint8(bytes, 304 + buffer_offset),
+                    clutch: get_uint8(bytes, 305 + buffer_offset),
+                    handbrake: get_uint8(bytes, 306 + buffer_offset),
+                    gear: get_uint8(bytes, 307 + buffer_offset),
+                    steer: get_int8(bytes, 308 + buffer_offset),
+                    normalDrivingLine: get_int8(bytes, 309 + buffer_offset),
+                    normalAiBrakeDifference: get_int8(bytes, 310 + buffer_offset),
+                };
+        }
         return {
-            isDashData: true,
-            positionX: get_float32(bytes, 232 + buffer_offset),
-            positionY: get_float32(bytes, 236 + buffer_offset),
-            positionZ: get_float32(bytes, 240 + buffer_offset),
-            speed: get_float32(bytes, 244 + buffer_offset),
-            power: get_float32(bytes, 248 + buffer_offset),
-            torque: get_float32(bytes, 252 + buffer_offset),
-            tireTempFrontLeft: get_float32(bytes, 256 + buffer_offset),
-            tireTempFrontRight: get_float32(bytes, 260 + buffer_offset),
-            tireTempRearLeft: get_float32(bytes, 264 + buffer_offset),
-            tireTempRearRight: get_float32(bytes, 268 + buffer_offset),
-            boost: get_float32(bytes, 272 + buffer_offset),
-            fuel: get_float32(bytes, 276 + buffer_offset),
-            distance: get_float32(bytes, 280 + buffer_offset),
-            bestLapTime: get_float32(bytes, 284 + buffer_offset),
-            lastLapTime: get_float32(bytes, 288 + buffer_offset),
-            currentLapTime: get_float32(bytes, 292 + buffer_offset),
-            currentRaceTime: get_float32(bytes, 296 + buffer_offset),
-            lap: get_uint16(bytes, 300 + buffer_offset),
-            racePosition: get_uint8(bytes, 302 + buffer_offset),
-            accelerator: get_uint8(bytes, 303 + buffer_offset),
-            brake: get_uint8(bytes, 304 + buffer_offset),
-            clutch: get_uint8(bytes, 305 + buffer_offset),
-            handbrake: get_uint8(bytes, 306 + buffer_offset),
-            gear: get_uint8(bytes, 307 + buffer_offset),
-            steer: get_int8(bytes, 308 + buffer_offset),
-            normalDrivingLine: get_int8(bytes, 309 + buffer_offset),
-            normalAiBrakeDifference: get_int8(bytes, 310 + buffer_offset),
-        };
-    }
-
-    function getDashPlaceholder() {
-        return {
-            isDashData: false,
             positionX: 0,
             positionY: 0,
             positionZ: 0,
@@ -269,23 +293,38 @@ export function parseMessageData(buffer: number[]): MessageData {
         };
     }
 
-    if (isDashData) {
+    function getFm8Extend() {
+        switch (dataType) {
+            case DataType.FM8Dash:
+                return {
+                    tireWearFrontLeft: get_float32(bytes, 311 + buffer_offset),
+                    tireWearFrontRight: get_float32(bytes, 315 + buffer_offset),
+                    tireWearRearLeft: get_float32(bytes, 319 + buffer_offset),
+                    tireWearRearRight: get_float32(bytes, 323 + buffer_offset),
+                    trackOrdinal: get_int32(bytes, 327 + buffer_offset),
+                };
+        }
         return {
-            ...getSled(),
-            ...getDash(),
-        };
-    } else {
-        return {
-            ...getSled(),
-            ...getDashPlaceholder(),
+            tireWearFrontLeft: 0,
+            tireWearFrontRight: 0,
+            tireWearRearLeft: 0,
+            tireWearRearRight: 0,
+            trackOrdinal: 0,
         };
     }
+
+    return {
+        dataType,
+        ...getSled(),
+        ...getDash(),
+        ...getFm8Extend(),
+    };
 }
 
 export type MessageDataAnalysis = {
     id: number,
     maxPower: { value: number, rpm: number, torque: number; };
-    powerCurve: Map<string/* (rpm: number).toFixed(1) */, { rpm: number, power: number, torque: number; isFullAcceleratorForAWhile: boolean; }>;
+    powerCurve: { rpm: number, power: number, torque: number; isFullAcceleratorForAWhile: boolean; }[];
     distance: CircularBuffer<number>;
     speed: CircularBuffer<number>;
     isFullAcceleratorForAWhile: boolean;
@@ -293,13 +332,13 @@ export type MessageDataAnalysis = {
 };
 
 export function newMessageDataAnalysis(capacity: number): MessageDataAnalysis {
-    return { id: 0, maxPower: { value: 0, rpm: 0, torque: 0 }, powerCurve: new Map(), distance: new CircularBuffer<number>(capacity), speed: new CircularBuffer<number>(capacity), isFullAcceleratorForAWhile: false, stamp: 0 };
+    return { id: 0, maxPower: { value: 0, rpm: 0, torque: 0 }, powerCurve: [], distance: new CircularBuffer<number>(capacity), speed: new CircularBuffer<number>(capacity), isFullAcceleratorForAWhile: false, stamp: 0 };
 }
 
 export function resetMessageDataAnalysis(analysis: MessageDataAnalysis) {
     analysis.id += 1;
     analysis.maxPower = { value: 0, rpm: 0, torque: 0 };
-    analysis.powerCurve = new Map();
+    analysis.powerCurve = [];
     analysis.distance = new CircularBuffer(analysis.distance.getCapacity());
     analysis.speed = new CircularBuffer(analysis.speed.getCapacity());
     analysis.isFullAcceleratorForAWhile = false;
@@ -311,15 +350,8 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>/* no
     const lastData = messageData.slice(-6);
     const lastMessageData = lastData[lastData.length - 1];
     const isFullAcceleratorForAWhile = lastData.every(v => v.accelerator > 248 && v.gear === lastData[0].gear);
-    const isMaxPower = lastMessageData.power > 0 && analysis.maxPower.value < lastMessageData.power;
 
-    if (isMaxPower) {
-        analysis.maxPower = { value: lastMessageData.power, rpm: lastMessageData.currentEngineRpm, torque: lastMessageData.torque };
-        changed = true;
-    }
-
-    if (isMaxPower || isValidData(analysis, lastMessageData, isFullAcceleratorForAWhile)) {
-        analysis.powerCurve.set(lastMessageData.currentEngineRpm.toFixed(1), { rpm: lastMessageData.currentEngineRpm, power: lastMessageData.power, torque: lastMessageData.torque, isFullAcceleratorForAWhile });
+    if (validData(analysis, lastMessageData, isFullAcceleratorForAWhile)) {
         changed = true;
     }
 
@@ -343,143 +375,219 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>/* no
     }
 }
 
-function isValidData(analysis: MessageDataAnalysis, lastMessageData: MessageData, isFullAcceleratorForAWhile: boolean) {
-    const currentEngineRpm = lastMessageData.currentEngineRpm.toFixed(1); // limit data dense
+const MaxFdTolerationFactor = 8;
+const MinFdTolerationFactor = 2 / 3;
+function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData, isFullAcceleratorForAWhile: boolean) {
+    if (lastMessageData.power <= 0 ||
+        lastMessageData.currentEngineRpm === lastMessageData.engineMaxRpm ||
+        lastMessageData.currentEngineRpm === lastMessageData.engineIdleRpm) {
+        return false;
+    }
+    type Element = { power: number, rpm: number, torque: number; isFullAcceleratorForAWhile: boolean; };
 
-    const recordPower = analysis.powerCurve.get(currentEngineRpm);
-    if (recordPower !== undefined) {
-        return recordPower.power < lastMessageData.power;
+    const powerCurveData = { power: lastMessageData.power, torque: lastMessageData.torque, rpm: lastMessageData.currentEngineRpm, isFullAcceleratorForAWhile };
+    function updateMaxPower() {
+        analysis.maxPower = { value: powerCurveData.power, torque: powerCurveData.torque, rpm: powerCurveData.rpm };
     }
 
-    // ensure max power record show in power curve
-    const maxPowerRecordRpmKey = analysis.maxPower.rpm.toFixed(1);
+    const rpmKey = powerCurveData.rpm.toFixed(1);
+    function isSameRpm(rpm: number) {
+        return rpm.toFixed(1) === rpmKey;
+    }
+    function isMaxPowerData(data: Element) {
+        return data.rpm.toFixed(1) === analysis.maxPower.rpm.toFixed(1);
+    }
 
-    if (recordPower === undefined && lastMessageData.power > 500 /* at least 0.5KMH */) {
-        if (analysis.powerCurve.size < 3) {
+    if (analysis.powerCurve.length === 0) {
+        updateMaxPower();
+        analysis.powerCurve = [powerCurveData];
+        return true;
+    }
+    const isMaxPower = powerCurveData.power > 0 && analysis.maxPower.value < powerCurveData.power;
+    const rpmArray = analysis.powerCurve.map(v => v.rpm);
+    const insertIndex = quickSearch(rpmArray, powerCurveData.rpm);
+
+    // fd means First Derivative
+    function getFirstDerivative(first: { power: number, rpm: number; }, second: { power: number, rpm: number; }) {
+        return (second.power - first.power) / (second.rpm - first.rpm);
+    }
+
+    if (insertIndex === 0) {
+        const data = analysis.powerCurve[0];
+
+        const fd1 = getFirstDerivative(powerCurveData, data);
+        if (isMaxPower) {
+            const minFdToleration = MinFdTolerationFactor * getFirstDerivative(powerCurveData, { power: 0, rpm: lastMessageData.engineMaxRpm });
+            if (fd1 < minFdToleration) { // analysis.powerCurve[0] is invalid
+                analysis.powerCurve[0] = powerCurveData;
+            } else if (isSameRpm(data.rpm)) {
+                analysis.powerCurve[0] = powerCurveData;
+            } else {
+                analysis.powerCurve = [powerCurveData, ...analysis.powerCurve];
+            }
+            updateMaxPower();
+            return true;
+        } else { // not max power
+            if (fd1 <= 0) { // analysis.powerCurve[0] is invalid
+                analysis.powerCurve[0] = powerCurveData;
+                return true;
+            }
+            const maxFdToleration = MaxFdTolerationFactor * getFirstDerivative({ power: 0, rpm: lastMessageData.engineIdleRpm }, { power: analysis.maxPower.value, rpm: analysis.maxPower.rpm });
+            if (fd1 > maxFdToleration) {
+                return false;
+            }
+
+            if (isSameRpm(data.rpm)) {
+                if (isMaxPowerData(data)) {
+                    return false;
+                }
+                analysis.powerCurve[0] = powerCurveData;
+            } else {
+                analysis.powerCurve = [powerCurveData, ...analysis.powerCurve];
+            }
             return true;
         }
-        // to reduce power data noise
-        // assume power curve is a convex function f(x)
-        // so it's second derivative f''(x) is always < 0
-        // also if a < b < c, then f(a) + f(c) < 2 * f(b)
-        const { sorted, position } = getClosestPositions(currentEngineRpm, analysis.powerCurve);
+    } else if (insertIndex === rpmArray.length) {
+        const lastIndex = analysis.powerCurve.length - 1;
+        const data = analysis.powerCurve[lastIndex];
 
-        const toleration = isFullAcceleratorForAWhile ?
-            2 : // full accelerator for a while, more likely to accept this data
-            (isDataTooDense(lastMessageData.currentEngineRpm, sorted, position) ? 0.9 : 0.95);
-
-        if (position === 0) {
-            const bRpm = sorted[0];
-            const cRpm = sorted[1];
-            const bKey = bRpm.toFixed(1);
-            const cKey = cRpm.toFixed(1);
-            const bValue = analysis.powerCurve.get(bKey)!;
-            const cValue = analysis.powerCurve.get(cKey)!;
-
-            if (bKey !== maxPowerRecordRpmKey &&
-                !isConvex({ x: lastMessageData.currentEngineRpm, y: lastMessageData.power },// lastMessageData as a
-                    { x: bRpm, y: bValue.power },
-                    { x: cRpm, y: cValue.power }, toleration)) {
-                analysis.powerCurve.delete(bKey); // upper is invalid power data, remove it
+        if (powerCurveData.rpm === data.rpm) {
+            powerCurveData.rpm = Math.min(powerCurveData.rpm + Number.MIN_VALUE, lastMessageData.engineMaxRpm);
+        }
+        const fd0 = getFirstDerivative(data, powerCurveData);
+        if (isMaxPower) {
+            const maxFdToleration = MaxFdTolerationFactor * getFirstDerivative({ rpm: lastMessageData.engineIdleRpm, power: 0 }, powerCurveData);
+            if (fd0 > maxFdToleration) { // analysis.powerCurve[lastIndex] is invalid
+                analysis.powerCurve[lastIndex] = powerCurveData;
+            } else if (isSameRpm(data.rpm)) {
+                analysis.powerCurve[lastIndex] = powerCurveData;
+            } else {
+                analysis.powerCurve.push(powerCurveData);
             }
-        } else if (position === sorted.length) {
-            const aRpm = sorted[sorted.length - 2];
-            const bRpm = sorted[sorted.length - 1];
-            const aKey = aRpm.toFixed(1);
-            const bKey = bRpm.toFixed(1);
-            const aValue = analysis.powerCurve.get(aKey)!;
-            const bValue = analysis.powerCurve.get(bKey)!;
-
-            if (bKey !== maxPowerRecordRpmKey &&
-                !isConvex({ x: aRpm, y: aValue.power },
-                    { x: bRpm, y: bValue.power },
-                    { x: lastMessageData.currentEngineRpm, y: lastMessageData.power }, toleration)) {// lastMessageData as c
-                analysis.powerCurve.delete(bKey); // lower is invalid power data, remove it
+            updateMaxPower();
+            return true;
+        } else { // not max power
+            if (fd0 >= 0) { // analysis.powerCurve[lastIndex] is invalid
+                analysis.powerCurve[lastIndex] = powerCurveData;
+                return true;
             }
-        } else {
-            const aRpm = sorted[position - 1];
-            const cRpm = sorted[position];
-            const aKey = aRpm.toFixed(1);
-            const cKey = cRpm.toFixed(1);
-            const aValue = analysis.powerCurve.get(aKey)!;
-            const cValue = analysis.powerCurve.get(cKey)!;
-
-            let valid = true;
-            if (!isConvex({ x: aRpm, y: aValue.power },
-                { x: lastMessageData.currentEngineRpm, y: lastMessageData.power },// lastMessageData as b
-                { x: cRpm, y: cValue.power }, toleration)) {
-                valid = false; // lastMessageData is invalid power data, ignore it
+            const minFdToleration = MinFdTolerationFactor * getFirstDerivative({ power: analysis.maxPower.value, rpm: analysis.maxPower.rpm }, { power: 0, rpm: lastMessageData.engineMaxRpm });
+            if (fd0 < minFdToleration) {
+                return false;
             }
-            // accept lastMessageData
-            // clean up lower/upper bound data
-            if (position > 1) {
-                const aaRpm = sorted[position - 2];
-                const aaKey = aaRpm.toFixed(1);
-                const aaValue = analysis.powerCurve.get(aaKey)!;
-                const toleration = aValue.isFullAcceleratorForAWhile ? 2 : 0.8;
 
-                if (aKey !== maxPowerRecordRpmKey &&
-                    !isConvex({ x: aaRpm, y: aaValue.power },
-                        { x: aRpm, y: aValue.power },
-                        { x: lastMessageData.currentEngineRpm, y: lastMessageData.power }, toleration)) {
-                    analysis.powerCurve.delete(aKey); // lower is invalid power data, remove it
+            if (isSameRpm(data.rpm)) {
+                if (isMaxPowerData(data)) {
+                    return false;
                 }
+                analysis.powerCurve[lastIndex] = powerCurveData;
+            } else {
+                analysis.powerCurve.push(powerCurveData);
             }
-            if (position < sorted.length - 1) {
-                const ccRpm = sorted[position + 1];
-                const ccKey = ccRpm.toFixed(1);
-                const ccValue = analysis.powerCurve.get(ccKey)!;
-                const toleration = cValue.isFullAcceleratorForAWhile ? 2 : 0.8;
+            return true;
+        }
+    }
 
-                if (cKey !== maxPowerRecordRpmKey &&
-                    !isConvex({ x: lastMessageData.currentEngineRpm, y: lastMessageData.power },
-                        { x: cRpm, y: cValue.power },
-                        { x: ccRpm, y: ccValue.power }, toleration)) {
-                    analysis.powerCurve.delete(cKey); // upper is invalid power data, remove it
-                }
+    const data0 = analysis.powerCurve[insertIndex - 1];
+    const data1 = analysis.powerCurve[insertIndex];
+
+    const originFd = getFirstDerivative(data0, data1);
+    const fd1 = getFirstDerivative(powerCurveData, data1);
+
+    if (data0.rpm === powerCurveData.rpm) {
+        powerCurveData.rpm += Number.MIN_VALUE;
+    }
+
+    const fd0 = getFirstDerivative(data0, powerCurveData);
+    if (isMaxPower) {
+        if ((insertIndex - 2) >= 0 && (insertIndex + 1) <= (analysis.powerCurve.length - 1)) {
+            const data00 = analysis.powerCurve[insertIndex - 2];
+            const data11 = analysis.powerCurve[insertIndex + 1];
+            const originFd0 = getFirstDerivative(data00, data0);
+            const originFd1 = getFirstDerivative(data1, data11);
+            if (originFd0 < 0 && originFd1 < 0 && originFd < 0 && fd0 > 0) {
+                return false;
             }
-
-            if (valid === false) {
+            if (originFd0 > 0 && originFd1 > 0 && originFd > 0 && fd1 < 0) {
                 return false;
             }
         }
+        const maxFdToleration = MaxFdTolerationFactor * getFirstDerivative({ power: 0, rpm: lastMessageData.engineIdleRpm }, powerCurveData);
+        const minFdToleration = MinFdTolerationFactor * getFirstDerivative(powerCurveData, { power: 0, rpm: lastMessageData.engineMaxRpm });
+
+        const isData0Invalid = fd0 > maxFdToleration;
+        const isData1Invalid = fd1 < minFdToleration;
+        function merge(before: Element | undefined, target: Element, after: Element | undefined) {
+            const res: Element[] = [];
+            if (before !== undefined && !isSameRpm(before.rpm)) {
+                res.push(before);
+            }
+            res.push(target);
+            if (after !== undefined && !isSameRpm(after.rpm)) {
+                res.push(after);
+            }
+            return res;
+        }
+        const m = merge(isData0Invalid ? undefined : data0, powerCurveData, isData1Invalid ? undefined : data1);
+
+        analysis.powerCurve = [...analysis.powerCurve.slice(0, insertIndex - 1), ...m, ...analysis.powerCurve.slice(insertIndex + 1)];
+        updateMaxPower();
         return true;
+    } else {
+        const maxFdToleration = MaxFdTolerationFactor * getFirstDerivative({ power: 0, rpm: lastMessageData.engineIdleRpm }, { power: analysis.maxPower.value, rpm: analysis.maxPower.rpm });
+        const minFdToleration = MinFdTolerationFactor * getFirstDerivative({ power: analysis.maxPower.value, rpm: analysis.maxPower.rpm }, { power: 0, rpm: lastMessageData.engineMaxRpm });
+        function merge(before: Element | undefined, target: Element, after: Element | undefined) {
+            let isBeforeInvalid = false;
+            let isAfterInvalid = false;
+            let isTargetInvalid = false;
+            if (before !== undefined && isSameRpm(before.rpm)) {
+                if (before.power < target.power) {
+                    isBeforeInvalid = true;
+                } else {
+                    isTargetInvalid = false;
+                }
+            }
+            if (after !== undefined && isSameRpm(after.rpm)) {
+                if (after.power < target.power) {
+                    isAfterInvalid = true;
+                } else {
+                    isTargetInvalid = false;
+                }
+            }
+
+            const res: Element[] = [];
+            if (before !== undefined && !isBeforeInvalid) {
+                res.push(before);
+            }
+            if (!isTargetInvalid) {
+                res.push(target);
+            }
+            if (after !== undefined && !isAfterInvalid) {
+                res.push(after);
+            }
+            return res;
+        }
+        if (powerCurveData.rpm < analysis.maxPower.rpm) {
+            if (fd0 <= 0 || fd1 > maxFdToleration) {
+                return false;
+            }
+            const isData0Invalid = fd0 <= 0 || fd0 > maxFdToleration;
+            const isData1Invalid = fd1 <= 0;
+            const m = merge(isData0Invalid ? undefined : data0, powerCurveData, isData1Invalid ? undefined : data1);
+            analysis.powerCurve = [...analysis.powerCurve.slice(0, insertIndex - 1), ...m, ...analysis.powerCurve.slice(insertIndex + 1)];
+            return true;
+        } else {
+            if (fd1 >= 0 || fd0 < minFdToleration) {
+                return false;
+            }
+            const isData0Invalid = fd0 >= 0;
+            const isData1Invalid = fd1 >= 0 || fd1 < minFdToleration;
+            const m = merge(isData0Invalid ? undefined : data0, powerCurveData, isData1Invalid ? undefined : data1);
+            analysis.powerCurve = [...analysis.powerCurve.slice(0, insertIndex - 1), ...m, ...analysis.powerCurve.slice(insertIndex + 1)];
+            return true;
+        }
     }
 
-    return false;
-}
-
-type AxisPosition = { x: number, y: number; };
-function isConvex(a: AxisPosition, b: AxisPosition, c: AxisPosition, toleration: number) {
-    const eccentricity = getEccentricity(b.x, a.x, c.x);
-    return (a.y + c.y) < (b.y * 2 * (toleration * (1 - eccentricity) + 1 * eccentricity));
-}
-
-function getClosestPositions(currentEngineRpm: string, powerCurve: Map<string, { power: number, torque: number; }>) {
-    const currentEngineRpmNumber = parseFloat(currentEngineRpm);
-    const sorted = [...powerCurve.keys()].map(v => parseFloat(v)).sort((a, b) => a - b);
-    const position = quickSearch(sorted, currentEngineRpmNumber);
-    return { sorted, position };
-}
-
-function getEccentricity(current: number, lower: number, upper: number) {
-    const range = upper - lower;
-    const center = lower + range * 0.5;
-    const delta = Math.abs(current - center);
-    return delta / range;
-}
-
-function isDataTooDense(current: number, sorted: number[], position: number, threshold = 50) {
-    if (position === 0 && sorted[0] - current < threshold) {
-        return true;
-    }
-    if (position === sorted.length && current - sorted[sorted.length - 1] < threshold) {
-        return true;
-    }
-    if (current - sorted[position - 1] < threshold && sorted[position] - current < threshold) {
-        return true;
-    }
-    return false;
 }
 
 type Position = {
@@ -500,9 +608,9 @@ function getDistance(now: Position, before: Position) {
 }
 
 export const dummyMessageData: MessageData = {
-    isDashData: false,
+    dataType: DataType.Sled,
     // Sled
-    isRaceOn: false,
+    isRaceOn: 0,
     timestampMs: 0, // Can overflow to 0 eventually
     engineMaxRpm: 0,
     engineIdleRpm: 0,
@@ -589,4 +697,12 @@ export const dummyMessageData: MessageData = {
     steer: 0,
     normalDrivingLine: 0,
     normalAiBrakeDifference: 0,
+
+    // FM8 extend
+    tireWearFrontLeft: 0,
+    tireWearFrontRight: 0,
+    tireWearRearLeft: 0,
+    tireWearRearRight: 0,
+    trackOrdinal: 0,
+
 };
