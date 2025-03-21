@@ -5,17 +5,7 @@ import { ListItem, Select, SelectOption, Switch } from "rmcw/dist/components3";
 import { ReactStreamAppContext, ReactWindowContext } from "../common/AppContext";
 import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
 import CircularBuffer from "../common/CircularBuffer";
-import { DataType, dummyMessageData, MessageData } from "../common/MessageData";
-
-const keys = Object.keys(dummyMessageData).filter(value => {
-  switch (value) {
-    case "dataType":
-    case "isRaceOn":
-      return false;
-    default:
-      return true;
-  }
-});
+import { dashExtendTemplate, DataType, dummyMessageData, fm8DashExtendTemplate, MessageData, sledTemplate } from "../common/MessageData";
 
 export default function Detail() {
   const { messageData } = React.useContext(ReactStreamAppContext);
@@ -25,24 +15,27 @@ export default function Detail() {
     messageData.map((data, index) => { return { index, value: data[detailOption as keyof MessageData] }; });
   const lastData = messageData.getLast();
   const currentDataType = lastData ? getDataTypeName(lastData.dataType) : "Unknown Data Type";
+  const validKeys = getValidKeys(lastData?.dataType);
   const displayText = React.useMemo(() => capitalizeFirstLetter(detailOption), [detailOption]);
-  return <div className="fill-parent flex-column" style={{ padding: "16px 16px 0" }}>
-    <Select label="option" displayText={displayText} supportingText={currentDataType}>
-      {keys.map(key => <SelectOption key={key} headline={key} selected={detailOption === key} onClick={() => setDetailOption(key)} style={{ textTransform: "capitalize" }} />)}
-    </Select>
-    <div style={{ height: 16 }} aria-hidden />
-    <div className="flex-child" style={{ overflow: "clip" }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data}
-          margin={{ top: 16, right: 2, left: 0, bottom: 24 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} hide />
-          <YAxis dataKey="value" type="number" domain={['dataMin', 'dataMax']} tickFormatter={value => value.toFixed(1)} />
-          <Tooltip formatter={(value) => (value as number).toFixed(6)}
-            contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-          <Line type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" dot={false} animationDuration={350} strokeLinecap="round" />
-        </LineChart>
-      </ResponsiveContainer>
+  return <div className="fill-parent flex-column" style={{ padding: "8px 0" }}>
+    <div className="flex-child flex-column" style={{ padding: "0 16px" }}>
+      <Select label={currentDataType} displayText={displayText}>
+        {keys.map(key => <SelectOption key={key} headline={key} disabled={!validKeys.has(key)} selected={detailOption === key} onClick={() => setDetailOption(key)} style={{ textTransform: "capitalize" }} />)}
+      </Select>
+      <div style={{ height: 16 }} aria-hidden />
+      <div className="flex-child" style={{ overflow: "clip" }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data}
+            margin={{ top: 16, right: 2, left: 0, bottom: 24 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} hide />
+            <YAxis dataKey="value" type="number" domain={['dataMin', 'dataMax']} tickFormatter={value => value.toFixed(1)} />
+            <Tooltip formatter={(value) => (value as number).toFixed(6)}
+              contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
+            <Line type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" dot={false} animationDuration={350} strokeLinecap="round" />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
     <ListItem type="button" end={<Switch selected={showDetailDelta} />} onClick={() => setShowDetailDelta(!showDetailDelta)}>Show Delta</ListItem>
   </div>;
@@ -76,4 +69,34 @@ function getDelta<T extends keyof MessageData>(messageData: CircularBuffer<Messa
     res[i] = { index: i, value: (value1 - value0) };
   }
   return res;
+}
+
+const keys = Object.keys(dummyMessageData).filter(value => {
+  switch (value) {
+    case "dataType":
+    case "isRaceOn":
+      return false;
+    default:
+      return true;
+  }
+}) as (keyof MessageData)[];
+
+const noValidKeys = new Set();
+const sledValidKeys = new Set(Object.keys(sledTemplate));
+const fh4DashValidKeys = new Set([...Object.keys(sledTemplate), ...Object.keys(dashExtendTemplate)]);
+const fm7ValidKeys = new Set([...Object.keys(sledTemplate), ...Object.keys(dashExtendTemplate)]);
+const fm8ValidKeys = new Set([...Object.keys(sledTemplate), ...Object.keys(dashExtendTemplate), ...Object.keys(fm8DashExtendTemplate)]);
+
+function getValidKeys(dataType?: DataType) {
+  switch (dataType) {
+    case DataType.Sled:
+      return sledValidKeys;
+    case DataType.FH4Dash:
+      return fh4DashValidKeys;
+    case DataType.FM7Dash:
+      return fm7ValidKeys;
+    case DataType.FM8Dash:
+      return fm8ValidKeys;
+  }
+  return noValidKeys;
 }

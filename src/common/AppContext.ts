@@ -20,11 +20,27 @@ export enum AppWindowMode {
     Multi,
 };
 
+export enum TireOption {
+    SlipAngle = "tireSlipAngle",
+    SlipRatio = "tireSlipRatio",
+    CombinedSlip = "tireCombinedSlip",
+    Temp = "tireTemp",
+    SurfaceRumble = "surfaceRumble",
+    WheelRotationSpeed = "wheelRotationSpeed",
+    WheelOnRumbleStrip = "wheelOnRumbleStrip",
+    WheelInPuddleDepth = "wheelInPuddleDepth",
+    NormalizedSuspensionTravel = "normalizedSuspensionTravel",
+    SuspensionTravelMeters = "suspensionTravelMeters",
+    TireWear = "tireWear",
+}
+
 export type WindowContext = {
     showEnginePowerCurve: boolean,
     setShowEnginePowerCurve: (v: boolean) => unknown,
-    detailOption: string,
-    setDetailOption: (v: string) => unknown,
+    tireOption: TireOption,
+    setTireOption: (v: TireOption) => unknown,
+    detailOption: keyof MessageData,
+    setDetailOption: (v: keyof MessageData) => unknown,
     showDetailDelta: boolean,
     setShowDetailDelta: (v: boolean) => unknown,
 };

@@ -2,7 +2,7 @@ import { FadeThrough, SharedAxis } from "material-design-transform";
 import React from "react";
 import { Divider, Icon, List, ListItem, NavigationDrawer, NavigationDrawerPadding, Typography } from "rmcw/dist/components3";
 
-import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, WindowContext } from "./common/AppContext";
+import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, TireOption, WindowContext } from "./common/AppContext";
 import CircularBuffer from "./common/CircularBuffer";
 import { dummyMessageData, MessageData } from "./common/MessageData";
 import { Page } from "./common/Page";
@@ -18,16 +18,18 @@ export default function SinglePageApp({ streamAppContext }: { streamAppContext: 
     setLastOpenedPage(value);
   }, [setLastOpenedPage]);
 
+  const [tireOption, setTireOption] = React.useState(TireOption.SlipAngle);
   const [showEnginePowerCurve, setShowEnginePowerCurve] = React.useState(true);
-  const [detailOption, setDetailOption] = React.useState("timestampMs");
+  const [detailOption, setDetailOption] = React.useState<keyof MessageData>("timestampMs");
   const [showDetailDelta, setShowDetailDelta] = React.useState(false);
   const windowContext = React.useMemo<WindowContext>(() => {
     return {
+      tireOption, setTireOption,
       showEnginePowerCurve, setShowEnginePowerCurve,
       detailOption, setDetailOption,
       showDetailDelta, setShowDetailDelta
     };
-  }, [detailOption, showDetailDelta, showEnginePowerCurve]);
+  }, [detailOption, showDetailDelta, showEnginePowerCurve, tireOption]);
 
   return <div className="rmcw-drawer fill-parent">
     <NavigationDrawer opened className="flex-column" style={{

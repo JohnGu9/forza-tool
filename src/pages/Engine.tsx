@@ -86,7 +86,9 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
           default:
             return (value as number).toFixed(1);
         }
-      }} contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
+      }}
+        labelFormatter={label => (label as number).toFixed(1)}
+        contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
       <Legend />
       <Area yAxisId={1} type="monotone" dataKey="torque" stroke="var(--md-sys-color-primary)" fillOpacity={0.6} fill="var(--md-sys-color-primary)" isAnimationActive={false} />
       <Area yAxisId={0} type="monotone" dataKey="power" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" isAnimationActive={false} />

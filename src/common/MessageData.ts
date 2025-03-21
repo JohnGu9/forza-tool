@@ -108,209 +108,195 @@ export type MessageData = {
     trackOrdinal: number;
 };
 
-function getBufferOffset(dataType: DataType) {
-    switch (dataType) {
-        case DataType.FH4Dash:
-            return 12;
-    }
-    return 0;
-}
-
 export function parseMessageData(buffer: number[]): MessageData {
     let dataType = DataType.Sled;
     switch (buffer.length) {
-        case 232: // Sled
+        case 232:   // Sled
             dataType = DataType.Sled;
             break;
-        case 324:// FH4
+        case 324:   // FH4
             dataType = DataType.FH4Dash;
             break;
-        case 311:// FM7 dash
+        case 311:   // FM7 dash
             dataType = DataType.FM7Dash;
             break;
-        case 331:// FM8 dash
+        case 331:   // FM8 dash
             dataType = DataType.FM8Dash;
             break;
         default:
             throw Error(`Unsupported Data (Unknown length: ${buffer.length})`);
     }
-    const buffer_offset = getBufferOffset(dataType);
-
 
     const array = new Uint8Array(buffer);
     const bytes = new DataView(array.buffer);
 
-    function get_float32(bytes: DataView<ArrayBuffer>, index: number) {
+    function getFloat32(bytes: DataView<ArrayBuffer>, index: number) {
         return bytes.getFloat32(index, true);
     }
 
-    function get_int32(bytes: DataView<ArrayBuffer>, index: number) {
+    function getInt32(bytes: DataView<ArrayBuffer>, index: number) {
         return bytes.getInt32(index, true);
     }
 
-    function get_uint32(bytes: DataView<ArrayBuffer>, index: number) {
+    function getUint32(bytes: DataView<ArrayBuffer>, index: number) {
         return bytes.getUint32(index, true);
     }
 
-    function get_uint16(bytes: DataView<ArrayBuffer>, index: number) {
+    function getUint16(bytes: DataView<ArrayBuffer>, index: number) {
         return bytes.getUint16(index, true);
     }
 
-    function get_uint8(bytes: DataView<ArrayBuffer>, index: number) {
+    function getUint8(bytes: DataView<ArrayBuffer>, index: number) {
         return bytes.getUint8(index);
     }
 
-    function get_int8(bytes: DataView<ArrayBuffer>, index: number) {
+    function getInt8(bytes: DataView<ArrayBuffer>, index: number) {
         return bytes.getInt8(index);
     }
 
     function getSled() {
         return {
-            isRaceOn: get_int32(bytes, 0),
-            timestampMs: get_uint32(bytes, 4), // Can overflow to 0 eventually
-            engineMaxRpm: get_float32(bytes, 8),
-            engineIdleRpm: get_float32(bytes, 12),
-            currentEngineRpm: get_float32(bytes, 16),
-            accelerationX: get_float32(bytes, 20), // In the car's local space; X = right, Y = up, Z = forward
-            accelerationY: get_float32(bytes, 24),
-            accelerationZ: get_float32(bytes, 28),
-            velocityX: get_float32(bytes, 32), // In the car's local space; X = right, Y = up, Z = forward
-            velocityY: get_float32(bytes, 36),
-            velocityZ: get_float32(bytes, 40),
-            angularVelocityX: get_float32(bytes, 44), // In the car's local space; X = pitch, Y = yaw, Z = roll
-            angularVelocityY: get_float32(bytes, 48),
-            angularVelocityZ: get_float32(bytes, 52),
-            yaw: get_float32(bytes, 56),
-            pitch: get_float32(bytes, 60),
-            roll: get_float32(bytes, 64),
-            normalizedSuspensionTravelFrontLeft: get_float32(bytes, 68), // Suspension travel normalized: 0.0f = max stretch; 1.0 = max compression
-            normalizedSuspensionTravelFrontRight: get_float32(bytes, 72),
-            normalizedSuspensionTravelRearLeft: get_float32(bytes, 76),
-            normalizedSuspensionTravelRearRight: get_float32(bytes, 80),
-            tireSlipRatioFrontLeft: get_float32(bytes, 84), // Tire normalized slip ratio, = 0 means 100% grip and |ratio| > 1.0 means loss of grip.
-            tireSlipRatioFrontRight: get_float32(bytes, 88),
-            tireSlipRatioRearLeft: get_float32(bytes, 92),
-            tireSlipRatioRearRight: get_float32(bytes, 96),
-            wheelRotationSpeedFrontLeft: get_float32(bytes, 100), // Wheel rotation speed radians/sec.
-            wheelRotationSpeedFrontRight: get_float32(bytes, 104),
-            wheelRotationSpeedRearLeft: get_float32(bytes, 108),
-            wheelRotationSpeedRearRight: get_float32(bytes, 112),
-            wheelOnRumbleStripFrontLeft: get_float32(bytes, 116), // = 1 when wheel is on rumble strip, = 0 when off.
-            wheelOnRumbleStripFrontRight: get_float32(bytes, 120),
-            wheelOnRumbleStripRearLeft: get_float32(bytes, 124),
-            wheelOnRumbleStripRearRight: get_float32(bytes, 128),
-            wheelInPuddleDepthFrontLeft: get_float32(bytes, 132), // = from 0 to 1, where 1 is the deepest puddle
-            wheelInPuddleDepthFrontRight: get_float32(bytes, 136),
-            wheelInPuddleDepthRearLeft: get_float32(bytes, 140),
-            wheelInPuddleDepthRearRight: get_float32(bytes, 144),
-            surfaceRumbleFrontLeft: get_float32(bytes, 148), // Non-dimensional surface rumble values passed to controller force feedback
-            surfaceRumbleFrontRight: get_float32(bytes, 152),
-            surfaceRumbleRearLeft: get_float32(bytes, 156),
-            surfaceRumbleRearRight: get_float32(bytes, 160),
-            tireSlipAngleFrontLeft: get_float32(bytes, 164), // Tire normalized slip angle, = 0 means 100% grip and |angle| > 1.0 means loss of grip.
-            tireSlipAngleFrontRight: get_float32(bytes, 168),
-            tireSlipAngleRearLeft: get_float32(bytes, 172),
-            tireSlipAngleRearRight: get_float32(bytes, 176),
-            tireCombinedSlipFrontLeft: get_float32(bytes, 180), // Tire normalized combined slip, = 0 means 100% grip and |slip| > 1.0 means loss of grip.
-            tireCombinedSlipFrontRight: get_float32(bytes, 184),
-            tireCombinedSlipRearLeft: get_float32(bytes, 188),
-            tireCombinedSlipRearRight: get_float32(bytes, 192),
-            suspensionTravelMetersFrontLeft: get_float32(bytes, 196), // Actual suspension travel in meters
-            suspensionTravelMetersFrontRight: get_float32(bytes, 200),
-            suspensionTravelMetersRearLeft: get_float32(bytes, 204),
-            suspensionTravelMetersRearRight: get_float32(bytes, 208),
-            carOrdinal: get_int32(bytes, 212),           // Unique ID of the car make/model
-            carClass: get_int32(bytes, 216), // Between 0 (D -- worst cars) and 7 (X class -- best cars) inclusive
-            carPerformanceIndex: get_int32(bytes, 220), // Between 100 (slowest car) and 999 (fastest car) inclusive
-            drivetrainType: get_int32(bytes, 224), // Corresponds to EDrivetrainType; 0 = FWD, 1 = RWD, 2 = AWD
-            numCylinders: get_int32(bytes, 228), // Number of cylinders in the engine
+            isRaceOn: getInt32(bytes, 0),
+            timestampMs: getUint32(bytes, 4), // Can overflow to 0 eventually
+            engineMaxRpm: getFloat32(bytes, 8),
+            engineIdleRpm: getFloat32(bytes, 12),
+            currentEngineRpm: getFloat32(bytes, 16),
+            accelerationX: getFloat32(bytes, 20), // In the car's local space; X = right, Y = up, Z = forward
+            accelerationY: getFloat32(bytes, 24),
+            accelerationZ: getFloat32(bytes, 28),
+            velocityX: getFloat32(bytes, 32), // In the car's local space; X = right, Y = up, Z = forward
+            velocityY: getFloat32(bytes, 36),
+            velocityZ: getFloat32(bytes, 40),
+            angularVelocityX: getFloat32(bytes, 44), // In the car's local space; X = pitch, Y = yaw, Z = roll
+            angularVelocityY: getFloat32(bytes, 48),
+            angularVelocityZ: getFloat32(bytes, 52),
+            yaw: getFloat32(bytes, 56),
+            pitch: getFloat32(bytes, 60),
+            roll: getFloat32(bytes, 64),
+            normalizedSuspensionTravelFrontLeft: getFloat32(bytes, 68), // Suspension travel normalized: 0.0f = max stretch; 1.0 = max compression
+            normalizedSuspensionTravelFrontRight: getFloat32(bytes, 72),
+            normalizedSuspensionTravelRearLeft: getFloat32(bytes, 76),
+            normalizedSuspensionTravelRearRight: getFloat32(bytes, 80),
+            tireSlipRatioFrontLeft: getFloat32(bytes, 84), // Tire normalized slip ratio, = 0 means 100% grip and |ratio| > 1.0 means loss of grip.
+            tireSlipRatioFrontRight: getFloat32(bytes, 88),
+            tireSlipRatioRearLeft: getFloat32(bytes, 92),
+            tireSlipRatioRearRight: getFloat32(bytes, 96),
+            wheelRotationSpeedFrontLeft: getFloat32(bytes, 100), // Wheel rotation speed radians/sec.
+            wheelRotationSpeedFrontRight: getFloat32(bytes, 104),
+            wheelRotationSpeedRearLeft: getFloat32(bytes, 108),
+            wheelRotationSpeedRearRight: getFloat32(bytes, 112),
+            wheelOnRumbleStripFrontLeft: getFloat32(bytes, 116), // = 1 when wheel is on rumble strip, = 0 when off.
+            wheelOnRumbleStripFrontRight: getFloat32(bytes, 120),
+            wheelOnRumbleStripRearLeft: getFloat32(bytes, 124),
+            wheelOnRumbleStripRearRight: getFloat32(bytes, 128),
+            wheelInPuddleDepthFrontLeft: getFloat32(bytes, 132), // = from 0 to 1, where 1 is the deepest puddle
+            wheelInPuddleDepthFrontRight: getFloat32(bytes, 136),
+            wheelInPuddleDepthRearLeft: getFloat32(bytes, 140),
+            wheelInPuddleDepthRearRight: getFloat32(bytes, 144),
+            surfaceRumbleFrontLeft: getFloat32(bytes, 148), // Non-dimensional surface rumble values passed to controller force feedback
+            surfaceRumbleFrontRight: getFloat32(bytes, 152),
+            surfaceRumbleRearLeft: getFloat32(bytes, 156),
+            surfaceRumbleRearRight: getFloat32(bytes, 160),
+            tireSlipAngleFrontLeft: getFloat32(bytes, 164), // Tire normalized slip angle, = 0 means 100% grip and |angle| > 1.0 means loss of grip.
+            tireSlipAngleFrontRight: getFloat32(bytes, 168),
+            tireSlipAngleRearLeft: getFloat32(bytes, 172),
+            tireSlipAngleRearRight: getFloat32(bytes, 176),
+            tireCombinedSlipFrontLeft: getFloat32(bytes, 180), // Tire normalized combined slip, = 0 means 100% grip and |slip| > 1.0 means loss of grip.
+            tireCombinedSlipFrontRight: getFloat32(bytes, 184),
+            tireCombinedSlipRearLeft: getFloat32(bytes, 188),
+            tireCombinedSlipRearRight: getFloat32(bytes, 192),
+            suspensionTravelMetersFrontLeft: getFloat32(bytes, 196), // Actual suspension travel in meters
+            suspensionTravelMetersFrontRight: getFloat32(bytes, 200),
+            suspensionTravelMetersRearLeft: getFloat32(bytes, 204),
+            suspensionTravelMetersRearRight: getFloat32(bytes, 208),
+            carOrdinal: getInt32(bytes, 212),           // Unique ID of the car make/model
+            carClass: getInt32(bytes, 216), // Between 0 (D -- worst cars) and 7 (X class -- best cars) inclusive
+            carPerformanceIndex: getInt32(bytes, 220), // Between 100 (slowest car) and 999 (fastest car) inclusive
+            drivetrainType: getInt32(bytes, 224), // Corresponds to EDrivetrainType; 0 = FWD, 1 = RWD, 2 = AWD
+            numCylinders: getInt32(bytes, 228), // Number of cylinders in the engine
         };
     }
 
     function getDash() {
+        const fh4_buffer_offset = 12;
         switch (dataType) {
             case DataType.FH4Dash:
+                return {
+                    positionX: getFloat32(bytes, 232 + fh4_buffer_offset),
+                    positionY: getFloat32(bytes, 236 + fh4_buffer_offset),
+                    positionZ: getFloat32(bytes, 240 + fh4_buffer_offset),
+                    speed: getFloat32(bytes, 244 + fh4_buffer_offset),
+                    power: getFloat32(bytes, 248 + fh4_buffer_offset),
+                    torque: getFloat32(bytes, 252 + fh4_buffer_offset),
+                    tireTempFrontLeft: getFloat32(bytes, 256 + fh4_buffer_offset),
+                    tireTempFrontRight: getFloat32(bytes, 260 + fh4_buffer_offset),
+                    tireTempRearLeft: getFloat32(bytes, 264 + fh4_buffer_offset),
+                    tireTempRearRight: getFloat32(bytes, 268 + fh4_buffer_offset),
+                    boost: getFloat32(bytes, 272 + fh4_buffer_offset),
+                    fuel: getFloat32(bytes, 276 + fh4_buffer_offset),
+                    distance: getFloat32(bytes, 280 + fh4_buffer_offset),
+                    bestLapTime: getFloat32(bytes, 284 + fh4_buffer_offset),
+                    lastLapTime: getFloat32(bytes, 288 + fh4_buffer_offset),
+                    currentLapTime: getFloat32(bytes, 292 + fh4_buffer_offset),
+                    currentRaceTime: getFloat32(bytes, 296 + fh4_buffer_offset),
+                    lap: getUint16(bytes, 300 + fh4_buffer_offset),
+                    racePosition: getUint8(bytes, 302 + fh4_buffer_offset),
+                    accelerator: getUint8(bytes, 303 + fh4_buffer_offset),
+                    brake: getUint8(bytes, 304 + fh4_buffer_offset),
+                    clutch: getUint8(bytes, 305 + fh4_buffer_offset),
+                    handbrake: getUint8(bytes, 306 + fh4_buffer_offset),
+                    gear: getUint8(bytes, 307 + fh4_buffer_offset),
+                    steer: getInt8(bytes, 308 + fh4_buffer_offset),
+                    normalDrivingLine: getInt8(bytes, 309 + fh4_buffer_offset),
+                    normalAiBrakeDifference: getInt8(bytes, 310 + fh4_buffer_offset),
+                };
             case DataType.FM7Dash:
             case DataType.FM8Dash:
                 return {
-                    positionX: get_float32(bytes, 232 + buffer_offset),
-                    positionY: get_float32(bytes, 236 + buffer_offset),
-                    positionZ: get_float32(bytes, 240 + buffer_offset),
-                    speed: get_float32(bytes, 244 + buffer_offset),
-                    power: get_float32(bytes, 248 + buffer_offset),
-                    torque: get_float32(bytes, 252 + buffer_offset),
-                    tireTempFrontLeft: get_float32(bytes, 256 + buffer_offset),
-                    tireTempFrontRight: get_float32(bytes, 260 + buffer_offset),
-                    tireTempRearLeft: get_float32(bytes, 264 + buffer_offset),
-                    tireTempRearRight: get_float32(bytes, 268 + buffer_offset),
-                    boost: get_float32(bytes, 272 + buffer_offset),
-                    fuel: get_float32(bytes, 276 + buffer_offset),
-                    distance: get_float32(bytes, 280 + buffer_offset),
-                    bestLapTime: get_float32(bytes, 284 + buffer_offset),
-                    lastLapTime: get_float32(bytes, 288 + buffer_offset),
-                    currentLapTime: get_float32(bytes, 292 + buffer_offset),
-                    currentRaceTime: get_float32(bytes, 296 + buffer_offset),
-                    lap: get_uint16(bytes, 300 + buffer_offset),
-                    racePosition: get_uint8(bytes, 302 + buffer_offset),
-                    accelerator: get_uint8(bytes, 303 + buffer_offset),
-                    brake: get_uint8(bytes, 304 + buffer_offset),
-                    clutch: get_uint8(bytes, 305 + buffer_offset),
-                    handbrake: get_uint8(bytes, 306 + buffer_offset),
-                    gear: get_uint8(bytes, 307 + buffer_offset),
-                    steer: get_int8(bytes, 308 + buffer_offset),
-                    normalDrivingLine: get_int8(bytes, 309 + buffer_offset),
-                    normalAiBrakeDifference: get_int8(bytes, 310 + buffer_offset),
+                    positionX: getFloat32(bytes, 232),
+                    positionY: getFloat32(bytes, 236),
+                    positionZ: getFloat32(bytes, 240),
+                    speed: getFloat32(bytes, 244),
+                    power: getFloat32(bytes, 248),
+                    torque: getFloat32(bytes, 252),
+                    tireTempFrontLeft: getFloat32(bytes, 256),
+                    tireTempFrontRight: getFloat32(bytes, 260),
+                    tireTempRearLeft: getFloat32(bytes, 264),
+                    tireTempRearRight: getFloat32(bytes, 268),
+                    boost: getFloat32(bytes, 272),
+                    fuel: getFloat32(bytes, 276),
+                    distance: getFloat32(bytes, 280),
+                    bestLapTime: getFloat32(bytes, 284),
+                    lastLapTime: getFloat32(bytes, 288),
+                    currentLapTime: getFloat32(bytes, 292),
+                    currentRaceTime: getFloat32(bytes, 296),
+                    lap: getUint16(bytes, 300),
+                    racePosition: getUint8(bytes, 302),
+                    accelerator: getUint8(bytes, 303),
+                    brake: getUint8(bytes, 304),
+                    clutch: getUint8(bytes, 305),
+                    handbrake: getUint8(bytes, 306),
+                    gear: getUint8(bytes, 307),
+                    steer: getInt8(bytes, 308),
+                    normalDrivingLine: getInt8(bytes, 309),
+                    normalAiBrakeDifference: getInt8(bytes, 310),
                 };
         }
-        return {
-            positionX: 0,
-            positionY: 0,
-            positionZ: 0,
-            speed: 0,
-            power: 0,
-            torque: 0,
-            tireTempFrontLeft: 0,
-            tireTempFrontRight: 0,
-            tireTempRearLeft: 0,
-            tireTempRearRight: 0,
-            boost: 0,
-            fuel: 0,
-            distance: 0,
-            bestLapTime: 0,
-            lastLapTime: 0,
-            currentLapTime: 0,
-            currentRaceTime: 0,
-            lap: 0,
-            racePosition: 0,
-            accelerator: 0,
-            brake: 0,
-            clutch: 0,
-            handbrake: 0,
-            gear: 0,
-            steer: 0,
-            normalDrivingLine: 0,
-            normalAiBrakeDifference: 0,
-        };
+        return dashExtendTemplate;
     }
 
     function getFm8Extend() {
         switch (dataType) {
             case DataType.FM8Dash:
                 return {
-                    tireWearFrontLeft: get_float32(bytes, 311 + buffer_offset),
-                    tireWearFrontRight: get_float32(bytes, 315 + buffer_offset),
-                    tireWearRearLeft: get_float32(bytes, 319 + buffer_offset),
-                    tireWearRearRight: get_float32(bytes, 323 + buffer_offset),
-                    trackOrdinal: get_int32(bytes, 327 + buffer_offset),
+                    tireWearFrontLeft: getFloat32(bytes, 311),
+                    tireWearFrontRight: getFloat32(bytes, 315),
+                    tireWearRearLeft: getFloat32(bytes, 319),
+                    tireWearRearRight: getFloat32(bytes, 323),
+                    trackOrdinal: getInt32(bytes, 327),
                 };
         }
-        return {
-            tireWearFrontLeft: 0,
-            tireWearFrontRight: 0,
-            tireWearRearLeft: 0,
-            tireWearRearRight: 0,
-            trackOrdinal: 0,
-        };
+        return fm8DashExtendTemplate;
     }
 
     return {
@@ -408,16 +394,17 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData, 
     const insertIndex = quickSearch(rpmArray, powerCurveData.rpm);
 
     // fd means First Derivative
-    function getFirstDerivative(first: { power: number, rpm: number; }, second: { power: number, rpm: number; }) {
+    // sd means Second Derivative
+    function getDerivative(first: { power: number, rpm: number; }, second: { power: number, rpm: number; }) {
         return (second.power - first.power) / (second.rpm - first.rpm);
     }
 
-    if (insertIndex === 0) {
+    if (insertIndex === 0) { // unlikely
         const data = analysis.powerCurve[0];
+        const fd1 = getDerivative(powerCurveData, data);
 
-        const fd1 = getFirstDerivative(powerCurveData, data);
         if (isMaxPower) {
-            const minFdToleration = MinFdTolerationFactor * getFirstDerivative(powerCurveData, { power: 0, rpm: lastMessageData.engineMaxRpm });
+            const minFdToleration = MinFdTolerationFactor * getDerivative(powerCurveData, { power: 0, rpm: lastMessageData.engineMaxRpm });
             if (fd1 < minFdToleration) { // analysis.powerCurve[0] is invalid
                 analysis.powerCurve[0] = powerCurveData;
             } else if (isSameRpm(data.rpm)) {
@@ -432,7 +419,7 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData, 
                 analysis.powerCurve[0] = powerCurveData;
                 return true;
             }
-            const maxFdToleration = MaxFdTolerationFactor * getFirstDerivative({ power: 0, rpm: lastMessageData.engineIdleRpm }, { power: analysis.maxPower.value, rpm: analysis.maxPower.rpm });
+            const maxFdToleration = MaxFdTolerationFactor * getDerivative({ power: 0, rpm: lastMessageData.engineIdleRpm }, { power: analysis.maxPower.value, rpm: analysis.maxPower.rpm });
             if (fd1 > maxFdToleration) {
                 return false;
             }
@@ -447,16 +434,16 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData, 
             }
             return true;
         }
-    } else if (insertIndex === rpmArray.length) {
+    } else if (insertIndex === rpmArray.length) {  // unlikely
         const lastIndex = analysis.powerCurve.length - 1;
         const data = analysis.powerCurve[lastIndex];
 
         if (powerCurveData.rpm === data.rpm) {
-            powerCurveData.rpm = Math.min(powerCurveData.rpm + Number.MIN_VALUE, lastMessageData.engineMaxRpm);
+            powerCurveData.rpm += Number.MIN_VALUE;
         }
-        const fd0 = getFirstDerivative(data, powerCurveData);
+        const fd0 = getDerivative(data, powerCurveData);
         if (isMaxPower) {
-            const maxFdToleration = MaxFdTolerationFactor * getFirstDerivative({ rpm: lastMessageData.engineIdleRpm, power: 0 }, powerCurveData);
+            const maxFdToleration = MaxFdTolerationFactor * getDerivative({ rpm: lastMessageData.engineIdleRpm, power: 0 }, powerCurveData);
             if (fd0 > maxFdToleration) { // analysis.powerCurve[lastIndex] is invalid
                 analysis.powerCurve[lastIndex] = powerCurveData;
             } else if (isSameRpm(data.rpm)) {
@@ -471,7 +458,7 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData, 
                 analysis.powerCurve[lastIndex] = powerCurveData;
                 return true;
             }
-            const minFdToleration = MinFdTolerationFactor * getFirstDerivative({ power: analysis.maxPower.value, rpm: analysis.maxPower.rpm }, { power: 0, rpm: lastMessageData.engineMaxRpm });
+            const minFdToleration = MinFdTolerationFactor * getDerivative({ power: analysis.maxPower.value, rpm: analysis.maxPower.rpm }, { power: 0, rpm: lastMessageData.engineMaxRpm });
             if (fd0 < minFdToleration) {
                 return false;
             }
@@ -491,29 +478,37 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData, 
     const data0 = analysis.powerCurve[insertIndex - 1];
     const data1 = analysis.powerCurve[insertIndex];
 
-    const originFd = getFirstDerivative(data0, data1);
-    const fd1 = getFirstDerivative(powerCurveData, data1);
+    const originFd = getDerivative(data0, data1);
+    const originTorqueFd = getDerivative({ power: data0.torque, rpm: data0.rpm }, { power: data1.torque, rpm: data1.rpm });
+    const fd1 = getDerivative(powerCurveData, data1);
 
     if (data0.rpm === powerCurveData.rpm) {
+        // just cheating to handle wired situation, forgive me :)
+        // ensure `fd1` is valid.
         powerCurveData.rpm += Number.MIN_VALUE;
     }
 
-    const fd0 = getFirstDerivative(data0, powerCurveData);
-    if (isMaxPower) {
-        if ((insertIndex - 2) >= 0 && (insertIndex + 1) <= (analysis.powerCurve.length - 1)) {
-            const data00 = analysis.powerCurve[insertIndex - 2];
-            const data11 = analysis.powerCurve[insertIndex + 1];
-            const originFd0 = getFirstDerivative(data00, data0);
-            const originFd1 = getFirstDerivative(data1, data11);
-            if (originFd0 < 0 && originFd1 < 0 && originFd < 0 && fd0 > 0) {
-                return false;
-            }
-            if (originFd0 > 0 && originFd1 > 0 && originFd > 0 && fd1 < 0) {
-                return false;
-            }
+    const fd0 = getDerivative(data0, powerCurveData);
+
+    const torqueFd0 = getDerivative({ power: data0.torque, rpm: data0.rpm }, { power: powerCurveData.torque, rpm: powerCurveData.rpm });
+    const torqueFd1 = getDerivative({ power: powerCurveData.torque, rpm: powerCurveData.rpm }, { power: data1.torque, rpm: data1.rpm });
+
+    if ((insertIndex - 2) >= 0 && (insertIndex + 1) <= (analysis.powerCurve.length - 1)) { // likely
+        const data00 = analysis.powerCurve[insertIndex - 2];
+        const data11 = analysis.powerCurve[insertIndex + 1];
+        const torqueFd00 = getDerivative({ power: data00.torque, rpm: data00.rpm }, { power: data0.torque, rpm: data0.rpm });
+        const torqueFd11 = getDerivative({ power: data1.torque, rpm: data1.rpm }, { power: data11.torque, rpm: data11.rpm });
+
+        const maxTorqueFdToleration = 0.9 * Math.max(originTorqueFd, torqueFd00, torqueFd11);
+        if ((torqueFd00 < 0 && torqueFd11 < 0 && originTorqueFd < 0) &&
+            (torqueFd0 > maxTorqueFdToleration || torqueFd1 > maxTorqueFdToleration)) {
+            return false;
         }
-        const maxFdToleration = MaxFdTolerationFactor * getFirstDerivative({ power: 0, rpm: lastMessageData.engineIdleRpm }, powerCurveData);
-        const minFdToleration = MinFdTolerationFactor * getFirstDerivative(powerCurveData, { power: 0, rpm: lastMessageData.engineMaxRpm });
+    }
+
+    if (isMaxPower) {
+        const maxFdToleration = MaxFdTolerationFactor * getDerivative({ power: 0, rpm: lastMessageData.engineIdleRpm }, powerCurveData);
+        const minFdToleration = MinFdTolerationFactor * getDerivative(powerCurveData, { power: 0, rpm: lastMessageData.engineMaxRpm });
 
         const isData0Invalid = fd0 > maxFdToleration;
         const isData1Invalid = fd1 < minFdToleration;
@@ -534,8 +529,8 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData, 
         updateMaxPower();
         return true;
     } else {
-        const maxFdToleration = MaxFdTolerationFactor * getFirstDerivative({ power: 0, rpm: lastMessageData.engineIdleRpm }, { power: analysis.maxPower.value, rpm: analysis.maxPower.rpm });
-        const minFdToleration = MinFdTolerationFactor * getFirstDerivative({ power: analysis.maxPower.value, rpm: analysis.maxPower.rpm }, { power: 0, rpm: lastMessageData.engineMaxRpm });
+        const maxFdToleration = MaxFdTolerationFactor * getDerivative({ power: 0, rpm: lastMessageData.engineIdleRpm }, { power: analysis.maxPower.value, rpm: analysis.maxPower.rpm });
+        const minFdToleration = MinFdTolerationFactor * getDerivative({ power: analysis.maxPower.value, rpm: analysis.maxPower.rpm }, { power: 0, rpm: lastMessageData.engineMaxRpm });
         function merge(before: Element | undefined, target: Element, after: Element | undefined) {
             let isBeforeInvalid = false;
             let isAfterInvalid = false;
@@ -544,14 +539,14 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData, 
                 if (before.power < target.power) {
                     isBeforeInvalid = true;
                 } else {
-                    isTargetInvalid = false;
+                    isTargetInvalid = true;
                 }
             }
             if (after !== undefined && isSameRpm(after.rpm)) {
                 if (after.power < target.power) {
                     isAfterInvalid = true;
                 } else {
-                    isTargetInvalid = false;
+                    isTargetInvalid = true;
                 }
             }
 
@@ -568,26 +563,31 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData, 
             return res;
         }
         if (powerCurveData.rpm < analysis.maxPower.rpm) {
-            if (fd0 <= 0 || fd1 > maxFdToleration) {
+            if (fd0 <= 0 && fd0 <= originFd) {
                 return false;
             }
-            const isData0Invalid = fd0 <= 0 || fd0 > maxFdToleration;
+            if (fd1 > maxFdToleration) {
+                return false;
+            }
+            const isData0Invalid = fd0 > maxFdToleration;
             const isData1Invalid = fd1 <= 0;
             const m = merge(isData0Invalid ? undefined : data0, powerCurveData, isData1Invalid ? undefined : data1);
             analysis.powerCurve = [...analysis.powerCurve.slice(0, insertIndex - 1), ...m, ...analysis.powerCurve.slice(insertIndex + 1)];
             return true;
         } else {
-            if (fd1 >= 0 || fd0 < minFdToleration) {
+            if (fd1 >= 0 && fd1 >= originFd) {
+                return false;
+            }
+            if (fd0 < minFdToleration) {
                 return false;
             }
             const isData0Invalid = fd0 >= 0;
-            const isData1Invalid = fd1 >= 0 || fd1 < minFdToleration;
+            const isData1Invalid = fd1 < minFdToleration;
             const m = merge(isData0Invalid ? undefined : data0, powerCurveData, isData1Invalid ? undefined : data1);
             analysis.powerCurve = [...analysis.powerCurve.slice(0, insertIndex - 1), ...m, ...analysis.powerCurve.slice(insertIndex + 1)];
             return true;
         }
     }
-
 }
 
 type Position = {
@@ -607,9 +607,7 @@ function getDistance(now: Position, before: Position) {
     return Math.pow(distanceSquare, 1 / 3);
 }
 
-export const dummyMessageData: MessageData = {
-    dataType: DataType.Sled,
-    // Sled
+export const sledTemplate = {
     isRaceOn: 0,
     timestampMs: 0, // Can overflow to 0 eventually
     engineMaxRpm: 0,
@@ -668,8 +666,9 @@ export const dummyMessageData: MessageData = {
     carPerformanceIndex: 0,  // Between 100 (slowest car) and 999 (fastest car) inclusive
     drivetrainType: 0,       // Corresponds to EDrivetrainType; 0 = FWD, 1 = RWD, 2 = AWD
     numCylinders: 0,         // Number of cylinders in the engine
+};
 
-    // Dash
+export const dashExtendTemplate = {
     positionX: 0,
     positionY: 0,
     positionZ: 0,
@@ -697,12 +696,25 @@ export const dummyMessageData: MessageData = {
     steer: 0,
     normalDrivingLine: 0,
     normalAiBrakeDifference: 0,
+};
 
-    // FM8 extend
+export const fm8DashExtendTemplate = {
     tireWearFrontLeft: 0,
     tireWearFrontRight: 0,
     tireWearRearLeft: 0,
     tireWearRearRight: 0,
     trackOrdinal: 0,
+};
+
+export const dummyMessageData: MessageData = {
+    dataType: DataType.Sled,
+    // Sled
+    ...sledTemplate,
+
+    // Dash
+    ...dashExtendTemplate,
+
+    // FM8 extend
+    ...fm8DashExtendTemplate,
 
 };

@@ -4,7 +4,8 @@ import { FadeThrough, SharedAxis } from "material-design-transform";
 import React from "react";
 import { Button, Dialog, Divider, Fab, Icon, IconButton, ListItem } from "rmcw/dist/components3";
 
-import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, WindowContext } from "./common/AppContext";
+import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, TireOption, WindowContext } from "./common/AppContext";
+import { MessageData } from "./common/MessageData";
 import { Page } from "./common/Page";
 import { isSocketError, socketStateToIcon } from "./common/SocketState";
 import getPage, { MultiPageAppContext, ReactMultiPageAppContext } from "./pages";
@@ -109,17 +110,19 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
   const [openDialog, setOpenDialog] = React.useState(false);
   const closeDialog = React.useCallback(() => setOpenDialog(false), []);
   const [showEnginePowerCurve, setShowEnginePowerCurve] = React.useState(true);
-  const [detailOption, setDetailOption] = React.useState("timestampMs");
+  const [tireOption, setTireOption] = React.useState(TireOption.SlipAngle);
+  const [detailOption, setDetailOption] = React.useState("timestampMs" as keyof MessageData);
   const [showDetailDelta, setShowDetailDelta] = React.useState(false);
   const { usedPages } = React.useContext(ReactMultiPageAppContext);
   const { messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const windowContext = React.useMemo<WindowContext>(() => {
     return {
+      tireOption, setTireOption,
       showEnginePowerCurve, setShowEnginePowerCurve,
       detailOption, setDetailOption,
       showDetailDelta, setShowDetailDelta
     };
-  }, [detailOption, showDetailDelta, showEnginePowerCurve]);
+  }, [detailOption, showDetailDelta, showEnginePowerCurve, tireOption]);
   return <div className="flex-column flex-child window-divider">
     <ListItem trailingSupportingText={<Icon>swap_horiz</Icon>} type="button"
       onClick={() => setOpenDialog(true)}>{page}</ListItem>
