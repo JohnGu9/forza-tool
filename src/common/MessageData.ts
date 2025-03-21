@@ -568,7 +568,9 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData, 
 
     const originFd = getDerivative(data0, data1);
     const originTorqueFd = getDerivative({ power: data0.torque, rpm: data0.rpm }, { power: data1.torque, rpm: data1.rpm });
+
     const fd1 = getDerivative(powerCurveData, data1);
+    const torqueFd1 = getDerivative({ power: powerCurveData.torque, rpm: powerCurveData.rpm }, { power: data1.torque, rpm: data1.rpm });
 
     if (data0.rpm === powerCurveData.rpm) { // unlikely
         // just cheating to handle weird situation, forgive me :)
@@ -577,9 +579,7 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData, 
     }
 
     const fd0 = getDerivative(data0, powerCurveData);
-
     const torqueFd0 = getDerivative({ power: data0.torque, rpm: data0.rpm }, { power: powerCurveData.torque, rpm: powerCurveData.rpm });
-    const torqueFd1 = getDerivative({ power: powerCurveData.torque, rpm: powerCurveData.rpm }, { power: data1.torque, rpm: data1.rpm });
 
     if ((insertIndex - 2) >= 0 && (insertIndex + 1) <= (analysis.powerCurve.length - 1)) { // likely
         const data00 = analysis.powerCurve[insertIndex - 2];
@@ -804,5 +804,4 @@ export const dummyMessageData: MessageData = {
 
     // FM8 extend
     ...fm8DashExtendTemplate,
-
 };
