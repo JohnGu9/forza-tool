@@ -307,18 +307,95 @@ export function parseMessageData(buffer: number[]): MessageData {
     };
 }
 
+export type ConsumptionEstimation = {
+    fuelPerLap: number;
+    fuelPerTenMin: number;
+    tireWearPerLap: number;
+    tireWearPerTenMin: number;
+    lapTime: number;
+    start: {
+        timestamp: number;
+        fuel: number;
+        tireWearFrontLeft: number;
+        tireWearFrontRight: number;
+        tireWearRearLeft: number;
+        tireWearRearRight: number;
+    };
+};
+
+function newConsumptionEstimation(): ConsumptionEstimation {
+    return {
+        fuelPerLap: 0,
+        fuelPerTenMin: 0,
+        tireWearPerLap: 0,
+        tireWearPerTenMin: 0,
+        lapTime: 0,
+        start: {
+            timestamp: 0,
+            fuel: 0,
+            tireWearFrontLeft: 0,
+            tireWearFrontRight: 0,
+            tireWearRearLeft: 0,
+            tireWearRearRight: 0,
+        },
+    };
+}
+
+function startConsumptionEstimation(consumptionEstimation: ConsumptionEstimation, data: MessageData) {
+    consumptionEstimation.start = {
+        timestamp: data.currentLapTime,
+        fuel: data.fuel,
+        tireWearFrontLeft: data.tireWearFrontLeft,
+        tireWearFrontRight: data.tireWearFrontRight,
+        tireWearRearLeft: data.tireWearRearLeft,
+        tireWearRearRight: data.tireWearRearRight,
+    };
+}
+
+function computeConsumptionEstimation(consumptionEstimation: ConsumptionEstimation, data: MessageData) {
+    consumptionEstimation.lapTime = data.currentLapTime;
+    const duration = data.currentLapTime - consumptionEstimation.start.timestamp; // unit: sec
+    const deltaFuel = consumptionEstimation.start.fuel - data.fuel;
+    const deltaTireWearFrontLeft = consumptionEstimation.start.tireWearFrontLeft - data.tireWearFrontLeft;
+    const deltaTireWearFrontRight = consumptionEstimation.start.tireWearFrontRight - data.tireWearFrontRight;
+    const deltaTireWearRearLeft = consumptionEstimation.start.tireWearRearLeft - data.tireWearRearLeft;
+    const deltaTireWearRearRight = consumptionEstimation.start.tireWearRearRight - data.tireWearRearRight;
+    if (deltaFuel > 0) {
+        consumptionEstimation.fuelPerLap = deltaFuel / duration * data.currentLapTime;
+        consumptionEstimation.fuelPerTenMin = deltaFuel / duration * 600;
+    }
+    if (deltaTireWearFrontLeft < 0 &&
+        deltaTireWearFrontRight < 0 &&
+        deltaTireWearRearLeft < 0 &&
+        deltaTireWearRearRight < 0) {
+        const deltaTireWearMax = -Math.min(deltaTireWearFrontLeft, deltaTireWearFrontRight, deltaTireWearRearLeft, deltaTireWearRearRight);
+        consumptionEstimation.tireWearPerLap = deltaTireWearMax / duration * data.currentLapTime;
+        consumptionEstimation.tireWearPerTenMin = deltaTireWearMax / duration * 600;
+    }
+}
+
 export type MessageDataAnalysis = {
     id: number,
     maxPower: { value: number, rpm: number, torque: number; };
     powerCurve: { rpm: number, power: number, torque: number; isFullAcceleratorForAWhile: boolean; }[];
     distance: CircularBuffer<number>;
     speed: CircularBuffer<number>;
+    consumptionEstimation: ConsumptionEstimation;
     isFullAcceleratorForAWhile: boolean;
     stamp: number;
 };
 
 export function newMessageDataAnalysis(capacity: number): MessageDataAnalysis {
-    return { id: 0, maxPower: { value: 0, rpm: 0, torque: 0 }, powerCurve: [], distance: new CircularBuffer<number>(capacity), speed: new CircularBuffer<number>(capacity), isFullAcceleratorForAWhile: false, stamp: 0 };
+    return {
+        id: 0,
+        maxPower: { value: 0, rpm: 0, torque: 0 },
+        powerCurve: [],
+        distance: new CircularBuffer<number>(capacity),
+        speed: new CircularBuffer<number>(capacity),
+        isFullAcceleratorForAWhile: false,
+        consumptionEstimation: newConsumptionEstimation(),
+        stamp: 0
+    };
 }
 
 export function resetMessageDataAnalysis(analysis: MessageDataAnalysis) {
@@ -328,6 +405,7 @@ export function resetMessageDataAnalysis(analysis: MessageDataAnalysis) {
     analysis.distance = new CircularBuffer(analysis.distance.getCapacity());
     analysis.speed = new CircularBuffer(analysis.speed.getCapacity());
     analysis.isFullAcceleratorForAWhile = false;
+    analysis.consumptionEstimation = newConsumptionEstimation();
     analysis.stamp = 0;
 }
 
@@ -341,11 +419,21 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>/* no
         changed = true;
     }
 
-    if (messageData.getElementCount() > 1) {
-        analysis.distance.push(getDistance(lastData[lastData.length - 1], lastData[lastData.length - 2]));
+    if (lastData.length > 1) {
+        analysis.distance.push(getDistance(lastMessageData, lastData[lastData.length - 2]));
 
-        const timeDelta = lastData[lastData.length - 1].timestampMs - lastData[0].timestampMs;
+        const timeDelta = lastMessageData.timestampMs - lastData[0].timestampMs;
         analysis.speed.push(positionToVelocity(analysis.distance.slice(-lastData.length), timeDelta / 1000));
+
+        if (lastMessageData.trackOrdinal !== lastData[lastData.length - 2].trackOrdinal) {
+            startConsumptionEstimation(analysis.consumptionEstimation, lastMessageData);
+        } else if (lastMessageData.lap !== lastData[lastData.length - 2].lap) { // new lap
+            if (lastMessageData.lap - lastData[lastData.length - 2].lap === 1) {
+                computeConsumptionEstimation(analysis.consumptionEstimation, lastData[lastData.length - 2]);
+            }
+            startConsumptionEstimation(analysis.consumptionEstimation, lastMessageData);
+        }
+
         changed = true;
     } else {
         analysis.distance.push(0);
@@ -482,8 +570,8 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData, 
     const originTorqueFd = getDerivative({ power: data0.torque, rpm: data0.rpm }, { power: data1.torque, rpm: data1.rpm });
     const fd1 = getDerivative(powerCurveData, data1);
 
-    if (data0.rpm === powerCurveData.rpm) {
-        // just cheating to handle wired situation, forgive me :)
+    if (data0.rpm === powerCurveData.rpm) { // unlikely
+        // just cheating to handle weird situation, forgive me :)
         // ensure `fd1` is valid.
         powerCurveData.rpm += Number.MIN_VALUE;
     }

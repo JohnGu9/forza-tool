@@ -4,6 +4,7 @@ import { Page } from "../common/Page";
 import Control from "./Control";
 import Detail from "./Detail";
 import Engine from "./Engine";
+import Estimation from "./Estimation";
 import Motion from "./Motion";
 import SpeedMeter from "./SpeedMeter";
 import Tachometer from "./Tachometer";
@@ -25,6 +26,8 @@ export default function getPage(page: Page) {
             return <Control />;
         case Page.Motion:
             return <Motion />;
+        case Page.Estimation:
+            return <Estimation />;
     }
 }
 

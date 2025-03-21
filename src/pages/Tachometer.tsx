@@ -74,7 +74,7 @@ export default function Tachometer() {
       {showPowerLevel ?
         <PowerLevelChart messageData={messageData} messageDataAnalysis={messageDataAnalysis} onClick={switchDisplay} /> :
         <>
-          <SimpleCard title="RPM" content={lastData.currentEngineRpm.toFixed(0)} tooltip={`Rev / Min`} onClick={switchDisplay} />
+          <ConsumptionEstimationCard messageData={messageData} messageDataAnalysis={messageDataAnalysis} onClick={switchDisplay} />
           <SimpleCard title="High Power RPM Range" content={`${lower.toFixed(0)} - ${upper.toFixed(0)}`} tooltip={`Rev / Min`} onClick={switchDisplay} />
           {showMore ? <SimpleCard title="Power Level" content={`${(powerLevel * 100).toFixed(1)}%`} tooltip={``} onClick={switchDisplay} /> : undefined}
         </>}
@@ -215,16 +215,6 @@ function getBound(sorted: { x: number, y: number; }[], maxIndex: number, thresho
   return { lower, upper };
 }
 
-function SimpleCard({ title, tooltip, content, onClick }: { title: string, tooltip: string, content: React.ReactNode; onClick: () => unknown; }) {
-  return <Card className="flex-child" style={{ maxWidth: 280, textWrap: "nowrap" }}>
-    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly fit-elevated-card-container-shape" style={{ padding: "0 32px" }}>
-      <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
-      <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
-    </Ripple>
-  </Card>;
-}
-
-
 function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: number, upper: number, current: number; lowPowerLevel: boolean; }) {
   function getProgress(lower: number, upper: number, current: number) {
     if (lower === upper) {
@@ -330,4 +320,44 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
       </ResponsiveContainer>
     </Ripple>
   </Card>;
+}
+
+
+function SimpleCard({ title, tooltip, content, onClick }: { title: string, tooltip: string, content: React.ReactNode; onClick: () => unknown; }) {
+  return <Card className="flex-child" style={{ maxWidth: 280, textWrap: "nowrap" }}>
+    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly fit-elevated-card-container-shape" style={{ padding: "0 32px" }}>
+      <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
+      <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
+    </Ripple>
+  </Card>;
+}
+
+function ConsumptionEstimationCard({ messageData, messageDataAnalysis, onClick }: { messageData: CircularBuffer<MessageData>, messageDataAnalysis: MessageDataAnalysis; onClick: () => unknown; }) {
+  const lastData = messageData.getLast();
+  return <Card className="flex-child" style={{ maxWidth: 280, textWrap: "nowrap" }}>
+    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly fit-elevated-card-container-shape" style={{ padding: "0 32px", alignItems: "start" }}>
+      <Typography.Title.Medium tag='span'>Estimation</Typography.Title.Medium>
+      <Typography.Title.Medium tag='span' className="flex-row" style={{ justifyContent: "space-between", width: "100%" }}>
+        Fuel:
+        <span><span title="Per Lap">{toPercentage(messageDataAnalysis.consumptionEstimation.fuelPerLap)}</span> / <span title="Per 10 Min">{toPercentage(messageDataAnalysis.consumptionEstimation.fuelPerTenMin)}</span></span>
+      </Typography.Title.Medium>
+      <Typography.Title.Medium tag='span' className="flex-row" style={{ justifyContent: "space-between", width: "100%" }}>
+        TireWear:
+        <span><span title="Laps of Until 50% Tire Wear">{lastData === undefined ? "0.0" : lapsEstimate(messageDataAnalysis.consumptionEstimation.tireWearPerLap,
+          Math.max(0, 0.5 - Math.max(lastData.tireWearFrontLeft, lastData.tireWearFrontRight, lastData.tireWearRearLeft, lastData.tireWearRearRight))
+        )}</span> / <span title="Laps of Until 65% Tire Wear">{lastData === undefined ? "0.0" : lapsEstimate(messageDataAnalysis.consumptionEstimation.tireWearPerLap,
+          Math.max(0, 0.5 - Math.max(lastData.tireWearFrontLeft, lastData.tireWearFrontRight, lastData.tireWearRearLeft, lastData.tireWearRearRight))
+        )}</span></span>
+      </Typography.Title.Medium>
+    </Ripple>
+  </Card >;
+}
+
+function toPercentage(value: number) {
+  return `${(value * 100).toFixed(1)}%`;
+}
+
+function lapsEstimate(consumptionPerLap: number, targetConsumption: number) {
+  if (consumptionPerLap === 0) return "0.0";
+  return `${(targetConsumption / consumptionPerLap).toFixed(1)}`;
 }

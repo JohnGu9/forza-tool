@@ -5,5 +5,6 @@ export enum Page {
     SpeedMeter = "SpeedMeter",
     Control = "Control",
     Motion = "Motion",
+    Estimation = "Estimation",
     Detail = "Detail",
 };
