@@ -339,22 +339,23 @@ function ConsumptionEstimationCard({ messageData, messageDataAnalysis, onClick }
       <Typography.Title.Medium tag='span'>Estimation</Typography.Title.Medium>
       <Typography.Title.Medium tag='span' className="flex-row" style={{ justifyContent: "space-between", width: "100%" }}>
         Fuel:
-        <span><span title="Per Lap">{toPercentage(messageDataAnalysis.consumptionEstimation.fuelPerLap)}</span> / <span title="Per 10 Min">{toPercentage(messageDataAnalysis.consumptionEstimation.fuelPerTenMin)}</span></span>
+        <span>
+          <span title="Laps of Remain Fuel">{lastData === undefined ? "0.0" : lapsEstimate(messageDataAnalysis.consumptionEstimation.fuelPerLap, lastData.fuel)}</span><span style={{ paddingLeft: 8 }}>Laps</span>
+        </span>
       </Typography.Title.Medium>
       <Typography.Title.Medium tag='span' className="flex-row" style={{ justifyContent: "space-between", width: "100%" }}>
         TireWear:
-        <span><span title="Laps of Until 50% Tire Wear">{lastData === undefined ? "0.0" : lapsEstimate(messageDataAnalysis.consumptionEstimation.tireWearPerLap,
-          Math.max(0, 0.5 - Math.max(lastData.tireWearFrontLeft, lastData.tireWearFrontRight, lastData.tireWearRearLeft, lastData.tireWearRearRight))
-        )}</span> / <span title="Laps of Until 65% Tire Wear">{lastData === undefined ? "0.0" : lapsEstimate(messageDataAnalysis.consumptionEstimation.tireWearPerLap,
-          Math.max(0, 0.5 - Math.max(lastData.tireWearFrontLeft, lastData.tireWearFrontRight, lastData.tireWearRearLeft, lastData.tireWearRearRight))
-        )}</span></span>
+        <span>
+          <span title="Laps of Until 50% Tire Wear">{lastData === undefined ? "0.0" : lapsEstimate(messageDataAnalysis.consumptionEstimation.tireWearPerLap,
+            Math.max(0, 0.5 - Math.max(lastData.tireWearFrontLeft, lastData.tireWearFrontRight, lastData.tireWearRearLeft, lastData.tireWearRearRight))
+          )}</span> / <span title="Laps of Until 65% Tire Wear">{lastData === undefined ? "0.0" : lapsEstimate(messageDataAnalysis.consumptionEstimation.tireWearPerLap,
+            Math.max(0, 0.65 - Math.max(lastData.tireWearFrontLeft, lastData.tireWearFrontRight, lastData.tireWearRearLeft, lastData.tireWearRearRight))
+          )}</span>
+          <span style={{ paddingLeft: 8 }}>Laps</span>
+        </span>
       </Typography.Title.Medium>
     </Ripple>
   </Card >;
-}
-
-function toPercentage(value: number) {
-  return `${(value * 100).toFixed(1)}%`;
 }
 
 function lapsEstimate(consumptionPerLap: number, targetConsumption: number) {

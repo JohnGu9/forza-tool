@@ -313,14 +313,7 @@ export type ConsumptionEstimation = {
     tireWearPerLap: number;
     tireWearPerTenMin: number;
     lapTime: number;
-    start: {
-        timestamp: number;
-        fuel: number;
-        tireWearFrontLeft: number;
-        tireWearFrontRight: number;
-        tireWearRearLeft: number;
-        tireWearRearRight: number;
-    };
+    start: MessageData;
 };
 
 function newConsumptionEstimation(): ConsumptionEstimation {
@@ -330,40 +323,25 @@ function newConsumptionEstimation(): ConsumptionEstimation {
         tireWearPerLap: 0,
         tireWearPerTenMin: 0,
         lapTime: 0,
-        start: {
-            timestamp: 0,
-            fuel: 0,
-            tireWearFrontLeft: 0,
-            tireWearFrontRight: 0,
-            tireWearRearLeft: 0,
-            tireWearRearRight: 0,
-        },
+        start: dummyMessageData,
     };
 }
 
-function startConsumptionEstimation(consumptionEstimation: ConsumptionEstimation, data: MessageData) {
-    consumptionEstimation.start = {
-        timestamp: data.currentLapTime,
-        fuel: data.fuel,
-        tireWearFrontLeft: data.tireWearFrontLeft,
-        tireWearFrontRight: data.tireWearFrontRight,
-        tireWearRearLeft: data.tireWearRearLeft,
-        tireWearRearRight: data.tireWearRearRight,
-    };
-}
 
 function computeConsumptionEstimation(consumptionEstimation: ConsumptionEstimation, data: MessageData) {
     consumptionEstimation.lapTime = data.currentLapTime;
-    const duration = data.currentLapTime - consumptionEstimation.start.timestamp; // unit: sec
+    const duration = data.currentLapTime - consumptionEstimation.start.currentLapTime; // unit: sec
     const deltaFuel = consumptionEstimation.start.fuel - data.fuel;
     const deltaTireWearFrontLeft = consumptionEstimation.start.tireWearFrontLeft - data.tireWearFrontLeft;
     const deltaTireWearFrontRight = consumptionEstimation.start.tireWearFrontRight - data.tireWearFrontRight;
     const deltaTireWearRearLeft = consumptionEstimation.start.tireWearRearLeft - data.tireWearRearLeft;
     const deltaTireWearRearRight = consumptionEstimation.start.tireWearRearRight - data.tireWearRearRight;
+
     if (deltaFuel > 0) {
         consumptionEstimation.fuelPerLap = deltaFuel / duration * data.currentLapTime;
         consumptionEstimation.fuelPerTenMin = deltaFuel / duration * 600;
     }
+
     if (deltaTireWearFrontLeft < 0 &&
         deltaTireWearFrontRight < 0 &&
         deltaTireWearRearLeft < 0 &&
@@ -420,18 +398,20 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>/* no
     }
 
     if (lastData.length > 1) {
-        analysis.distance.push(getDistance(lastMessageData, lastData[lastData.length - 2]));
+        const beforeLast = lastData[lastData.length - 2];
+        analysis.distance.push(getDistance(lastMessageData, beforeLast));
 
         const timeDelta = lastMessageData.timestampMs - lastData[0].timestampMs;
         analysis.speed.push(positionToVelocity(analysis.distance.slice(-lastData.length), timeDelta / 1000));
 
-        if (lastMessageData.trackOrdinal !== lastData[lastData.length - 2].trackOrdinal) {
-            startConsumptionEstimation(analysis.consumptionEstimation, lastMessageData);
-        } else if (lastMessageData.lap !== lastData[lastData.length - 2].lap) { // new lap
-            if (lastMessageData.lap - lastData[lastData.length - 2].lap === 1) {
-                computeConsumptionEstimation(analysis.consumptionEstimation, lastData[lastData.length - 2]);
+        if (lastMessageData.trackOrdinal !== beforeLast.trackOrdinal ||
+            analysis.consumptionEstimation.start.fuel < lastMessageData.fuel) {
+            analysis.consumptionEstimation.start = lastMessageData;
+        } else if (lastMessageData.lap !== beforeLast.lap) { // new lap
+            if (lastMessageData.lap - beforeLast.lap === 1) {
+                computeConsumptionEstimation(analysis.consumptionEstimation, beforeLast);
             }
-            startConsumptionEstimation(analysis.consumptionEstimation, lastMessageData);
+            analysis.consumptionEstimation.start = lastMessageData;
         }
 
         changed = true;

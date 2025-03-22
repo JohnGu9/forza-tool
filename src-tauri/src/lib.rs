@@ -35,7 +35,7 @@ fn open_devtools(app: &mut App) {
 }
 
 #[cfg(not(debug_assertions))]
-fn open_devtools(app: &mut App) {}
+fn open_devtools(_: &mut App) {}
 
 #[tauri::command]
 fn my_custom_command(message: String) {

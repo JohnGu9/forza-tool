@@ -1,6 +1,6 @@
 [package]
 name = "forza-tool"
-version = "0.1.6"
+version = "0.1.7"
 description = "A Forza Telemetry App"
 authors = ["johngu"]
 license = "MIT"
@@ -25,4 +25,4 @@ tauri = { version = "2.3", features = [] }
 tauri-plugin-log = "2.2"
 tokio = { version = "1.43", features = ["full"] }
 futures = "0.3"
-tauri-plugin-window-state = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
+tauri-plugin-window-state = "2.2.1"

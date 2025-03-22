@@ -27,7 +27,7 @@ export default function Estimation() {
         Math.max(0, 0.5 - Math.max(lastData.tireWearFrontLeft, lastData.tireWearFrontRight, lastData.tireWearRearLeft, lastData.tireWearRearRight))
       )}>Laps of Until 50% Tire Wear</ListItem>
       <ListItem trailingSupportingText={lastData === undefined ? "0.0" : lapsEstimate(messageDataAnalysis.consumptionEstimation.tireWearPerLap,
-        Math.max(0, 0.5 - Math.max(lastData.tireWearFrontLeft, lastData.tireWearFrontRight, lastData.tireWearRearLeft, lastData.tireWearRearRight))
+        Math.max(0, 0.65 - Math.max(lastData.tireWearFrontLeft, lastData.tireWearFrontRight, lastData.tireWearRearLeft, lastData.tireWearRearRight))
       )}>Laps of Until 65% Tire Wear</ListItem>
       <Typography.Label.Small tag="div" style={{ padding: "8px 16px 16px", opacity: 0.5 }}>* Only work for Forza Motorsport</Typography.Label.Small>
     </Card>
@@ -40,7 +40,7 @@ export default function Estimation() {
       <ListItem trailingSupportingText={toPercentage(messageDataAnalysis.consumptionEstimation.fuelPerLap)}>Per Lap</ListItem>
       <ListItem trailingSupportingText={toPercentage(messageDataAnalysis.consumptionEstimation.fuelPerTenMin)}>Per 10 Minute</ListItem>
       <ListItem trailingSupportingText={lapsEstimate(messageDataAnalysis.consumptionEstimation.fuelPerLap, 1)}>Laps of Full Fuel</ListItem>
-      <ListItem trailingSupportingText={lastData === undefined ? "0" : lapsEstimate(messageDataAnalysis.consumptionEstimation.fuelPerLap, lastData.fuel)}>Laps of Remain Fuel</ListItem>
+      <ListItem trailingSupportingText={lastData === undefined ? "0.0" : lapsEstimate(messageDataAnalysis.consumptionEstimation.fuelPerLap, lastData.fuel)}>Laps of Remain Fuel</ListItem>
       <Typography.Label.Small tag="div" style={{ padding: "8px 16px 16px", opacity: 0.5 }}>* Only work for Dash</Typography.Label.Small>
     </Card>
   </div>;
