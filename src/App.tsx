@@ -140,7 +140,7 @@ export default function App() {
       current.push(errorMessage);
       return [...current.slice(Math.max(current.length - 20, 0))];
     });
-    const onData = (event: { event: 'data'; data: { data: number[]; }; }) => {
+    const onData = (event: { event: 'rawData'; data: { data: number[]; }; }) => {
       try {
         const data = parseMessageData(event.data.data);
         if (data.isRaceOn === 0) {
@@ -158,7 +158,7 @@ export default function App() {
       }
       updateTick();
     };
-    const unlisten = listen<{ event: 'data'; data: { data: number[]; }; }>("on-data", event => onData(event.payload));
+    const unlisten = listen<{ event: 'rawData'; data: { data: number[]; }; }>("on-data", event => onData(event.payload));
     listenData(`${address}:${port}`, forward, (event) => {
       switch (event.event) {
         case "error":
@@ -179,7 +179,7 @@ export default function App() {
           break;
       }
       updateTick();
-      return () => { (async () => { (await unlisten)(); })(); };
+      return () => { unlisten.then(unlisten => unlisten()); };
     });
   }, [listenAddress, messageData, messageDataAnalysis, resetData, updateTick]);
 

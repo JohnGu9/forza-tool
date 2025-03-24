@@ -50,3 +50,8 @@ div.app-theme {
   min-height: 0;
   min-width: 0;
 }
+
+.disable-progress-transition {
+  --rmcw-linear-progress-transition: none;
+  --rmcw-circular-progress-transition: none;
+}

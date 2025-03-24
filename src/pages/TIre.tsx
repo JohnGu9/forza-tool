@@ -73,7 +73,7 @@ function SimpleCard({ title, data, type }: { title: string, data: DataType[]; ty
     <div className="flex-row flex-space-between" style={{ padding: "4px 0" }}>
       <span>{title}</span>{formatter(value)}
     </div>
-    <LinearProgress value={progress(value)} style={{ "--rmcw-linear-progress-transition": "none" } as React.CSSProperties} />
+    <LinearProgress className="disable-progress-transition" value={progress(value)} />
   </Card>;
 }
 

@@ -26,7 +26,7 @@ export default function Engine() {
     }
   }, [setUnitSystem, unitSystem]);
   function getPowerLevelProgressColor() {
-    if (powerLevel > 0.99) {
+    if (powerLevel > 0.97) {
       return "var(--md-sys-color-tertiary)";
     }
     if (powerLevel < 0.9) {
@@ -211,9 +211,8 @@ function SimpleRow({ title, value, color }: { title: string; value: number; colo
     <div className="flex-row flex-space-between" style={{ padding: "4px 0" }}>
       <span>{title}</span>{(value * 100).toFixed(1)}%
     </div>
-    <LinearProgress value={value} style={{
+    <LinearProgress className="disable-progress-transition" value={value} style={{
       "--md-linear-progress-active-indicator-color": color,
-      "--rmcw-linear-progress-transition": "none"
     } as React.CSSProperties} />
   </div>;
 }

@@ -314,6 +314,12 @@ export class ConsumptionEstimation {
     protected _fuel = 0; // unit time consumption
     protected _tireWear = 0; // unit time consumption
 
+    reset(){
+        this._start = this._end;
+        this._fuel = 0;
+        this._tireWear = 0;
+    }
+
     getPerLapConsumption() {
         const lapTime = this.getLapTime();
         if (lapTime === 0) {
@@ -344,8 +350,8 @@ export class ConsumptionEstimation {
                 tireWear: 0,
             };
         }
-        const fuelRemainTime = 1 / this._fuel;
-        const tireWearRemainTime = 1 / this._tireWear;
+        const fuelRemainTime = this._fuel === 0 ? 0 : 1 / this._fuel;
+        const tireWearRemainTime = this._tireWear === 0 ? 0 : 1 / this._tireWear;
 
         return {
             fuel: fuelRemainTime / lapTime,
@@ -413,7 +419,7 @@ export type MessageDataAnalysis = {
     distance: CircularBuffer<number>;
     speed: CircularBuffer<number>;
     consumptionEstimation: ConsumptionEstimation;
-    isFullAcceleratorForAWhile: boolean;
+    isFullAcceleratorForAWhile: boolean; // @TODO: remove this
     stamp: number;
 };
 
@@ -424,8 +430,8 @@ export function newMessageDataAnalysis(capacity: number): MessageDataAnalysis {
         powerCurve: [],
         distance: new CircularBuffer<number>(capacity),
         speed: new CircularBuffer<number>(capacity),
-        isFullAcceleratorForAWhile: false,
         consumptionEstimation: new ConsumptionEstimation(),
+        isFullAcceleratorForAWhile: false,
         stamp: 0
     };
 }
@@ -434,10 +440,10 @@ export function resetMessageDataAnalysis(analysis: MessageDataAnalysis) {
     analysis.id += 1;
     analysis.maxPower = { value: 0, rpm: 0, torque: 0 };
     analysis.powerCurve = [];
-    analysis.distance = new CircularBuffer(analysis.distance.getCapacity());
-    analysis.speed = new CircularBuffer(analysis.speed.getCapacity());
+    analysis.distance.clear();
+    analysis.speed.clear();
+    analysis.consumptionEstimation.reset();
     analysis.isFullAcceleratorForAWhile = false;
-    analysis.consumptionEstimation = new ConsumptionEstimation();
     analysis.stamp = 0;
 }
 
@@ -456,7 +462,7 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>/* no
         analysis.distance.push(getDistance(lastMessageData, beforeLast));
 
         const timeDelta = lastMessageData.timestampMs - lastData[0].timestampMs;
-        analysis.speed.push(positionToVelocity(analysis.distance.slice(-lastData.length), timeDelta / 1000));
+        analysis.speed.push(toVelocity(analysis.distance.slice(-lastData.length), timeDelta / 1000));
 
         if (lastMessageData.trackOrdinal !== beforeLast.trackOrdinal ||
             analysis.consumptionEstimation.getStartFuel() < lastMessageData.fuel) {
@@ -621,10 +627,11 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData, 
         const torqueFd00 = getDerivative({ power: data00.torque, rpm: data00.rpm }, { power: data0.torque, rpm: data0.rpm });
         const torqueFd11 = getDerivative({ power: data1.torque, rpm: data1.rpm }, { power: data11.torque, rpm: data11.rpm });
 
-        const maxTorqueFdToleration = 0.9 * Math.max(originTorqueFd, torqueFd00, torqueFd11);
-        if ((torqueFd00 < 0 && torqueFd11 < 0 && originTorqueFd < 0) &&
-            (torqueFd0 > maxTorqueFdToleration || torqueFd1 > maxTorqueFdToleration)) {
-            return false;
+        if (torqueFd00 < 0 && torqueFd11 < 0 && originTorqueFd < 0) {
+            const maxTorqueFdToleration = 0.9 * Math.max(originTorqueFd, torqueFd00, torqueFd11);
+            if (torqueFd0 > maxTorqueFdToleration || torqueFd1 > maxTorqueFdToleration) {
+                return false;
+            }
         }
     }
 
@@ -717,7 +724,7 @@ type Position = {
     positionY: number,
     positionZ: number,
 };// unit: m
-function positionToVelocity(distances: number[], timeDelta: number /* unit: s */) {
+function toVelocity(distances: number[], timeDelta: number /* unit: s */) {
     if (timeDelta <= 0) { return 0; }
     const distance = distances.reduce((sum, value) => sum += value, 0);
     return distance / timeDelta; // unit: m/s
@@ -726,10 +733,10 @@ function getDistance(now: Position, before: Position) {
     const distanceSquare = Math.pow(now.positionX - before.positionX, 2) +
         Math.pow(now.positionY - before.positionY, 2) +
         Math.pow(now.positionZ - before.positionZ, 2);
-    return Math.pow(distanceSquare, 1 / 3);
+    return Math.pow(distanceSquare, 1 / 2);
 }
 
-export const sledTemplate = {
+const sledTemplate = {
     isRaceOn: 0,
     timestampMs: 0, // Can overflow to 0 eventually
     engineMaxRpm: 0,
@@ -790,7 +797,7 @@ export const sledTemplate = {
     numCylinders: 0,         // Number of cylinders in the engine
 };
 
-export const dashExtendTemplate = {
+const dashExtendTemplate = {
     positionX: 0,
     positionY: 0,
     positionZ: 0,
@@ -820,7 +827,7 @@ export const dashExtendTemplate = {
     normalAiBrakeDifference: 0,
 };
 
-export const fm8DashExtendTemplate = {
+const fm8DashExtendTemplate = {
     tireWearFrontLeft: 0,
     tireWearFrontRight: 0,
     tireWearRearLeft: 0,
@@ -839,3 +846,28 @@ export const dummyMessageData: MessageData = {
     // FM8 extend
     ...fm8DashExtendTemplate,
 };
+
+const sledValidKeys = new Set(Object.keys(sledTemplate));
+const fh4DashValidKeys = new Set([...Object.keys(sledTemplate), ...Object.keys(dashExtendTemplate)]);
+const fm7ValidKeys = new Set([...Object.keys(sledTemplate), ...Object.keys(dashExtendTemplate)]);
+const fm8ValidKeys = new Set([...Object.keys(sledTemplate), ...Object.keys(dashExtendTemplate), ...Object.keys(fm8DashExtendTemplate)]);
+const noValidKeys = new Set();
+
+export function getValidKeys(dataType?: DataType) {
+    switch (dataType) {
+        case DataType.Sled:
+            return sledValidKeys;
+        case DataType.FH4Dash:
+            return fh4DashValidKeys;
+        case DataType.FM7Dash:
+            return fm7ValidKeys;
+        case DataType.FM8Dash:
+            return fm8ValidKeys;
+    }
+    return noValidKeys;
+}
+
+export function isValidProp(dataType: DataType | undefined, key: Exclude<keyof MessageData, "dataType">) {
+    const validKeys = getValidKeys(dataType);
+    return validKeys.has(key);
+}

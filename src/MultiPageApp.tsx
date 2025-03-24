@@ -1,8 +1,9 @@
 import "./MultiPageApp.scss";
 
 import { FadeThrough, SharedAxis } from "material-design-transform";
+import { Curves, Duration } from "material-design-transform/dist/common";
 import React from "react";
-import { Button, Dialog, Divider, Fab, Icon, IconButton, ListItem } from "rmcw/dist/components3";
+import { Button, Dialog, Fab, Icon, IconButton, ListItem } from "rmcw/dist/components3";
 
 import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, TireOption, WindowContext } from "./common/AppContext";
 import { MessageData } from "./common/MessageData";
@@ -54,11 +55,11 @@ export default function MultiPageApp({ streamAppContext }: { streamAppContext: S
   return <ReactMultiPageAppContext.Provider value={multiPageAppContext}>
     <div className="fill-parent flex-row">
       <div className="flex-column app-navigation-rails">
-        <span title="add window">
+        <span title="Add Window">
           <Fab icon={<Icon>add</Icon>} onClick={() => setWindows([{ id: getNewWindowId(), page: getUnusedPage(windows) }, ...windows])} />
         </span>
         <div className="flex-child" />
-        <span title="clear data">
+        <span title="Clear Data">
           <IconButton onClick={resetData}><Icon>clear_all</Icon></IconButton>
         </span>
         <span title={`Socket: ${socketStats}`}>
@@ -68,7 +69,7 @@ export default function MultiPageApp({ streamAppContext }: { streamAppContext: S
             </IconButton>
           </FadeThrough>
         </span>
-        <span title="settings">
+        <span title="Settings">
           <IconButton onClick={openSettings}><Icon>settings</Icon></IconButton>
         </span>
       </div>
@@ -123,30 +124,38 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
       showDetailDelta, setShowDetailDelta
     };
   }, [detailOption, showDetailDelta, showEnginePowerCurve, tireOption]);
-  return <div className="flex-column flex-child window-divider">
-    <ListItem trailingSupportingText={<Icon>swap_horiz</Icon>} type="button"
-      onClick={() => setOpenDialog(true)}>{page}</ListItem>
-    <ReactWindowContext.Provider value={windowContext}>
-      <SharedAxis className="flex-child" keyId={`${page} ${messageDataAnalysis.id}`}>
-        {getPage(page)}
-      </SharedAxis>
-    </ReactWindowContext.Provider>
+  return <>
+    <div className="window-divider" />
+    <div className="flex-child flex-column"
+      style={{ transform: openDialog ? "scale(0.97)" : undefined, transition: `transform ${Duration.M3["md.sys.motion.duration.medium4"]}ms ${Curves.M3.Emphasized}` }}>
+      <ListItem
+        trailingSupportingText={<span title="Swap Page">
+          <IconButton onClick={() => setOpenDialog(true)}><Icon style={{ color: openDialog ? "var(--md-sys-color-primary)" : undefined }}>swap_horiz</Icon></IconButton>
+        </span>}><span style={{ color: openDialog ? "var(--md-sys-color-primary)" : undefined }}>{page}</span></ListItem>
+      <ReactWindowContext.Provider value={windowContext}>
+        <SharedAxis className="flex-child" keyId={`${page} ${messageDataAnalysis.id}`}>
+          {getPage(page)}
+        </SharedAxis>
+      </ReactWindowContext.Provider>
+    </div>
     <Dialog
       open={openDialog}
       onScrimClick={closeDialog}
       onEscapeKey={closeDialog}
       headline="Swap Page"
-      actions={<Button buttonStyle="text" onClick={closeDialog}>Close</Button>}>
-      <div className="flex-column" style={{ width: 360, gap: 16 }}>
-        {Object.values(Page).map(value =>
-          <Button key={value} buttonStyle={usedPages.has(value) ? "outlined" : "elevated"} disabled={page === value} onClick={() => { setPage(value); closeDialog(); }}>{value}</Button>)}
-        <Divider />
+      actions={<>
         <Button buttonStyle="filled" onClick={async () => {
           setOpenDialog(false);
           await new Promise((resolve) => setTimeout(resolve, 200));
           closeWindow();
-        }} style={{ "--md-sys-color-primary": "var(--md-sys-color-error)" } as React.CSSProperties} icon={<Icon>close</Icon>}>Remove This Page</Button>
+        }} style={{ "--md-sys-color-primary": "var(--md-sys-color-error)" } as React.CSSProperties} icon={<Icon>close</Icon>}>Remove Window</Button>
+        <div className="flex-child" />
+        <Button buttonStyle="text" onClick={closeDialog}>Close</Button>
+      </>}>
+      <div className="flex-column" style={{ width: 360, gap: 16 }}>
+        {Object.values(Page).map(value =>
+          <Button key={value} buttonStyle={usedPages.has(value) ? "outlined" : "elevated"} disabled={page === value} onClick={() => { setPage(value); closeDialog(); }}>{value}</Button>)}
       </div>
     </Dialog>
-  </div>;
+  </>;
 }

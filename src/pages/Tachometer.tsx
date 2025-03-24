@@ -8,7 +8,7 @@ import { Button, Card, Dialog, Divider, ListItem, Ripple, Typography } from "rmc
 
 import { AppWindowMode, ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
-import { ConsumptionEstimation, dummyMessageData, MessageData, MessageDataAnalysis } from "../common/MessageData";
+import { ConsumptionEstimation, dummyMessageData, isValidProp, MessageData, MessageDataAnalysis } from "../common/MessageData";
 
 const startAngle = 225;
 const endAngle = -45;
@@ -172,7 +172,7 @@ function getRange(messageDataAnalysis: MessageDataAnalysis) {
   return { lower: sorted[lower].x, upper: sorted[upper].x };
 }
 
-function getBound(sorted: { x: number, y: number; }[], maxIndex: number, threshold: number, bundleRange = 100) {
+function getBound(sorted: { x: number, y: number; }[], maxIndex: number, threshold: number, bundleRange = 50) {
   let upper = sorted.length - 1;
   function filterNoise(bundle: number[]) {
     const sorted = bundle.sort(function (a, b) { return a - b; });
@@ -325,9 +325,9 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
 
 function SimpleCard({ title, tooltip, content, onClick }: { title: string, tooltip: string, content: React.ReactNode; onClick: () => unknown; }) {
   return <Card className="flex-child" style={{ maxWidth: 280, textWrap: "nowrap" }}>
-    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly fit-elevated-card-container-shape" style={{ padding: "0 32px" }}>
+    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-between fit-elevated-card-container-shape" style={{ padding: 24 }}>
       <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
-      <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
+      <Typography.Headline.Medium tag='span' title={tooltip}>{content}</Typography.Headline.Medium>
     </Ripple>
   </Card>;
 }
@@ -338,15 +338,15 @@ function ConsumptionEstimationCard({ messageData, messageDataAnalysis, onClick }
   const remainEstimation = ConsumptionEstimation.estimateRemainLaps(perLapConsumption, lastData);
 
   return <Card className="flex-child" style={{ maxWidth: 280, textWrap: "nowrap" }}>
-    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly fit-elevated-card-container-shape" style={{ padding: "0 32px", alignItems: "start" }}>
+    <Ripple onClick={onClick} className="fill-parent flex-column flex-space-between fit-elevated-card-container-shape" style={{ padding: 24, alignItems: "start" }}>
       <Typography.Title.Medium tag='span'>Estimation</Typography.Title.Medium>
-      <Typography.Title.Medium tag='span' className="flex-row" style={{ justifyContent: "space-between", width: "100%" }}>
+      <Typography.Title.Medium tag='span' className="flex-row flex-space-between" style={{ width: "100%", opacity: isValidProp(lastData.dataType, "fuel") ? 1 : 0.3 }}>
         Fuel:
         <span>
           <span title="Laps of Remain Fuel">{remainEstimation.fuel.toFixed(1)}</span><span style={{ paddingLeft: 8 }}>Laps</span>
         </span>
       </Typography.Title.Medium>
-      <Typography.Title.Medium tag='span' className="flex-row" style={{ justifyContent: "space-between", width: "100%" }}>
+      <Typography.Title.Medium tag='span' className="flex-row flex-space-between" style={{ width: "100%", opacity: isValidProp(lastData.dataType, "tireWearFrontLeft") ? 1 : 0.3 }}>
         TireWear:
         <span>
           <span title="Laps of Until 50% Tire Wear">{remainEstimation.tireWear50.toFixed(1)}</span> / <span title="Laps of Until 65% Tire Wear">{remainEstimation.tireWear65.toFixed(1)}</span>

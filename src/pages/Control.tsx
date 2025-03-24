@@ -69,7 +69,7 @@ function SimpleCard({ title, data, onClick }: { title: string, data: DataType[];
       <div className="flex-row flex-space-between" style={{ padding: "4px 0" }}>
         <span>{title}</span>{(value).toFixed(1)}%
       </div>
-      <LinearProgress value={value / 100} style={{ "--rmcw-linear-progress-transition": "none" } as React.CSSProperties} />
+      <LinearProgress className="disable-progress-transition" value={value / 100} />
     </Ripple>
   </Card>;
 }

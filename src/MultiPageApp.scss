@@ -8,5 +8,6 @@
 .window-divider {
     border-left: var(--md-divider-thickness, 1px) solid
         var(--md-divider-color, var(--md-sys-color-outline-variant, #cac4d0));
-    overflow: clip;
+    height: 100%;
+    width: 1px;
 }

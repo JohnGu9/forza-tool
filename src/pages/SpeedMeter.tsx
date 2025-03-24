@@ -22,7 +22,7 @@ export default function SpeedMeter() {
   }, [setUnitSystem, unitSystem]);
   const data = toData(messageData, messageDataAnalysis, unitSystem);
   const lastData = data.length === 0 ? { index: 0, speed: 0, velocity: 0 } : data[data.length - 1];
-  const ratio = lastData.speed === 0 ? 0 : lastData.velocity / lastData.speed;
+  const ratio = lastData.velocity === 0 ? 0 : lastData.speed / lastData.velocity;
   return <div className="fill-parent flex-column" style={{ padding: "16px" }}>
     <div className="flex-row flex-space-between" style={{ height: columnHeight, alignItems: "stretch", gap: 16, padding: "0 0 16px" }}>
       <SimpleCard title="Speed" content={lastData.speed.toFixed(1)} tooltip={`car speed meter value; unit: ${getSpeedUnit(unitSystem)}`} onClick={changeUnitSystem} />

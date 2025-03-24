@@ -5,7 +5,7 @@ import { ListItem, Select, SelectOption, Switch } from "rmcw/dist/components3";
 import { ReactStreamAppContext, ReactWindowContext } from "../common/AppContext";
 import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
 import CircularBuffer from "../common/CircularBuffer";
-import { dashExtendTemplate, DataType, dummyMessageData, fm8DashExtendTemplate, MessageData, sledTemplate } from "../common/MessageData";
+import { DataType, dummyMessageData, getValidKeys, MessageData } from "../common/MessageData";
 
 export default function Detail() {
   const { messageData } = React.useContext(ReactStreamAppContext);
@@ -80,23 +80,3 @@ const keys = Object.keys(dummyMessageData).filter(value => {
       return true;
   }
 }) as (keyof MessageData)[];
-
-const noValidKeys = new Set();
-const sledValidKeys = new Set(Object.keys(sledTemplate));
-const fh4DashValidKeys = new Set([...Object.keys(sledTemplate), ...Object.keys(dashExtendTemplate)]);
-const fm7ValidKeys = new Set([...Object.keys(sledTemplate), ...Object.keys(dashExtendTemplate)]);
-const fm8ValidKeys = new Set([...Object.keys(sledTemplate), ...Object.keys(dashExtendTemplate), ...Object.keys(fm8DashExtendTemplate)]);
-
-function getValidKeys(dataType?: DataType) {
-  switch (dataType) {
-    case DataType.Sled:
-      return sledValidKeys;
-    case DataType.FH4Dash:
-      return fh4DashValidKeys;
-    case DataType.FM7Dash:
-      return fm7ValidKeys;
-    case DataType.FM8Dash:
-      return fm8ValidKeys;
-  }
-  return noValidKeys;
-}

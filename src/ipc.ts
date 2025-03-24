@@ -34,7 +34,7 @@ export type ListenDataEvent =
         data: unknown;
     }
     | {
-        event: 'raw_data';
+        event: 'rawData';
         data: number[];
     };
 
