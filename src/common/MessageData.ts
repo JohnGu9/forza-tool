@@ -111,16 +111,16 @@ export type MessageData = {
 export function parseMessageData(buffer: number[]): MessageData {
     let dataType = DataType.Sled;
     switch (buffer.length) {
-        case 232:   // Sled
+        case 232:
             dataType = DataType.Sled;
             break;
-        case 324:   // FH4
+        case 324:
             dataType = DataType.FH4Dash;
             break;
-        case 311:   // FM7 dash
+        case 311:
             dataType = DataType.FM7Dash;
             break;
-        case 331:   // FM8 dash
+        case 331:
             dataType = DataType.FM8Dash;
             break;
         default:
@@ -307,50 +307,104 @@ export function parseMessageData(buffer: number[]): MessageData {
     };
 }
 
-export type ConsumptionEstimation = {
-    fuelPerLap: number;
-    fuelPerTenMin: number;
-    tireWearPerLap: number;
-    tireWearPerTenMin: number;
-    lapTime: number;
-    start: MessageData;
+export class ConsumptionEstimation {
+    protected _start!: MessageData;
+    protected _end!: MessageData;
+
+    protected _fuel = 0; // unit time consumption
+    protected _tireWear = 0; // unit time consumption
+
+    getPerLapConsumption() {
+        const lapTime = this.getLapTime();
+        if (lapTime === 0) {
+            return {
+                fuel: 0,
+                tireWear: 0,
+            };
+        }
+        return {
+            fuel: this._fuel * lapTime,
+            tireWear: this._tireWear * lapTime,
+        };
+    }
+
+    getUnitTimeConsumption() {
+        return {
+            fuel: this._fuel,
+            tireWear: this._tireWear,
+        };
+    }
+
+    // 100% fuel and 100% tire wear
+    estimateLaps() {
+        const lapTime = this.getLapTime();
+        if (lapTime === 0) {
+            return {
+                fuel: 0,
+                tireWear: 0,
+            };
+        }
+        const fuelRemainTime = 1 / this._fuel;
+        const tireWearRemainTime = 1 / this._tireWear;
+
+        return {
+            fuel: fuelRemainTime / lapTime,
+            tireWear: tireWearRemainTime / lapTime,
+        };
+    }
+
+    static estimateRemainLaps(perLapConsumption: { fuel: number, tireWear: number; }, data: MessageData) {
+        const fuel = perLapConsumption.fuel === 0 ? 0 : data.fuel / perLapConsumption.fuel;
+        if (perLapConsumption.tireWear === 0) {
+            return {
+                fuel,
+                tireWear50: 0,
+                tireWear65: 0,
+            };
+        }
+        const maxTireWear = Math.max(data.tireWearFrontLeft, data.tireWearFrontRight, data.tireWearRearLeft, data.tireWearRearRight);
+        return {
+            fuel,
+            tireWear50: (0.5 - maxTireWear) / perLapConsumption.tireWear,
+            tireWear65: (0.65 - maxTireWear) / perLapConsumption.tireWear,
+        };
+    }
+
+    getLapTime() {
+        return this._end?.currentLapTime ?? 0;
+    }
+
+    getStartFuel() {
+        return this._start?.fuel ?? 0;
+    }
+
+    setStart(start: MessageData) {
+        this._start = start;
+    }
+
+    compute(end: MessageData) {
+        this._end = end;
+
+        const duration = this._end.currentLapTime - this._start.currentLapTime; // unit: sec
+        const deltaFuel = this._end.fuel - this._start.fuel;
+        const deltaTireWearFrontLeft = this._end.tireWearFrontLeft - this._start.tireWearFrontLeft;
+        const deltaTireWearFrontRight = this._end.tireWearFrontRight - this._start.tireWearFrontRight;
+        const deltaTireWearRearLeft = this._end.tireWearRearLeft - this._start.tireWearRearLeft;
+        const deltaTireWearRearRight = this._end.tireWearRearRight - this._start.tireWearRearRight;
+
+        if (deltaFuel < 0) {
+            this._fuel = - deltaFuel / duration;
+        }
+
+        if (deltaTireWearFrontLeft > 0 &&
+            deltaTireWearFrontRight > 0 &&
+            deltaTireWearRearLeft > 0 &&
+            deltaTireWearRearRight > 0) {
+            const deltaTireWearMax = Math.max(deltaTireWearFrontLeft, deltaTireWearFrontRight, deltaTireWearRearLeft, deltaTireWearRearRight);
+            this._tireWear = deltaTireWearMax / duration;
+        }
+    }
 };
-
-function newConsumptionEstimation(): ConsumptionEstimation {
-    return {
-        fuelPerLap: 0,
-        fuelPerTenMin: 0,
-        tireWearPerLap: 0,
-        tireWearPerTenMin: 0,
-        lapTime: 0,
-        start: dummyMessageData,
-    };
-}
-
-
-function computeConsumptionEstimation(consumptionEstimation: ConsumptionEstimation, data: MessageData) {
-    consumptionEstimation.lapTime = data.currentLapTime;
-    const duration = data.currentLapTime - consumptionEstimation.start.currentLapTime; // unit: sec
-    const deltaFuel = consumptionEstimation.start.fuel - data.fuel;
-    const deltaTireWearFrontLeft = consumptionEstimation.start.tireWearFrontLeft - data.tireWearFrontLeft;
-    const deltaTireWearFrontRight = consumptionEstimation.start.tireWearFrontRight - data.tireWearFrontRight;
-    const deltaTireWearRearLeft = consumptionEstimation.start.tireWearRearLeft - data.tireWearRearLeft;
-    const deltaTireWearRearRight = consumptionEstimation.start.tireWearRearRight - data.tireWearRearRight;
-
-    if (deltaFuel > 0) {
-        consumptionEstimation.fuelPerLap = deltaFuel / duration * data.currentLapTime;
-        consumptionEstimation.fuelPerTenMin = deltaFuel / duration * 600;
-    }
-
-    if (deltaTireWearFrontLeft < 0 &&
-        deltaTireWearFrontRight < 0 &&
-        deltaTireWearRearLeft < 0 &&
-        deltaTireWearRearRight < 0) {
-        const deltaTireWearMax = -Math.min(deltaTireWearFrontLeft, deltaTireWearFrontRight, deltaTireWearRearLeft, deltaTireWearRearRight);
-        consumptionEstimation.tireWearPerLap = deltaTireWearMax / duration * data.currentLapTime;
-        consumptionEstimation.tireWearPerTenMin = deltaTireWearMax / duration * 600;
-    }
-}
 
 export type MessageDataAnalysis = {
     id: number,
@@ -371,7 +425,7 @@ export function newMessageDataAnalysis(capacity: number): MessageDataAnalysis {
         distance: new CircularBuffer<number>(capacity),
         speed: new CircularBuffer<number>(capacity),
         isFullAcceleratorForAWhile: false,
-        consumptionEstimation: newConsumptionEstimation(),
+        consumptionEstimation: new ConsumptionEstimation(),
         stamp: 0
     };
 }
@@ -383,7 +437,7 @@ export function resetMessageDataAnalysis(analysis: MessageDataAnalysis) {
     analysis.distance = new CircularBuffer(analysis.distance.getCapacity());
     analysis.speed = new CircularBuffer(analysis.speed.getCapacity());
     analysis.isFullAcceleratorForAWhile = false;
-    analysis.consumptionEstimation = newConsumptionEstimation();
+    analysis.consumptionEstimation = new ConsumptionEstimation();
     analysis.stamp = 0;
 }
 
@@ -405,13 +459,13 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>/* no
         analysis.speed.push(positionToVelocity(analysis.distance.slice(-lastData.length), timeDelta / 1000));
 
         if (lastMessageData.trackOrdinal !== beforeLast.trackOrdinal ||
-            analysis.consumptionEstimation.start.fuel < lastMessageData.fuel) {
-            analysis.consumptionEstimation.start = lastMessageData;
+            analysis.consumptionEstimation.getStartFuel() < lastMessageData.fuel) {
+            analysis.consumptionEstimation.setStart(lastMessageData);
         } else if (lastMessageData.lap !== beforeLast.lap) { // new lap
             if (lastMessageData.lap - beforeLast.lap === 1) {
-                computeConsumptionEstimation(analysis.consumptionEstimation, beforeLast);
+                analysis.consumptionEstimation.compute(beforeLast);
             }
-            analysis.consumptionEstimation.start = lastMessageData;
+            analysis.consumptionEstimation.setStart(lastMessageData);
         }
 
         changed = true;

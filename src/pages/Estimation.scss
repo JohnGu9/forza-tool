@@ -1,4 +1,12 @@
 .estimation-circular-progress {
     --md-circular-progress-size: 36px;
     --rmcw-circular-progress-transition: none;
+
+    &.max {
+        --md-circular-progress-active-indicator-color: var(--md-sys-color-error);
+    }
+
+    &.min {
+        --md-circular-progress-active-indicator-color: var(--md-sys-color-tertiary);
+    }
 }

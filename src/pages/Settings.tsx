@@ -37,7 +37,7 @@ export default function Settings({ opened, close }: {
         <div style={{ height: 16 }} aria-hidden />
         <Button icon={<Icon>straighten</Icon>} onClick={() => setUnitSystem(getNextUnitSystem(unitSystem))}>UnitSystem: {getUnitSystemName(unitSystem)}</Button>
         <div style={{ height: 32 }} aria-hidden />
-        <Button icon={<Icon>error</Icon>} onClick={() => setOpenErrorMessage(true)}>Error Message ({errorMessage.length})</Button>
+        <Button icon={<Icon>error</Icon>} onClick={() => setOpenErrorMessage(true)}>Error ({errorMessage.length})</Button>
         {/* <div style={{ height: 16 }} aria-hidden />
          <Button onClick={() => log("Test")}>Test</Button> */}
       </div>

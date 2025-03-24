@@ -8,7 +8,7 @@ import { Button, Card, Dialog, Divider, ListItem, Ripple, Typography } from "rmc
 
 import { AppWindowMode, ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
-import { MessageData, MessageDataAnalysis } from "../common/MessageData";
+import { ConsumptionEstimation, dummyMessageData, MessageData, MessageDataAnalysis } from "../common/MessageData";
 
 const startAngle = 225;
 const endAngle = -45;
@@ -333,32 +333,26 @@ function SimpleCard({ title, tooltip, content, onClick }: { title: string, toolt
 }
 
 function ConsumptionEstimationCard({ messageData, messageDataAnalysis, onClick }: { messageData: CircularBuffer<MessageData>, messageDataAnalysis: MessageDataAnalysis; onClick: () => unknown; }) {
-  const lastData = messageData.getLast();
+  const lastData = messageData.getLast() ?? dummyMessageData;
+  const perLapConsumption = messageDataAnalysis.consumptionEstimation.getPerLapConsumption();
+  const remainEstimation = ConsumptionEstimation.estimateRemainLaps(perLapConsumption, lastData);
+
   return <Card className="flex-child" style={{ maxWidth: 280, textWrap: "nowrap" }}>
     <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly fit-elevated-card-container-shape" style={{ padding: "0 32px", alignItems: "start" }}>
       <Typography.Title.Medium tag='span'>Estimation</Typography.Title.Medium>
       <Typography.Title.Medium tag='span' className="flex-row" style={{ justifyContent: "space-between", width: "100%" }}>
         Fuel:
         <span>
-          <span title="Laps of Remain Fuel">{lastData === undefined ? "0.0" : lapsEstimate(messageDataAnalysis.consumptionEstimation.fuelPerLap, lastData.fuel)}</span><span style={{ paddingLeft: 8 }}>Laps</span>
+          <span title="Laps of Remain Fuel">{remainEstimation.fuel.toFixed(1)}</span><span style={{ paddingLeft: 8 }}>Laps</span>
         </span>
       </Typography.Title.Medium>
       <Typography.Title.Medium tag='span' className="flex-row" style={{ justifyContent: "space-between", width: "100%" }}>
         TireWear:
         <span>
-          <span title="Laps of Until 50% Tire Wear">{lastData === undefined ? "0.0" : lapsEstimate(messageDataAnalysis.consumptionEstimation.tireWearPerLap,
-            Math.max(0, 0.5 - Math.max(lastData.tireWearFrontLeft, lastData.tireWearFrontRight, lastData.tireWearRearLeft, lastData.tireWearRearRight))
-          )}</span> / <span title="Laps of Until 65% Tire Wear">{lastData === undefined ? "0.0" : lapsEstimate(messageDataAnalysis.consumptionEstimation.tireWearPerLap,
-            Math.max(0, 0.65 - Math.max(lastData.tireWearFrontLeft, lastData.tireWearFrontRight, lastData.tireWearRearLeft, lastData.tireWearRearRight))
-          )}</span>
+          <span title="Laps of Until 50% Tire Wear">{remainEstimation.tireWear50.toFixed(1)}</span> / <span title="Laps of Until 65% Tire Wear">{remainEstimation.tireWear65.toFixed(1)}</span>
           <span style={{ paddingLeft: 8 }}>Laps</span>
         </span>
       </Typography.Title.Medium>
     </Ripple>
   </Card >;
-}
-
-function lapsEstimate(consumptionPerLap: number, targetConsumption: number) {
-  if (consumptionPerLap === 0) return "0.0";
-  return `${(targetConsumption / consumptionPerLap).toFixed(1)}`;
 }
