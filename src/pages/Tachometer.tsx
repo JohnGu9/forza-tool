@@ -8,11 +8,14 @@ import { Button, Card, Dialog, Divider, ListItem, Ripple, Typography } from "rmc
 
 import { AppWindowMode, ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
-import { ConsumptionEstimation, dummyMessageData, isValidProp, MessageData, MessageDataAnalysis } from "../common/MessageData";
+import { dummyMessageData, isValidProp, MessageData } from "../common/MessageData";
+import { ConsumptionEstimation, MessageDataAnalysis } from "../common/MessageDataAnalysis";
 
 const startAngle = 225;
 const endAngle = -45;
 const columnHeight = 150;
+
+const dividerColor = "var(--md-divider-color, var(--md-sys-color-outline-variant, #cac4d0))";
 
 export default function Tachometer() {
   const { appWindowMode } = React.useContext(ReactAppContext);
@@ -40,22 +43,22 @@ export default function Tachometer() {
       <ResponsiveContainer width="100%" height="100%">
         <PieChart margin={{ bottom: -48 }}>
           {showMore && !showPowerLevel ? <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="60%" outerRadius="65%" startAngle={startAngle} endAngle={endAngle}
-            stroke="var(--md-sys-color-on-background)"
+            stroke={dividerColor}
             data={[{ name: "PowerLevel", value: powerLevel }, { name: "RemainingPowerCapacity", value: 1 - powerLevel }]} >
             <Cell fill={getPowerLevelProgressColor(powerLevel)} />
             <Cell fill="var(--md-sys-color-surface-dim)" />
           </Pie> : undefined}
           <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="70%" outerRadius="80%" fill="var(--md-sys-color-primary)" startAngle={startAngle} endAngle={endAngle} paddingAngle={1}
-            stroke="var(--md-sys-color-on-background)"
+            stroke={dividerColor}
             data={markData}>
             {markData.map((data, index) =>
               <Cell key={index} fill={data.mark ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)"} />)}
           </Pie>
           <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="85%" outerRadius="90%" fill={getColor()} startAngle={startAngle} endAngle={endAngle}
-            stroke="var(--md-sys-color-on-background)"
+            stroke={dividerColor}
             data={[{ name: "CurrentEngineRpm", value: lastData.currentEngineRpm }, { name: "RemainingRpmCapacity", value: lastData.engineMaxRpm - lastData.currentEngineRpm }]} >
             <Cell fill={getColor()} />
-            <Cell fill="var(--md-sys-color-surface-dim)" />
+            <Cell fill={dividerColor} />
           </Pie>
           <Tooltip content={<CustomTooltip />} />
         </PieChart>
@@ -174,16 +177,6 @@ function getRange(messageDataAnalysis: MessageDataAnalysis) {
 
 function getBound(sorted: { x: number, y: number; }[], maxIndex: number, threshold: number, bundleRange = 50) {
   let upper = sorted.length - 1;
-  function filterNoise(bundle: number[]) {
-    const sorted = bundle.sort(function (a, b) { return a - b; });
-    function filter(bundle: number[]) {
-      if (bundle.length < 8) {
-        return bundle.slice(Math.floor(bundle.length / 2));
-      }
-      return bundle.slice(Math.ceil(bundle.length / 2), Math.floor(0.9 * bundle.length));
-    }
-    return filter(sorted);
-  }
   function getAverage(bundle: number[]) {
     return bundle.reduce(function (sum, value) { return sum + value; }, 0) / bundle.length;
   }
@@ -193,7 +186,7 @@ function getBound(sorted: { x: number, y: number; }[], maxIndex: number, thresho
     for (i++; i < sorted.length && sorted[i].x - bundle[0].x < bundleRange; i++) {
       bundle.push(sorted[i]);
     }
-    const average = getAverage(filterNoise(bundle.map(v => v.y)));
+    const average = getAverage(bundle.map(v => v.y));
     if (average < threshold) {
       upper = startIndex;
       break;
@@ -206,7 +199,7 @@ function getBound(sorted: { x: number, y: number; }[], maxIndex: number, thresho
     for (i--; i >= 0 && bundle[0].x - sorted[i].x < bundleRange; i--) {
       bundle.push(sorted[i]);
     }
-    const average = getAverage(filterNoise(bundle.map(v => v.y)));
+    const average = getAverage(bundle.map(v => v.y));
     if (average < threshold) {
       lower = startIndex;
       break;
@@ -265,7 +258,6 @@ function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: numb
         <Card key={index} className="flex-child" style={{
           maxWidth: 120,
           "--md-elevated-card-container-color": getContainerColor(lower),
-          "--md-elevated-card-container-shadow-color": overProgress ? "var(--md-sys-color-tertiary)" : undefined,
         } as React.CSSProperties} >
           <Ripple className="fill-parent fit-elevated-card-container-shape" onClick={openDialog} />
         </Card>
@@ -276,15 +268,15 @@ function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: numb
       actions={<Button buttonStyle="text" onClick={closeDialog}>close</Button>}
       onScrimClick={closeDialog}>
       <ListItem trailingSupportingText={
-        <Card className="demo-card" style={{ "--md-elevated-card-container-color": "var(--md-sys-color-tertiary)" } as React.CSSProperties} />
+        <Card className="demo-card high-power" />
       } supportingText="97% or higher">High Power</ListItem>
       <Divider />
       <ListItem trailingSupportingText={
-        <Card className="demo-card" style={{ "--md-elevated-card-container-color": "var(--md-sys-color-primary)" } as React.CSSProperties} />
+        <Card className="demo-card normal-power" />
       } supportingText="90% or higher">Normal Power</ListItem>
       <Divider />
       <ListItem trailingSupportingText={
-        <Card className="demo-card" style={{ "--md-elevated-card-container-color": "var(--md-sys-color-error)" } as React.CSSProperties} />
+        <Card className="demo-card low-power" />
       } supportingText="below 90%">Low Power</ListItem>
     </Dialog>
   </>;

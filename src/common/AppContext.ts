@@ -1,7 +1,8 @@
 import React from "react";
 
 import CircularBuffer from "./CircularBuffer";
-import { MessageData, MessageDataAnalysis, MessageDataKey } from "./MessageData";
+import { MessageData, MessageDataKey } from "./MessageData";
+import { MessageDataAnalysis } from "./MessageDataAnalysis";
 import { Page } from "./Page";
 import { SocketState } from "./SocketState";
 import { UnitSystem } from "./UnitConvert";
@@ -74,6 +75,7 @@ export const ReactAppContext = React.createContext(null as unknown as AppContext
 export type StreamAppContext = {
     messageData: CircularBuffer<MessageData>,
     messageDataAnalysis: MessageDataAnalysis,
+    isPaused: boolean,
 
     tick: unknown,
 };

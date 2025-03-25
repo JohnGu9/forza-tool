@@ -1,4 +1,4 @@
-import "./MultiPageApp.scss";
+import "./MultiWindowApp.scss";
 
 import { FadeThrough, SharedAxis, SharedAxisTransform } from "material-design-transform";
 import { Curves, Duration } from "material-design-transform/dist/common";
@@ -9,11 +9,17 @@ import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppCo
 import { MessageDataKey } from "./common/MessageData";
 import { Page } from "./common/Page";
 import { isSocketError, socketStateToIcon } from "./common/SocketState";
-import getPage, { MultiPageAppContext, ReactMultiPageAppContext } from "./pages";
+import getPage from "./pages";
 
 type WindowTag = { id: number; page: Page; };
 
-export default function MultiPageApp({ streamAppContext }: { streamAppContext: StreamAppContext; }) {
+type MultiWindowAppContext = {
+  usedPages: Set<Page>,
+};
+
+const ReactMultiWindowAppContext = React.createContext(undefined as unknown as MultiWindowAppContext);
+
+export default function MultiWindowApp({ streamAppContext }: { streamAppContext: StreamAppContext; }) {
   const { resetData, socketStats, openNetwork, openSettings, lastOpenedPage, setLastOpenedPage, errorMessage, setErrorMessage } = React.useContext(ReactAppContext);
   function recoveryPages(): WindowTag[] {
     const value = localStorage.getItem("multi-page"); // only storage page, no id
@@ -43,7 +49,7 @@ export default function MultiPageApp({ streamAppContext }: { streamAppContext: S
     localStorage.setItem("multi-page", JSON.stringify(newValue.map(v => v.page))); // only storage page, no id
   }, []);
   const usedPages = React.useMemo(() => { return new Set(windows.map(v => v.page)); }, [windows]);
-  const multiPageAppContext = React.useMemo<MultiPageAppContext>(() => { return { usedPages }; }, [usedPages]);
+  const multiPageAppContext = React.useMemo<MultiWindowAppContext>(() => { return { usedPages }; }, [usedPages]);
 
   function getNewWindowId() {
     if (windows.length === 0) {
@@ -52,7 +58,7 @@ export default function MultiPageApp({ streamAppContext }: { streamAppContext: S
     return windows[0].id + 1;
   }
 
-  return <ReactMultiPageAppContext.Provider value={multiPageAppContext}>
+  return <ReactMultiWindowAppContext.Provider value={multiPageAppContext}>
     <div className="fill-parent flex-row">
       <div className="flex-column app-navigation-rails">
         <span title="Add Window">
@@ -94,7 +100,7 @@ export default function MultiPageApp({ streamAppContext }: { streamAppContext: S
       </ReactStreamAppContext.Provider>
 
     </div>
-  </ReactMultiPageAppContext.Provider>;
+  </ReactMultiWindowAppContext.Provider>;
 }
 
 function getUnusedPage(windows: WindowTag[]) {
@@ -114,7 +120,7 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
   const [tireOption, setTireOption] = React.useState(TireOption.SlipAngle);
   const [detailOption, setDetailOption] = React.useState("timestampMs" as MessageDataKey);
   const [showDetailDelta, setShowDetailDelta] = React.useState(false);
-  const { usedPages } = React.useContext(ReactMultiPageAppContext);
+  const { usedPages } = React.useContext(ReactMultiWindowAppContext);
   const { messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const windowContext = React.useMemo<WindowContext>(() => {
     return {
@@ -146,11 +152,14 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
       onEscapeKey={closeDialog}
       headline="Swap Page"
       actions={<>
-        <Button buttonStyle="filled" onClick={async () => {
+        <Button className="close-window-button" buttonStyle="filled" onClick={async () => {
           setOpenDialog(false);
           await new Promise((resolve) => setTimeout(resolve, 50));
           closeWindow();
-        }} style={{ "--md-sys-color-primary": "var(--md-sys-color-error)" } as React.CSSProperties} icon={<Icon>close</Icon>}>Remove Window</Button>
+        }}
+          icon={<Icon>close</Icon>}>
+          Remove Window
+        </Button>
         <div className="flex-child" />
         <Button buttonStyle="text" onClick={closeDialog}>Close</Button>
       </>}>

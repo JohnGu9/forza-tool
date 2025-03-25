@@ -4,7 +4,8 @@ import { Card, Ripple, Typography } from "rmcw/dist/components3";
 
 import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
-import { MessageData, MessageDataAnalysis } from "../common/MessageData";
+import { MessageData } from "../common/MessageData";
+import { MessageDataAnalysis } from "../common/MessageDataAnalysis";
 import { getSpeedUnit, msTo, UnitSystem } from "../common/UnitConvert";
 
 const columnHeight = 150;

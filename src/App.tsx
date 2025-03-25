@@ -7,15 +7,16 @@ import { Theme } from 'rmcw/dist/components3';
 
 import { AppContext, AppWindowMode, ListenAddress, ReactAppContext, StreamAppContext } from './common/AppContext';
 import CircularBuffer from './common/CircularBuffer';
-import { analyzeMessageData, MessageData, MessageDataAnalysis, newMessageDataAnalysis, parseMessageData, resetMessageDataAnalysis } from './common/MessageData';
+import { MessageData, parseMessageData } from './common/MessageData';
+import { MessageDataAnalysis } from './common/MessageDataAnalysis';
 import { Page } from './common/Page';
 import { SocketState } from './common/SocketState';
 import { UnitSystem } from './common/UnitConvert';
 import { listenData } from './ipc';
-import MultiPageApp from './MultiPageApp';
+import MultiWindowApp from './MultiWindowApp';
 import Network from './pages/Network';
 import Settings from './pages/Settings';
-import SinglePageApp from './SinglePageApp';
+import SingleWindowApp from './SingleWindowApp';
 
 export default function App() {
   const [isOpenSettings, setOpenSettings] = React.useState(false);
@@ -61,7 +62,7 @@ export default function App() {
   }, [dataBufferLength]);
 
   const messageData = React.useMemo<CircularBuffer<MessageData>>(() => new CircularBuffer<MessageData>(dataBufferLength), [dataBufferLength]);
-  const messageDataAnalysis = React.useMemo<MessageDataAnalysis>(() => newMessageDataAnalysis(dataBufferLength), [dataBufferLength]);
+  const messageDataAnalysis = React.useMemo<MessageDataAnalysis>(() => new MessageDataAnalysis(dataBufferLength), [dataBufferLength]);
 
   const [errorMessage, setErrorMessage] = React.useState<string[]>([]);
 
@@ -72,12 +73,13 @@ export default function App() {
     }
     return value;
   }), []);
+  const [isPaused, setPaused] = React.useState(true);
 
   const [socketStats, setSocketStats] = React.useState(SocketState.closed);
 
   const resetData = React.useCallback(() => {
     messageData.clear();
-    resetMessageDataAnalysis(messageDataAnalysis);
+    messageDataAnalysis.reset();
     updateTick();
   }, [messageData, messageDataAnalysis, updateTick]);
 
@@ -129,8 +131,8 @@ export default function App() {
   }, [openNetwork, openSettings, resetData, socketStats, listenAddress, setListenAddress, enableDarkTheme, unitSystem, dataBufferLength, setDataBufferLength, errorMessage, lastOpenedPage, setLastOpenedPage, appWindowMode, setAppWindowMode]);
 
   const streamAppContext = React.useMemo<StreamAppContext>(() => {
-    return { messageData, messageDataAnalysis, tick };
-  }, [messageData, messageDataAnalysis, tick]);
+    return { messageData, messageDataAnalysis, isPaused, tick };
+  }, [isPaused, messageData, messageDataAnalysis, tick]);
 
   React.useEffect(() => {
     setSocketStats(SocketState.opening);
@@ -144,15 +146,15 @@ export default function App() {
       try {
         const data = parseMessageData(event.data.data);
         if (data.isRaceOn === 0) {
+          setPaused(true);
           return;
         }
-        // log(`${JSON.stringify(data)}`);
+        setPaused(false);
         if (isNeedToReset(messageData, data)) { // car changed
           resetData();
         }
         messageData.push(data);
-        analyzeMessageData(messageData, messageDataAnalysis);
-        // log(`${messageData.map(data => data.timestampMs).slice(-6)}`);
+        messageDataAnalysis.analyze(messageData);
       } catch (error) {
         addErrorMessage(`[${new Date().toTimeString()}] ${error}`);
       }
@@ -168,9 +170,9 @@ export default function App() {
         case "messageError":
           addErrorMessage(`[${new Date().toTimeString()}] ${event.data.reason}`);
           break;
-        // case "data":
-        //   onData(event);
-        //   break;
+        case "rawData":
+          addErrorMessage(`[${new Date().toTimeString()}] Received unexpected message`);
+          break;
         case "opened":
           setSocketStats(SocketState.opened);
           break;
@@ -201,17 +203,17 @@ const materialDesignTransformContext: MaterialDesignTransformContextType = { tra
 function getWindow(mode: AppWindowMode, streamAppContext: StreamAppContext) {
   switch (mode) {
     case AppWindowMode.Single:
-      return <SinglePageApp streamAppContext={streamAppContext} />;
+      return <SingleWindowApp streamAppContext={streamAppContext} />;
     case AppWindowMode.Multi:
-      return <MultiPageApp streamAppContext={streamAppContext} />;
+      return <MultiWindowApp streamAppContext={streamAppContext} />;
   }
 }
 
 function isNeedToReset(messageData: CircularBuffer<MessageData>, newData: MessageData) {
-  if (messageData.isEmpty()) {
+  const lastData = messageData.getLast();
+  if (lastData === undefined) {
     return false;
   }
-  const lastData = messageData.getLastUnsafe();
   if (lastData.carOrdinal === newData.carOrdinal &&
     lastData.carPerformanceIndex === newData.carPerformanceIndex &&
     lastData.drivetrainType === newData.drivetrainType &&

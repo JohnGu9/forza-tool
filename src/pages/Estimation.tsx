@@ -4,7 +4,8 @@ import React from "react";
 import { Card, CircularProgress, ListItem, Typography } from "rmcw/dist/components3";
 
 import { ReactStreamAppContext } from "../common/AppContext";
-import { ConsumptionEstimation, dummyMessageData, MessageData } from "../common/MessageData";
+import { dummyMessageData, MessageData } from "../common/MessageData";
+import { ConsumptionEstimation } from "../common/MessageDataAnalysis";
 
 export default function Estimation() {
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);

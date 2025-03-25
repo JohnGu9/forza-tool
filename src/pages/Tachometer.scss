@@ -14,7 +14,7 @@
         color 200ms,
         outline 200ms,
         font-size 200ms;
-    -webkit-text-stroke: 1px var(--md-sys-color-on-background);
+    -webkit-text-stroke: 1px var(--md-divider-color, var(--md-sys-color-outline-variant, #cac4d0));
     width: var(--text-size);
     height: var(--text-size);
     border-radius: var(--text-size);
@@ -24,4 +24,14 @@
 .demo-card {
     height: 32px;
     width: 32px;
+
+    &.high-power {
+        --md-elevated-card-container-color: var(--md-sys-color-tertiary);
+    }
+    &.normal-power {
+        --md-elevated-card-container-color: var(--md-sys-color-primary);
+    }
+    &.low-power {
+        --md-elevated-card-container-color: var(--md-sys-color-error);
+    }
 }

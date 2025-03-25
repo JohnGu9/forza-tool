@@ -9,7 +9,7 @@ import { Page } from "./common/Page";
 import { isSocketError, socketStateToIcon } from "./common/SocketState";
 import getPage from "./pages";
 
-export default function SinglePageApp({ streamAppContext }: { streamAppContext: StreamAppContext; }) {
+export default function SingleWindowApp({ streamAppContext }: { streamAppContext: StreamAppContext; }) {
   const { socketStats, openNetwork, openSettings, lastOpenedPage, setLastOpenedPage } = React.useContext(ReactAppContext);
   const { messageData } = streamAppContext;
   const [page, _setPage] = React.useState(lastOpenedPage);
@@ -33,7 +33,8 @@ export default function SinglePageApp({ streamAppContext }: { streamAppContext: 
 
   return <div className="rmcw-drawer fill-parent">
     <NavigationDrawer opened className="flex-column" style={{
-      position: "absolute", "--md-navigation-drawer-container-shape": "0 8px 8px 0",
+      position: "absolute",
+      "--md-navigation-drawer-container-shape": "0 8px 8px 0",
     } as React.CSSProperties}>
       <List className="flex-child" style={{ padding: 0 }}>
         <Typography.Headline.Large tag='div' style={{ padding: 16 }}>Forza</Typography.Headline.Large>
@@ -52,7 +53,7 @@ export default function SinglePageApp({ streamAppContext }: { streamAppContext: 
         <ListItem type='button' trailingSupportingText={
           <FadeThrough keyId={socketStats} transitionStyle="M3">
             <span title={`Socket: ${socketStats}`}>
-              <Icon style={{ color: isSocketError(socketStats) ? "--md-sys-color-error" : undefined, transition: "color 200ms" }}>{socketStateToIcon(socketStats)}</Icon>
+              <Icon style={{ color: isSocketError(socketStats) ? "var(--md-sys-color-error)" : undefined, transition: "color 200ms" }}>{socketStateToIcon(socketStats)}</Icon>
             </span>
           </FadeThrough>}
           onClick={openNetwork}>Network</ListItem>

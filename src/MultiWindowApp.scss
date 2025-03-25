@@ -11,3 +11,7 @@
     height: 100%;
     width: 1px;
 }
+
+.close-window-button {
+    --md-sys-color-primary: var(--md-sys-color-error);
+}
