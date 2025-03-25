@@ -3,18 +3,19 @@ import React from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, ReferenceDot, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, LinearProgress, Ripple, Typography } from "rmcw/dist/components3";
 
-import { ReactAppContext, ReactStreamAppContext, ReactWindowContext } from "../common/AppContext";
+import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
 import { dummyMessageData, MessageData } from "../common/MessageData";
 import { MessageDataAnalysis } from "../common/MessageDataAnalysis";
 import { getPowerUnit, getTorqueUnit, nmTo, UnitSystem, wTo } from "../common/UnitConvert";
+import { ReactPageContext } from "./common/Context";
 
 const columnHeight = 150;
 const chartsPadding = 32;
 
 export default function Engine() {
   const { unitSystem, setUnitSystem } = React.useContext(ReactAppContext);
-  const { showEnginePowerCurve, setShowEnginePowerCurve } = React.useContext(ReactWindowContext);
+  const { showEnginePowerCurve, setShowEnginePowerCurve } = React.useContext(ReactPageContext);
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const lastMessageData = messageData.isEmpty() ? dummyMessageData : messageData.getLastUnsafe();
   const powerLevel = messageDataAnalysis.maxPower.value === 0 ? 0 : Math.max(lastMessageData.power / messageDataAnalysis.maxPower.value, 0);

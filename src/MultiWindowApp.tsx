@@ -5,11 +5,12 @@ import { Curves, Duration } from "material-design-transform/dist/common";
 import React from "react";
 import { Button, Dialog, Fab, Icon, IconButton, ListItem } from "rmcw/dist/components3";
 
-import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, TireOption, WindowContext } from "./common/AppContext";
+import { ReactAppContext, ReactStreamAppContext, StreamAppContext } from "./common/AppContext";
 import { MessageDataKey } from "./common/MessageData";
 import { Page } from "./common/Page";
 import { isSocketError, socketStateToIcon } from "./common/SocketState";
 import getPage from "./pages";
+import { MotionOption, PageContext,ReactPageContext, SpeedMeterOption, TireOption } from "./pages/common/Context";
 
 type WindowTag = { id: number; page: Page; };
 
@@ -118,18 +119,22 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
   const closeDialog = React.useCallback(() => setOpenDialog(false), []);
   const [showEnginePowerCurve, setShowEnginePowerCurve] = React.useState(true);
   const [tireOption, setTireOption] = React.useState(TireOption.SlipAngle);
+  const [motionOption, setMotionOption] = React.useState(MotionOption.Acceleration);
+  const [speedMeterOption, setSpeedMeterOption] = React.useState(SpeedMeterOption.VelocityVsSpeed);
   const [detailOption, setDetailOption] = React.useState("timestampMs" as MessageDataKey);
   const [showDetailDelta, setShowDetailDelta] = React.useState(false);
   const { usedPages } = React.useContext(ReactMultiWindowAppContext);
   const { messageDataAnalysis } = React.useContext(ReactStreamAppContext);
-  const windowContext = React.useMemo<WindowContext>(() => {
+  const windowContext = React.useMemo<PageContext>(() => {
     return {
       tireOption, setTireOption,
+      motionOption, setMotionOption,
+      speedMeterOption, setSpeedMeterOption,
       showEnginePowerCurve, setShowEnginePowerCurve,
       detailOption, setDetailOption,
       showDetailDelta, setShowDetailDelta
     };
-  }, [detailOption, showDetailDelta, showEnginePowerCurve, tireOption]);
+  }, [detailOption, motionOption, showDetailDelta, showEnginePowerCurve, speedMeterOption, tireOption]);
   return <>
     <div className="window-divider" />
     <div className="flex-child flex-column"
@@ -140,11 +145,11 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
         </span>}>
         <SharedAxis keyId={page} transform={SharedAxisTransform.fromLeftToRight} style={{ color: openDialog ? "var(--md-sys-color-primary)" : undefined }}>{page}</SharedAxis>
       </ListItem>
-      <ReactWindowContext.Provider value={windowContext}>
+      <ReactPageContext.Provider value={windowContext}>
         <SharedAxis className="flex-child" keyId={`${page} ${messageDataAnalysis.id}`}>
           {getPage(page)}
         </SharedAxis>
-      </ReactWindowContext.Provider>
+      </ReactPageContext.Provider>
     </div>
     <Dialog
       open={openDialog}
@@ -154,7 +159,7 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
       actions={<>
         <Button className="close-window-button" buttonStyle="filled" onClick={async () => {
           setOpenDialog(false);
-          await new Promise((resolve) => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 180));
           closeWindow();
         }}
           icon={<Icon>close</Icon>}>

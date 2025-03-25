@@ -114,13 +114,15 @@ export class MessageDataAnalysis {
     maxPower: { value: number, rpm: number, torque: number; } = { value: 0, rpm: 0, torque: 0 };
     powerCurve: { rpm: number, power: number, torque: number; }[] = [];
     distance: CircularBuffer<number>;
-    speed: CircularBuffer<number>;
+    velocity: CircularBuffer<number>;
+    velocityPrediction: CircularBuffer<number>;
     consumptionEstimation = new ConsumptionEstimation();
     isFullAcceleratorForAWhile = false; // @TODO: maybe remove this
 
     constructor(capacity: number) {
         this.distance = new CircularBuffer<number>(capacity);
-        this.speed = new CircularBuffer<number>(capacity);
+        this.velocity = new CircularBuffer<number>(capacity);
+        this.velocityPrediction = new CircularBuffer<number>(capacity);
     }
 
     reset() {
@@ -130,7 +132,8 @@ export class MessageDataAnalysis {
         this.maxPower = { value: 0, rpm: 0, torque: 0 };
         this.powerCurve = [];
         this.distance.clear();
-        this.speed.clear();
+        this.velocity.clear();
+        this.velocityPrediction.clear();
         this.consumptionEstimation.reset();
         this.isFullAcceleratorForAWhile = false;
     }
@@ -147,10 +150,13 @@ export class MessageDataAnalysis {
 
         if (lastData.length > 1) {
             const beforeLast = lastData[lastData.length - 2];
-            this.distance.push(getDistance(lastMessageData, beforeLast));
+            this.distance.push(toDistance(lastMessageData, beforeLast));
 
             const timeDelta = lastMessageData.timestampMs - lastData[0].timestampMs;
-            this.speed.push(toVelocity(this.distance.slice(-Math.max(lastData.length - 1, 0)), timeDelta / 1000));
+            this.velocity.push(timeDelta <= 0 ? 0 : toVelocity(this.distance.slice(-Math.max(lastData.length - 1, 0)), timeDelta / 1000));
+
+            const timeDeltaSmall = lastMessageData.timestampMs - beforeLast.timestampMs;
+            this.velocityPrediction.push(timeDeltaSmall <= 0 ? 0 : getVelocityPrediction(beforeLast, timeDeltaSmall / 1000));
 
             if (lastMessageData.trackOrdinal !== beforeLast.trackOrdinal ||
                 this.consumptionEstimation.getStartFuel() < lastMessageData.fuel) {
@@ -163,8 +169,16 @@ export class MessageDataAnalysis {
             }
 
             changed = true;
-        } else {
+        } else { // lastData.length === 1
             this.distance.push(0);
+            this.velocity.push(0);
+
+            if (lastData.length !== 0) {
+                const last = lastData[0];
+                this.velocityPrediction.push(toScalar({ x: last.velocityX, y: last.velocityY, z: last.velocityZ }));
+            } else {
+                this.velocityPrediction.push(0);
+            }
         }
 
         if (this.isFullAcceleratorForAWhile !== isFullAcceleratorForAWhile) {
@@ -418,9 +432,19 @@ function toVelocity(distances: number[], timeDelta: number /* unit: s */) {
     const distance = distances.reduce((sum, value) => sum += value, 0);
     return distance / timeDelta; // unit: m/s
 }
-function getDistance(now: Position, before: Position) {
-    const distanceSquare = Math.pow(now.positionX - before.positionX, 2) +
-        Math.pow(now.positionY - before.positionY, 2) +
-        Math.pow(now.positionZ - before.positionZ, 2);
-    return Math.pow(distanceSquare, 1 / 2);
+function toDistance(now: Position, before: Position) {
+    return toScalar({ x: now.positionX - before.positionX, y: now.positionY - before.positionY, z: now.positionZ - before.positionZ });
+}
+function toScalar(value: { [key: string]: number; }) {
+    const v = Object.values(value).map(v => Math.pow(v, 2));
+    const sum = v.reduce((sum, value) => sum + value, 0);
+    return Math.pow(sum, 1 / 2);
+}
+function getVelocityPrediction(data: MessageData, duration: number /* unit: s */) {
+    const velocity = {
+        x: data.velocityX + data.accelerationX * duration,
+        y: data.velocityY + data.accelerationY * duration,
+        z: data.velocityZ + data.accelerationZ * duration,
+    };
+    return toScalar(velocity);
 }

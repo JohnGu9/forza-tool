@@ -1,7 +1,7 @@
 import React from "react";
 
 import CircularBuffer from "./CircularBuffer";
-import { MessageData, MessageDataKey } from "./MessageData";
+import { MessageData } from "./MessageData";
 import { MessageDataAnalysis } from "./MessageDataAnalysis";
 import { Page } from "./Page";
 import { SocketState } from "./SocketState";
@@ -20,33 +20,6 @@ export enum AppWindowMode {
     Single,
     Multi,
 };
-
-export enum TireOption {
-    SlipAngle = "tireSlipAngle",
-    SlipRatio = "tireSlipRatio",
-    CombinedSlip = "tireCombinedSlip",
-    Temp = "tireTemp",
-    SurfaceRumble = "surfaceRumble",
-    WheelRotationSpeed = "wheelRotationSpeed",
-    WheelOnRumbleStrip = "wheelOnRumbleStrip",
-    WheelInPuddleDepth = "wheelInPuddleDepth",
-    NormalizedSuspensionTravel = "normalizedSuspensionTravel",
-    SuspensionTravelMeters = "suspensionTravelMeters",
-    TireWear = "tireWear",
-}
-
-export type WindowContext = {
-    showEnginePowerCurve: boolean,
-    setShowEnginePowerCurve: (v: boolean) => unknown,
-    tireOption: TireOption,
-    setTireOption: (v: TireOption) => unknown,
-    detailOption: MessageDataKey,
-    setDetailOption: (v: MessageDataKey) => unknown,
-    showDetailDelta: boolean,
-    setShowDetailDelta: (v: boolean) => unknown,
-};
-
-export const ReactWindowContext = React.createContext(null as unknown as WindowContext);
 
 export type AppContext = {
     openNetwork: () => unknown,

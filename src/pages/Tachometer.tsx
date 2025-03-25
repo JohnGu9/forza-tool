@@ -48,7 +48,7 @@ export default function Tachometer() {
             <Cell fill={getPowerLevelProgressColor(powerLevel)} />
             <Cell fill="var(--md-sys-color-surface-dim)" />
           </Pie> : undefined}
-          <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="70%" outerRadius="80%" fill="var(--md-sys-color-primary)" startAngle={startAngle} endAngle={endAngle} paddingAngle={1}
+          <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="70%" outerRadius="80%" fill="var(--md-sys-color-primary)" startAngle={startAngle} endAngle={endAngle} paddingAngle={0.5}
             stroke={dividerColor}
             data={markData}>
             {markData.map((data, index) =>

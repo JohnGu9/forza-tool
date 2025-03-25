@@ -3,39 +3,41 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import { AxisDomain } from "recharts/types/util/types";
 import { Card, LinearProgress, Select, SelectOption } from "rmcw/dist/components3";
 
-import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, TireOption } from "../common/AppContext";
+import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
 import CircularBuffer from "../common/CircularBuffer";
-import { MessageData } from "../common/MessageData";
+import { getValidKeys, MessageData } from "../common/MessageData";
 import { UnitSystem } from "../common/UnitConvert";
+import { ReactPageContext, TireOption } from "./common/Context";
 
 export default function Tire() {
-  const { tireOption, setTireOption } = React.useContext(ReactWindowContext);
+  const { tireOption, setTireOption } = React.useContext(ReactPageContext);
   const { messageData } = React.useContext(ReactStreamAppContext);
   const { frontLeft, frontRight, rearLeft, rearRight } = getTargetData(messageData, tireOption);
   const displayText = React.useMemo(() => capitalizeFirstLetter(tireOption), [tireOption]);
+  const lastData = messageData.getLast();
+  const validKeys = getValidKeys(lastData?.dataType);
   return <div className="fill-parent flex-column flex-space-between" style={{ alignItems: "stretch", padding: "16px " }}>
     <Select label="option" displayText={displayText}>
-      {Object.values(TireOption).map(key => <SelectOption key={key} headline={key} selected={tireOption === key} onClick={() => setTireOption(key as TireOption)} style={{ textTransform: "capitalize" }} />)}
+      {Object.values(TireOption).map(key => <SelectOption key={key} headline={key} disabled={!validKeys.has(`${key}FrontLeft`)} selected={tireOption === key} onClick={() => setTireOption(key as TireOption)} style={{ textTransform: "capitalize" }} />)}
     </Select>
     <div className="flex-child" style={{ display: "grid", gridTemplateColumns: "50% 50%", gridTemplateRows: "50% 50%", gap: "16px", padding: "16px 16px 16px 0" }}>
-      <SimpleCard title="FrontLeft" data={frontLeft} type={tireOption} />
-      <SimpleCard title="FrontRight" data={frontRight} type={tireOption} />
-      <SimpleCard title="RearLeft" data={rearLeft} type={tireOption} />
-      <SimpleCard title="RearRight" data={rearRight} type={tireOption} />
+      <SimpleCard title="FrontLeft" data={frontLeft} option={tireOption} />
+      <SimpleCard title="FrontRight" data={frontRight} option={tireOption} />
+      <SimpleCard title="RearLeft" data={rearLeft} option={tireOption} />
+      <SimpleCard title="RearRight" data={rearRight} option={tireOption} />
     </div>
   </div>;
 }
 
 type DataType = { index: number; value: number; };
 
-function getTargetData(messageData: CircularBuffer<MessageData>, type: TireOption) {
-  const { keyFrontLeft, keyFrontRight, keyRearLeft, keyRearRight } = {
-    keyFrontLeft: `${type}FrontLeft`,
-    keyFrontRight: `${type}FrontRight`,
-    keyRearLeft: `${type}RearLeft`,
-    keyRearRight: `${type}RearRight`
-  };
+function getTargetData(messageData: CircularBuffer<MessageData>, option: TireOption) {
+  const keyFrontLeft = `${option}FrontLeft`;
+  const keyFrontRight = `${option}FrontRight`;
+  const keyRearLeft = `${option}RearLeft`;
+  const keyRearRight = `${option}RearRight`;
+
   const length = messageData.getElementCount();
   const frontLeft = new Array<DataType>(length);
   const frontRight = new Array<DataType>(length);
@@ -53,10 +55,10 @@ function getTargetData(messageData: CircularBuffer<MessageData>, type: TireOptio
   return { frontLeft, frontRight, rearLeft, rearRight };
 }
 
-function SimpleCard({ title, data, type }: { title: string, data: DataType[]; type: TireOption; }) {
+function SimpleCard({ title, data, option }: { title: string, data: DataType[]; option: TireOption; }) {
   const { unitSystem } = React.useContext(ReactAppContext);
   const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1].value);
-  const { formatter, progress, domain, ticks, } = React.useMemo(() => getSettings(type, unitSystem), [type, unitSystem]);
+  const { formatter, progress, domain, ticks } = React.useMemo(() => getConfiguration(option, unitSystem), [option, unitSystem]);
   return <Card className="flex-column flex-space-evenly" style={{ alignItems: "stretch", padding: 16 }}>
     <div className="flex-child" style={{ overflow: "clip" }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -77,7 +79,7 @@ function SimpleCard({ title, data, type }: { title: string, data: DataType[]; ty
   </Card>;
 }
 
-function getSettings(type: TireOption, unitSystem: UnitSystem): {
+function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
   formatter: (value: number) => string;
   ticks: (string | number)[] | undefined;
   domain: AxisDomain | undefined;
