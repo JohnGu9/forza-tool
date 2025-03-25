@@ -1,12 +1,12 @@
 import "./MultiPageApp.scss";
 
-import { FadeThrough, SharedAxis } from "material-design-transform";
+import { FadeThrough, SharedAxis, SharedAxisTransform } from "material-design-transform";
 import { Curves, Duration } from "material-design-transform/dist/common";
 import React from "react";
 import { Button, Dialog, Fab, Icon, IconButton, ListItem } from "rmcw/dist/components3";
 
 import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, TireOption, WindowContext } from "./common/AppContext";
-import { MessageData } from "./common/MessageData";
+import { MessageDataKey } from "./common/MessageData";
 import { Page } from "./common/Page";
 import { isSocketError, socketStateToIcon } from "./common/SocketState";
 import getPage, { MultiPageAppContext, ReactMultiPageAppContext } from "./pages";
@@ -65,7 +65,7 @@ export default function MultiPageApp({ streamAppContext }: { streamAppContext: S
         <span title={`Socket: ${socketStats}`}>
           <FadeThrough keyId={socketStats} transitionStyle="M3">
             <IconButton onClick={openNetwork}>
-              <Icon style={{ color: isSocketError(socketStats) ? "--md-sys-color-error" : undefined, transition: "color 200ms" }}>{socketStateToIcon(socketStats)}</Icon>
+              <Icon style={{ color: isSocketError(socketStats) ? "var(--md-sys-color-error)" : undefined, transition: "color 200ms" }}>{socketStateToIcon(socketStats)}</Icon>
             </IconButton>
           </FadeThrough>
         </span>
@@ -112,7 +112,7 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
   const closeDialog = React.useCallback(() => setOpenDialog(false), []);
   const [showEnginePowerCurve, setShowEnginePowerCurve] = React.useState(true);
   const [tireOption, setTireOption] = React.useState(TireOption.SlipAngle);
-  const [detailOption, setDetailOption] = React.useState("timestampMs" as keyof MessageData);
+  const [detailOption, setDetailOption] = React.useState("timestampMs" as MessageDataKey);
   const [showDetailDelta, setShowDetailDelta] = React.useState(false);
   const { usedPages } = React.useContext(ReactMultiPageAppContext);
   const { messageDataAnalysis } = React.useContext(ReactStreamAppContext);
@@ -127,11 +127,13 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
   return <>
     <div className="window-divider" />
     <div className="flex-child flex-column"
-      style={{ transform: openDialog ? "scale(0.97)" : undefined, transition: `transform ${Duration.M3["md.sys.motion.duration.medium4"]}ms ${Curves.M3.Emphasized}` }}>
+      style={{ transform: openDialog ? "scale(1.02)" : undefined, transition: `transform ${Duration.M3["md.sys.motion.duration.medium4"]}ms ${Curves.M3.Emphasized}` }}>
       <ListItem
         trailingSupportingText={<span title="Swap Page">
           <IconButton onClick={() => setOpenDialog(true)}><Icon style={{ color: openDialog ? "var(--md-sys-color-primary)" : undefined }}>swap_horiz</Icon></IconButton>
-        </span>}><span style={{ color: openDialog ? "var(--md-sys-color-primary)" : undefined }}>{page}</span></ListItem>
+        </span>}>
+        <SharedAxis keyId={page} transform={SharedAxisTransform.fromLeftToRight} style={{ color: openDialog ? "var(--md-sys-color-primary)" : undefined }}>{page}</SharedAxis>
+      </ListItem>
       <ReactWindowContext.Provider value={windowContext}>
         <SharedAxis className="flex-child" keyId={`${page} ${messageDataAnalysis.id}`}>
           {getPage(page)}
@@ -146,7 +148,7 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
       actions={<>
         <Button buttonStyle="filled" onClick={async () => {
           setOpenDialog(false);
-          await new Promise((resolve) => setTimeout(resolve, 200));
+          await new Promise((resolve) => setTimeout(resolve, 50));
           closeWindow();
         }} style={{ "--md-sys-color-primary": "var(--md-sys-color-error)" } as React.CSSProperties} icon={<Icon>close</Icon>}>Remove Window</Button>
         <div className="flex-child" />

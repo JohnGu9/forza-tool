@@ -108,6 +108,8 @@ export type MessageData = {
     trackOrdinal: number;
 };
 
+export type MessageDataKey = Exclude<keyof MessageData, "dataType">;
+
 export function parseMessageData(buffer: number[]): MessageData {
     let dataType = DataType.Sled;
     switch (buffer.length) {
@@ -314,7 +316,7 @@ export class ConsumptionEstimation {
     protected _fuel = 0; // unit time consumption
     protected _tireWear = 0; // unit time consumption
 
-    reset(){
+    reset() {
         this._start = this._end;
         this._fuel = 0;
         this._tireWear = 0;
@@ -462,7 +464,7 @@ export function analyzeMessageData(messageData: CircularBuffer<MessageData>/* no
         analysis.distance.push(getDistance(lastMessageData, beforeLast));
 
         const timeDelta = lastMessageData.timestampMs - lastData[0].timestampMs;
-        analysis.speed.push(toVelocity(analysis.distance.slice(-lastData.length), timeDelta / 1000));
+        analysis.speed.push(toVelocity(analysis.distance.slice(-Math.max(lastData.length - 1, 0)), timeDelta / 1000));
 
         if (lastMessageData.trackOrdinal !== beforeLast.trackOrdinal ||
             analysis.consumptionEstimation.getStartFuel() < lastMessageData.fuel) {
@@ -867,7 +869,7 @@ export function getValidKeys(dataType?: DataType) {
     return noValidKeys;
 }
 
-export function isValidProp(dataType: DataType | undefined, key: Exclude<keyof MessageData, "dataType">) {
+export function isValidProp(dataType: DataType | undefined, key: MessageDataKey) {
     const validKeys = getValidKeys(dataType);
     return validKeys.has(key);
 }

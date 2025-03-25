@@ -5,14 +5,14 @@ import { ListItem, Select, SelectOption, Switch } from "rmcw/dist/components3";
 import { ReactStreamAppContext, ReactWindowContext } from "../common/AppContext";
 import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
 import CircularBuffer from "../common/CircularBuffer";
-import { DataType, dummyMessageData, getValidKeys, MessageData } from "../common/MessageData";
+import { DataType, dummyMessageData, getValidKeys, MessageData, MessageDataKey } from "../common/MessageData";
 
 export default function Detail() {
   const { messageData } = React.useContext(ReactStreamAppContext);
   const { detailOption, setDetailOption, showDetailDelta, setShowDetailDelta } = React.useContext(ReactWindowContext);
   const data = showDetailDelta ?
-    getDelta(messageData, detailOption as keyof MessageData) :
-    messageData.map((data, index) => { return { index, value: data[detailOption as keyof MessageData] }; });
+    getDelta(messageData, detailOption as MessageDataKey) :
+    messageData.map((data, index) => { return { index, value: data[detailOption as MessageDataKey] }; });
   const lastData = messageData.getLast();
   const currentDataType = lastData ? getDataTypeName(lastData.dataType) : "Unknown Data Type";
   const validKeys = getValidKeys(lastData?.dataType);
@@ -54,7 +54,7 @@ function getDataTypeName(dataType: DataType) {
   }
 }
 
-function getDelta<T extends keyof MessageData>(messageData: CircularBuffer<MessageData>, option: T) {
+function getDelta<T extends MessageDataKey>(messageData: CircularBuffer<MessageData>, option: T) {
   const lower = messageData.getLowerBound();
   const upper = messageData.getUpperBound();
   if ((upper - lower) < 2) {
@@ -79,4 +79,4 @@ const keys = Object.keys(dummyMessageData).filter(value => {
     default:
       return true;
   }
-}) as (keyof MessageData)[];
+}) as MessageDataKey[];

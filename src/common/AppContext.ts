@@ -1,7 +1,7 @@
 import React from "react";
 
 import CircularBuffer from "./CircularBuffer";
-import { MessageData, MessageDataAnalysis } from "./MessageData";
+import { MessageData, MessageDataAnalysis, MessageDataKey } from "./MessageData";
 import { Page } from "./Page";
 import { SocketState } from "./SocketState";
 import { UnitSystem } from "./UnitConvert";
@@ -39,8 +39,8 @@ export type WindowContext = {
     setShowEnginePowerCurve: (v: boolean) => unknown,
     tireOption: TireOption,
     setTireOption: (v: TireOption) => unknown,
-    detailOption: keyof MessageData,
-    setDetailOption: (v: keyof MessageData) => unknown,
+    detailOption: MessageDataKey,
+    setDetailOption: (v: MessageDataKey) => unknown,
     showDetailDelta: boolean,
     setShowDetailDelta: (v: boolean) => unknown,
 };

@@ -4,7 +4,7 @@ import { Divider, Icon, List, ListItem, NavigationDrawer, NavigationDrawerPaddin
 
 import { ReactAppContext, ReactStreamAppContext, ReactWindowContext, StreamAppContext, TireOption, WindowContext } from "./common/AppContext";
 import CircularBuffer from "./common/CircularBuffer";
-import { dummyMessageData, MessageData } from "./common/MessageData";
+import { dummyMessageData, MessageData, MessageDataKey } from "./common/MessageData";
 import { Page } from "./common/Page";
 import { isSocketError, socketStateToIcon } from "./common/SocketState";
 import getPage from "./pages";
@@ -20,7 +20,7 @@ export default function SinglePageApp({ streamAppContext }: { streamAppContext: 
 
   const [tireOption, setTireOption] = React.useState(TireOption.SlipAngle);
   const [showEnginePowerCurve, setShowEnginePowerCurve] = React.useState(true);
-  const [detailOption, setDetailOption] = React.useState<keyof MessageData>("timestampMs");
+  const [detailOption, setDetailOption] = React.useState<MessageDataKey>("timestampMs");
   const [showDetailDelta, setShowDetailDelta] = React.useState(false);
   const windowContext = React.useMemo<WindowContext>(() => {
     return {
