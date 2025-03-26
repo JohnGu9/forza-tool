@@ -10,7 +10,7 @@ import { MessageDataKey } from "./common/MessageData";
 import { Page } from "./common/Page";
 import { isSocketError, socketStateToIcon } from "./common/SocketState";
 import getPage from "./pages";
-import { MotionOption, PageContext,ReactPageContext, SpeedMeterOption, TireOption } from "./pages/common/Context";
+import { MotionOption, PageContext, ReactPageContext, SpeedMeterOption, TireOption } from "./pages/common/Context";
 
 type WindowTag = { id: number; page: Page; };
 
@@ -18,11 +18,23 @@ type MultiWindowAppContext = {
   usedPages: Set<Page>,
 };
 
+type DragContext = {
+  source: WindowTag | null;
+  target: WindowTag | null;
+};
+
+const ReactDragContext = React.createContext(undefined as unknown as {
+  value: DragContext;
+  setValue: (v: DragContext) => unknown;
+  swapWindow: () => unknown;
+});
+
 const ReactMultiWindowAppContext = React.createContext(undefined as unknown as MultiWindowAppContext);
 
 export default function MultiWindowApp({ streamAppContext }: { streamAppContext: StreamAppContext; }) {
   const { resetData, socketStats, openNetwork, openSettings, lastOpenedPage, setLastOpenedPage, errorMessage, setErrorMessage } = React.useContext(ReactAppContext);
-  function recoveryPages(): WindowTag[] {
+
+  const [windows, _setWindows] = React.useState<WindowTag[]>((): WindowTag[] => {
     const value = localStorage.getItem("multi-page"); // only storage page, no id
     if (value !== null) {
       try {
@@ -43,14 +55,35 @@ export default function MultiWindowApp({ streamAppContext }: { streamAppContext:
     }
 
     return [{ id: 0, page: lastOpenedPage }];
-  }
-  const [windows, _setWindows] = React.useState<WindowTag[]>(recoveryPages);
+  });
   const setWindows = React.useCallback((newValue: WindowTag[]) => {
     _setWindows(newValue);
     localStorage.setItem("multi-page", JSON.stringify(newValue.map(v => v.page))); // only storage page, no id
   }, []);
   const usedPages = React.useMemo(() => { return new Set(windows.map(v => v.page)); }, [windows]);
   const multiPageAppContext = React.useMemo<MultiWindowAppContext>(() => { return { usedPages }; }, [usedPages]);
+
+  const [dragContextValue, setDragContextValue] = React.useState<DragContext>({ source: null, target: null });
+  const swapWindow = React.useCallback(() => {
+    const { source, target } = dragContextValue;
+    if (source !== null && target !== null) { // likely
+      const newWindows = [...windows];
+      const sourceIndex = newWindows.findIndex(v => v.id === source.id);
+      const targetIndex = newWindows.findIndex(v => v.id === target.id);
+      if (sourceIndex !== -1 && targetIndex !== -1) { // likely
+        newWindows[sourceIndex] = { id: newWindows[sourceIndex].id, page: target.page };
+        newWindows[targetIndex] = { id: newWindows[targetIndex].id, page: source.page };
+        setWindows(newWindows);
+      }
+    }
+  }, [dragContextValue, setWindows, windows]);
+  const dragContext = React.useMemo(() => {
+    return {
+      value: dragContextValue,
+      setValue: setDragContextValue,
+      swapWindow,
+    };
+  }, [dragContextValue, swapWindow]);
 
   function getNewWindowId() {
     if (windows.length === 0) {
@@ -81,24 +114,26 @@ export default function MultiWindowApp({ streamAppContext }: { streamAppContext:
         </span>
       </div>
 
-      <ReactStreamAppContext.Provider value={streamAppContext}>
-        <FadeThrough keyId={windows.length} className="flex-row flex-child">
-          {windows.map((value) =>
-            <SingleWindow key={value.id}
-              page={value.page}
-              setPage={(page) => {
-                const index = windows.findIndex(v => v.id === value.id);
-                if (index === -1) return;
-                setWindows([...windows.slice(0, index), { id: value.id, page }, ...windows.slice(index + 1)]);
-                setLastOpenedPage(page);
-              }}
-              closeWindow={() => {
-                const index = windows.findIndex(v => v.id === value.id);
-                if (index === -1) return;
-                setWindows([...windows.slice(0, index), ...windows.slice(index + 1)]);
-              }} />)}
-        </FadeThrough>
-      </ReactStreamAppContext.Provider>
+      <ReactDragContext.Provider value={dragContext}>
+        <ReactStreamAppContext.Provider value={streamAppContext}>
+          <FadeThrough keyId={windows.length} className="flex-row flex-child">
+            {windows.map((value) =>
+              <SingleWindow key={value.id}
+                windowTag={value}
+                setPage={(page) => {
+                  const index = windows.findIndex(v => v.id === value.id);
+                  if (index === -1) return;
+                  setWindows([...windows.slice(0, index), { id: value.id, page }, ...windows.slice(index + 1)]);
+                  setLastOpenedPage(page);
+                }}
+                closeWindow={() => {
+                  const index = windows.findIndex(v => v.id === value.id);
+                  if (index === -1) return;
+                  setWindows([...windows.slice(0, index), ...windows.slice(index + 1)]);
+                }} />)}
+          </FadeThrough>
+        </ReactStreamAppContext.Provider>
+      </ReactDragContext.Provider>
 
     </div>
   </ReactMultiWindowAppContext.Provider>;
@@ -114,7 +149,10 @@ function getUnusedPage(windows: WindowTag[]) {
   return Page.Engine;
 }
 
-function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (page: Page) => unknown, closeWindow: () => unknown; }) {
+const dividerColor = "var(--md-divider-color, var(--md-sys-color-outline-variant, #cac4d0))";
+
+function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTag, setPage: (page: Page) => unknown, closeWindow: () => unknown; }) {
+  const { page: realPage } = windowTag;
   const [openDialog, setOpenDialog] = React.useState(false);
   const closeDialog = React.useCallback(() => setOpenDialog(false), []);
   const [showEnginePowerCurve, setShowEnginePowerCurve] = React.useState(true);
@@ -125,6 +163,9 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
   const [showDetailDelta, setShowDetailDelta] = React.useState(false);
   const { usedPages } = React.useContext(ReactMultiWindowAppContext);
   const { messageDataAnalysis } = React.useContext(ReactStreamAppContext);
+  const [isDragging, setDragging] = React.useState(false);
+  const [isDragover, setDragover] = React.useState(false);
+  const dragContext = React.useContext(ReactDragContext);
   const windowContext = React.useMemo<PageContext>(() => {
     return {
       tireOption, setTireOption,
@@ -135,19 +176,71 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
       showDetailDelta, setShowDetailDelta
     };
   }, [detailOption, motionOption, showDetailDelta, showEnginePowerCurve, speedMeterOption, tireOption]);
+
+  function getDisplayPage() {
+    if (isDragging) {
+      return dragContext.value.target?.page ?? realPage;
+    }
+    if (isDragover) {
+      return dragContext.value.source?.page ?? realPage;
+    }
+    return realPage;
+  }
+  const displayPage = getDisplayPage();
+
+  /**
+   * Caution:
+   * Drag and drop function requires tauri(v2)'s configuration "dragDropEnabled" is false
+   * reference: https://github.com/tauri-apps/tauri/issues/3277
+   */
+
   return <>
     <div className="window-divider" />
     <div className="flex-child flex-column"
-      style={{ transform: openDialog ? "scale(1.02)" : undefined, transition: `transform ${Duration.M3["md.sys.motion.duration.medium4"]}ms ${Curves.M3.Emphasized}` }}>
+      style={{
+        transform: openDialog ? "scale(1.02)" : undefined,
+        transition: `transform ${Duration.M3["md.sys.motion.duration.medium4"]}ms ${Curves.M3.Emphasized}`
+      }}>
       <ListItem
+        draggable
+        onDragStart={e => {
+          e.dataTransfer.effectAllowed = "all";
+          setDragging(true);
+          dragContext.setValue({ ...dragContext.value, source: windowTag });
+        }}
+        onDragEnd={() => {
+          setDragging(false);
+          dragContext.setValue({ source: null, target: null });
+        }}
+        onDragOver={isDragging ? undefined : e => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          setDragover(true);
+          dragContext.setValue({ ...dragContext.value, target: windowTag });
+        }}
+        onDragLeave={() => {
+          dragContext.setValue({ ...dragContext.value, target: null });
+          setDragover(false);
+        }}
+        onDrop={isDragging ? undefined : e => {
+          e.preventDefault();
+          setDragover(false);
+          dragContext.swapWindow();
+        }}
+        style={{
+          backgroundColor: "var(--md-sys-color-background)",
+          opacity: (isDragging && dragContext.value.target === null) || isDragover ? 0 : 1,
+          outline: dragContext.value.source !== null ? `1px solid ${dividerColor}` : `0px solid ${dividerColor}`,
+          transition: `opacity ${Duration.M3["md.sys.motion.duration.short4"]}ms ${Curves.M3.Emphasized}, outline ${Duration.M3["md.sys.motion.duration.medium4"]}ms`,
+        }}
         trailingSupportingText={<span title="Swap Page">
           <IconButton onClick={() => setOpenDialog(true)}><Icon style={{ color: openDialog ? "var(--md-sys-color-primary)" : undefined }}>swap_horiz</Icon></IconButton>
         </span>}>
-        <SharedAxis keyId={page} transform={SharedAxisTransform.fromLeftToRight} style={{ color: openDialog ? "var(--md-sys-color-primary)" : undefined }}>{page}</SharedAxis>
+        <SharedAxis keyId={displayPage} transform={SharedAxisTransform.fromLeftToRight} style={{ color: openDialog ? "var(--md-sys-color-primary)" : undefined }}>{displayPage}</SharedAxis>
       </ListItem>
       <ReactPageContext.Provider value={windowContext}>
-        <SharedAxis className="flex-child" keyId={`${page} ${messageDataAnalysis.id}`}>
-          {getPage(page)}
+        <SharedAxis className="flex-child" keyId={`${displayPage} ${messageDataAnalysis.id}`}>
+          {getPage(displayPage)}
         </SharedAxis>
       </ReactPageContext.Provider>
     </div>
@@ -170,7 +263,7 @@ function SingleWindow({ page, setPage, closeWindow }: { page: Page, setPage: (pa
       </>}>
       <div className="flex-column" style={{ width: 360, gap: 16 }}>
         {Object.values(Page).map(value =>
-          <Button key={value} buttonStyle={usedPages.has(value) ? "outlined" : "elevated"} disabled={page === value} onClick={() => { setPage(value); closeDialog(); }}>{value}</Button>)}
+          <Button key={value} buttonStyle={usedPages.has(value) ? "outlined" : "elevated"} disabled={realPage === value} onClick={() => { setPage(value); closeDialog(); }}>{value}</Button>)}
       </div>
     </Dialog>
   </>;
