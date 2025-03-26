@@ -159,7 +159,7 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
   const [tireOption, setTireOption] = React.useState(TireOption.SlipAngle);
   const [motionOption, setMotionOption] = React.useState(MotionOption.Acceleration);
   const [speedMeterOption, setSpeedMeterOption] = React.useState(SpeedMeterOption.VelocityVsSpeed);
-  const [detailOption, setDetailOption] = React.useState("timestampMs" as MessageDataKey);
+  const [detailOption, setDetailOption] = React.useState<MessageDataKey>("timestampMs");
   const [showDetailDelta, setShowDetailDelta] = React.useState(false);
   const { usedPages } = React.useContext(ReactMultiWindowAppContext);
   const { messageDataAnalysis } = React.useContext(ReactStreamAppContext);
@@ -209,8 +209,8 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
           dragContext.setValue({ ...dragContext.value, source: windowTag });
         }}
         onDragEnd={() => {
-          setDragging(false);
           dragContext.setValue({ source: null, target: null });
+          setDragging(false);
         }}
         onDragOver={isDragging ? undefined : e => {
           e.preventDefault();
@@ -218,7 +218,7 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
           setDragover(true);
           dragContext.setValue({ ...dragContext.value, target: windowTag });
         }}
-        onDragLeave={() => {
+        onDragLeave={isDragging ? undefined : () => {
           dragContext.setValue({ ...dragContext.value, target: null });
           setDragover(false);
         }}
@@ -228,15 +228,18 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
           dragContext.swapWindow();
         }}
         style={{
-          backgroundColor: "var(--md-sys-color-background)",
-          opacity: (isDragging && dragContext.value.target === null) || isDragover ? 0 : 1,
-          outline: dragContext.value.source !== null ? `1px solid ${dividerColor}` : `0px solid ${dividerColor}`,
-          transition: `opacity ${Duration.M3["md.sys.motion.duration.short4"]}ms ${Curves.M3.Emphasized}, outline ${Duration.M3["md.sys.motion.duration.medium4"]}ms`,
+          opacity: isDragging || isDragover ? 0.5 : undefined,
+          backgroundColor: isDragging ? "var(--md-sys-color-background)" : undefined,
+          transform: isDragover ? "scale(0.97)" : undefined,
+          outline: dragContext.value.source !== null && !isDragging ? `1px dotted ${dividerColor}` : `0px dotted ${dividerColor}`,
+          transition: `opacity ${Duration.M3["md.sys.motion.duration.short4"]}ms, outline ${Duration.M3["md.sys.motion.duration.short4"]}ms, transform ${Duration.M3["md.sys.motion.duration.medium4"]}ms ${Curves.M3.Emphasized}`,
         }}
         trailingSupportingText={<span title="Swap Page">
           <IconButton onClick={() => setOpenDialog(true)}><Icon style={{ color: openDialog ? "var(--md-sys-color-primary)" : undefined }}>swap_horiz</Icon></IconButton>
         </span>}>
-        <SharedAxis keyId={displayPage} transform={SharedAxisTransform.fromLeftToRight} style={{ color: openDialog ? "var(--md-sys-color-primary)" : undefined }}>{displayPage}</SharedAxis>
+        <SharedAxis keyId={displayPage} transform={SharedAxisTransform.fromLeftToRight} style={{ color: openDialog ? "var(--md-sys-color-primary)" : undefined }}>
+          {displayPage}
+        </SharedAxis>
       </ListItem>
       <ReactPageContext.Provider value={windowContext}>
         <SharedAxis className="flex-child" keyId={`${displayPage} ${messageDataAnalysis.id}`}>
@@ -252,7 +255,7 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
       actions={<>
         <Button className="close-window-button" buttonStyle="filled" onClick={async () => {
           setOpenDialog(false);
-          await new Promise((resolve) => setTimeout(resolve, 180));
+          await new Promise((resolve) => setTimeout(resolve, 150));
           closeWindow();
         }}
           icon={<Icon>close</Icon>}>

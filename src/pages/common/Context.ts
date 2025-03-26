@@ -45,4 +45,4 @@ export type PageContext = {
     setShowDetailDelta: (v: boolean) => unknown,
 };
 
-export const ReactPageContext = React.createContext(null as unknown as PageContext);
+export const ReactPageContext = React.createContext(undefined as unknown as PageContext);

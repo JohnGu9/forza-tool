@@ -134,14 +134,12 @@ export default function App() {
     return { messageData, messageDataAnalysis, isPaused, tick };
   }, [isPaused, messageData, messageDataAnalysis, tick]);
 
+  const addErrorMessage = React.useCallback((errorMessage: string) => setErrorMessage((current) => {
+    current.push(errorMessage);
+    return [...current.slice(Math.max(current.length - 20, 0))];
+  }), []);
+
   React.useEffect(() => {
-    setSocketStats(SocketState.opening);
-    const [address, port, forwardSwitch, forwardAddress, forwardPort] = listenAddress;
-    const forward = forwardSwitch ? `${forwardAddress}:${forwardPort}` : null;
-    const addErrorMessage = (errorMessage: string) => setErrorMessage((current) => {
-      current.push(errorMessage);
-      return [...current.slice(Math.max(current.length - 20, 0))];
-    });
     const onData = (event: { event: 'rawData'; data: { data: number[]; }; }) => {
       try {
         const data = parseMessageData(event.data.data);
@@ -161,6 +159,13 @@ export default function App() {
       updateTick();
     };
     const unlisten = listen<{ event: 'rawData'; data: { data: number[]; }; }>("on-data", event => onData(event.payload));
+    return () => { unlisten.then(unlisten => unlisten()); };
+  });
+
+  React.useEffect(() => {
+    setSocketStats(SocketState.opening);
+    const [address, port, forwardSwitch, forwardAddress, forwardPort] = listenAddress;
+    const forward = forwardSwitch ? `${forwardAddress}:${forwardPort}` : null;
     listenData(`${address}:${port}`, forward, (event) => {
       switch (event.event) {
         case "error":
@@ -181,9 +186,8 @@ export default function App() {
           break;
       }
       updateTick();
-      return () => { unlisten.then(unlisten => unlisten()); };
     });
-  }, [listenAddress, messageData, messageDataAnalysis, resetData, updateTick]);
+  }, [addErrorMessage, listenAddress, messageData, messageDataAnalysis, resetData, updateTick]);
 
   return (
     <MaterialDesignTransformContext.Provider value={materialDesignTransformContext}>
