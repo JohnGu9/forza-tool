@@ -7,14 +7,16 @@ import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
 import { MessageData } from "../common/MessageData";
 import { getPowerUnit, UnitSystem, wTo } from "../common/UnitConvert";
+import { ReactWindowContext } from "./common/Context";
 
 export default function Control() {
+  const { padding } = React.useContext(ReactWindowContext);
   const { unitSystem } = React.useContext(ReactAppContext);
   const { messageData } = React.useContext(ReactStreamAppContext);
   const { clutch, accelerator, brake, handbrake, engineBraking } = getTargetData(messageData, unitSystem);
   const [showEngineBraking, setShowEngineBraking] = React.useState(false);
   const switchCard = React.useCallback(() => setShowEngineBraking(v => !v), []);
-  return <div className="fill-parent flex-column" style={{ padding: "16px 16px", gap: 16 }}>
+  return <div className="fill-parent flex-column" style={{ padding, gap: 16 }}>
     <SimpleCard title="Accelerator" data={accelerator} onClick={switchCard} />
     <SimpleCard title="Brake" data={brake} onClick={switchCard} />
     <SharedAxis keyId={showEngineBraking ? 1 : 0}

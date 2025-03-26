@@ -7,14 +7,14 @@ import CircularBuffer from "../common/CircularBuffer";
 import { MessageData } from "../common/MessageData";
 import { MessageDataAnalysis } from "../common/MessageDataAnalysis";
 import { getSpeedUnit, msTo, UnitSystem } from "../common/UnitConvert";
-import { ReactPageContext, SpeedMeterOption } from "./common/Context";
+import { ReactWindowContext, SpeedMeterOption } from "./common/Context";
 
 const columnHeight = 150;
 
 export default function SpeedMeter() {
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const { unitSystem } = React.useContext(ReactAppContext);
-  const { speedMeterOption, setSpeedMeterOption } = React.useContext(ReactPageContext);
+  const { padding, speedMeterOption, setSpeedMeterOption } = React.useContext(ReactWindowContext);
   const onClick = React.useCallback(() => {
     switch (speedMeterOption) {
       case SpeedMeterOption.VelocityVsSpeed:
@@ -75,7 +75,7 @@ export default function SpeedMeter() {
   const compareTarget = getCompareTarget();
   const ratio = compareTarget.second.value === 0 ? 0 : compareTarget.first.value / compareTarget.second.value;
 
-  return <div className="fill-parent flex-column" style={{ padding: "16px" }}>
+  return <div className="fill-parent flex-column" style={{ padding }}>
     <div className="flex-row flex-space-between" style={{ height: columnHeight, alignItems: "stretch", gap: 16, padding: "0 0 16px" }}>
       <SimpleCard title={compareTarget.first.title} content={compareTarget.first.value.toFixed(1)} tooltip={compareTarget.first.tooltip} onClick={onClick} />
       <SimpleCard title={compareTarget.second.title} content={compareTarget.second.value.toFixed(1)} tooltip={compareTarget.second.tooltip} onClick={onClick} />

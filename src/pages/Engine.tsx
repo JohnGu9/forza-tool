@@ -8,14 +8,14 @@ import CircularBuffer from "../common/CircularBuffer";
 import { dummyMessageData, MessageData } from "../common/MessageData";
 import { MessageDataAnalysis } from "../common/MessageDataAnalysis";
 import { getPowerUnit, getTorqueUnit, nmTo, UnitSystem, wTo } from "../common/UnitConvert";
-import { ReactPageContext } from "./common/Context";
+import { ReactWindowContext } from "./common/Context";
 
 const columnHeight = 150;
 const chartsPadding = 32;
 
 export default function Engine() {
   const { unitSystem, setUnitSystem } = React.useContext(ReactAppContext);
-  const { showEnginePowerCurve, setShowEnginePowerCurve } = React.useContext(ReactPageContext);
+  const { padding, showEnginePowerCurve, setShowEnginePowerCurve } = React.useContext(ReactWindowContext);
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const lastMessageData = messageData.isEmpty() ? dummyMessageData : messageData.getLastUnsafe();
   const powerLevel = messageDataAnalysis.maxPower.value === 0 ? 0 : Math.max(lastMessageData.power / messageDataAnalysis.maxPower.value, 0);
@@ -38,7 +38,7 @@ export default function Engine() {
   }
   const powerUnitName = getPowerUnit(unitSystem);
   return <div className="fill-parent flex-column">
-    <div className="flex-row flex-space-between" style={{ height: columnHeight, gap: 8, padding: "16px" }}>
+    <div className="flex-row flex-space-between" style={{ height: columnHeight, gap: 8, padding }}>
       <SimpleCard title="RPM" content={lastMessageData.currentEngineRpm.toFixed(0)}
         tooltip="unit: Rev/Min"
         onClick={changeUnitSystem} />

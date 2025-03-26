@@ -4,12 +4,13 @@ import { FadeThrough, SharedAxis } from "material-design-transform";
 import React from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis } from "recharts";
 import { NameType, Payload, ValueType } from "recharts/types/component/DefaultTooltipContent";
-import { Button, Card, Dialog, Divider, ListItem, Ripple, Typography } from "rmcw/dist/components3";
+import { Card, Ripple, Typography } from "rmcw/dist/components3";
 
 import { AppWindowMode, ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
 import { dummyMessageData, isValidProp, MessageData } from "../common/MessageData";
 import { ConsumptionEstimation, MessageDataAnalysis } from "../common/MessageDataAnalysis";
+import { ReactWindowContext } from "./common/Context";
 
 const startAngle = 225;
 const endAngle = -45;
@@ -18,6 +19,7 @@ const columnHeight = 150;
 const dividerColor = "var(--md-divider-color, var(--md-sys-color-outline-variant, #cac4d0))";
 
 export default function Tachometer() {
+  const { padding } = React.useContext(ReactWindowContext);
   const { appWindowMode } = React.useContext(ReactAppContext);
   const showMore = appWindowMode === AppWindowMode.Single;
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
@@ -38,8 +40,16 @@ export default function Tachometer() {
     }
     return "var(--md-sys-color-primary)";
   }
-  return <div className="fill-parent flex-column" style={{ padding: "16px", gap: 16 }}>
-    <div className="flex-child" style={{ position: "relative" }}>
+  return <div className="fill-parent flex-column" style={{ padding, gap: 16 }}>
+    <IndicatorLights lower={lower} upper={upper} current={lastData.currentEngineRpm} lowPowerLevel={lowPowerLevel} />
+    <div draggable className="flex-child" style={{ position: "relative" }}>
+      <FadeThrough keyId={lastData.gear} transitionStyle="M2" className="flex-column flex-space-evenly tachometer-gear-position">
+        <Typography.Display.Large tag="span" title="Gear" className="tachometer-gear" style={{
+          color: getColor(),
+          fontSize: powerLevel > 0.99 ? "16vmin" : undefined,
+          outline: powerLevel > 0.99 ? "1rem solid" : "0rem solid",
+        } as React.CSSProperties}>{lastData.gear}</Typography.Display.Large>
+      </FadeThrough>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart margin={{ bottom: -48 }}>
           {showMore && !showPowerLevel ? <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="60%" outerRadius="65%" startAngle={startAngle} endAngle={endAngle}
@@ -63,15 +73,8 @@ export default function Tachometer() {
           <Tooltip content={<CustomTooltip />} />
         </PieChart>
       </ResponsiveContainer>
-      <FadeThrough keyId={lastData.gear} transitionStyle="M2" className="flex-column flex-space-evenly tachometer-gear-position">
-        <Typography.Display.Large tag="span" title="Gear" className="tachometer-gear" style={{
-          color: getColor(),
-          fontSize: powerLevel > 0.99 ? "16vmin" : undefined,
-          outline: powerLevel > 0.99 ? "1rem solid" : "0rem solid",
-        } as React.CSSProperties}>{lastData.gear}</Typography.Display.Large>
-      </FadeThrough>
+
     </div>
-    <IndicatorLights lower={lower} upper={upper} current={lastData.currentEngineRpm} lowPowerLevel={lowPowerLevel} />
     <SharedAxis keyId={showPowerLevel ? 1 : 0}
       className="flex-row flex-space-between" style={{ height: columnHeight, alignItems: "stretch", gap: 16 }}>
       {showPowerLevel ?
@@ -100,18 +103,16 @@ function CustomTooltip({ active, payload }: TooltipProps<ValueType, NameType>) {
     function getText(payload: Payload<ValueType, NameType>[]) {
       switch (payload[0].name) {
         case "CurrentEngineRpm":
-          return `${payload[0].name} : ${(payload[0].value as number).toFixed(1)}`;
+          return `${payload[0].name}: ${(payload[0].value as number).toFixed(1)}`;
         case "PowerLevel":
-          return `${payload[0].name} : ${(payload[0].value as number * 100).toFixed(1)}%`;
+          return `${payload[0].name}: ${(payload[0].value as number * 100).toFixed(1)}%`;
         default:
           return payload[0].name;
       }
     }
-    return (
-      <div style={{ backgroundColor: "var(--md-sys-color-surface)", padding: "8px 16px", border: "solid", borderColor: "var(--md-sys-color-on-surface)" }}>
-        <p >{getText(payload)}</p>
-      </div>
-    );
+    return <Card style={{ padding: "8px 16px" }}>
+      <p >{getText(payload)}</p>
+    </Card>;
   }
   return null;
 };
@@ -175,33 +176,18 @@ function getRange(messageDataAnalysis: MessageDataAnalysis) {
   return { lower: sorted[lower].x, upper: sorted[upper].x };
 }
 
-function getBound(sorted: { x: number, y: number; }[], maxIndex: number, threshold: number, bundleRange = 50) {
+function getBound(sorted: { x: number, y: number; }[], maxIndex: number, threshold: number) {
   let upper = sorted.length - 1;
-  function getAverage(bundle: number[]) {
-    return bundle.reduce(function (sum, value) { return sum + value; }, 0) / bundle.length;
-  }
-  for (let i = maxIndex + 1; i < sorted.length;) {
-    const bundle = [sorted[i]];
-    const startIndex = i;
-    for (i++; i < sorted.length && sorted[i].x - bundle[0].x < bundleRange; i++) {
-      bundle.push(sorted[i]);
-    }
-    const average = getAverage(bundle.map(v => v.y));
-    if (average < threshold) {
-      upper = startIndex;
+  for (let i = maxIndex + 1; i < sorted.length; i++) {
+    if (sorted[i].y <= threshold) {
+      upper = i;
       break;
     }
   }
   let lower = 0;
-  for (let i = maxIndex - 1; i >= 0;) {
-    const bundle = [sorted[i]];
-    const startIndex = i;
-    for (i--; i >= 0 && bundle[0].x - sorted[i].x < bundleRange; i--) {
-      bundle.push(sorted[i]);
-    }
-    const average = getAverage(bundle.map(v => v.y));
-    if (average < threshold) {
-      lower = startIndex;
+  for (let i = maxIndex - 1; i >= 0; i--) {
+    if (sorted[i].y <= threshold) {
+      lower = i;
       break;
     }
   }
@@ -220,9 +206,6 @@ function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: numb
   }
   const progress = getProgress(lower, upper, current);
 
-  const [isOpenDialog, setOpenDialog] = React.useState(false);
-  const openDialog = React.useCallback(() => setOpenDialog(true), []);
-  const closeDialog = React.useCallback(() => setOpenDialog(false), []);
   const [isMainSwitchOn, setMainSwitchOn] = React.useState(true);
   const overProgress = progress >= 1;
   React.useEffect(() => {
@@ -235,51 +218,44 @@ function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: numb
     }
   }, [overProgress]);
 
-  function getContainerColor(lower: number) {
+  function getContainerColor(lower: number, color: string, lowPowerFlash: boolean) {
     if (!isMainSwitchOn) {
       return undefined;
     }
     if (lowPowerLevel) {
-      return "var(--md-sys-color-error)";
+      if (lowPowerFlash) {
+        return "var(--md-sys-color-error)";
+      } else {
+        return undefined;
+      }
     }
     if (progress <= lower) {
       return undefined;
     }
-    return overProgress ? "var(--md-sys-color-primary)" : "var(--md-sys-color-tertiary)";
+    return color;
   }
 
-  return <>
-    <div className="flex-row flex-space-between" style={{ gap: 32, height: 32, alignItems: "stretch" }}>
-      {[{ lower: 0, upper: 0.2 },
-      { lower: 0.2, upper: 0.4 },
-      { lower: 0.4, upper: 0.6 },
-      { lower: 0.6, upper: 0.8 },
-      { lower: 0.8, upper: 1 }].map(({ lower }, index) =>
+  return <div className="flex-row flex-space-between" style={{ gap: 12, height: 42, alignItems: "stretch" }}>
+    {[
+      { lower: 0.0, upper: 0.2, color: "var(--md-sys-color-tertiary)" },
+      { lower: 0.2, upper: 0.4, color: "var(--md-sys-color-tertiary)" },
+      { lower: 0.4, upper: 0.6, color: "var(--md-sys-color-primary)" },
+      { lower: 0.6, upper: 0.8, color: "var(--md-sys-color-primary)" },
+      { lower: 0.8, upper: 1.0, color: "var(--md-sys-color-error)" },
+      { lower: 0.9, upper: 1.0, color: "var(--md-sys-color-error)" },
+      { lower: 0.8, upper: 1.0, color: "var(--md-sys-color-error)" },
+      { lower: 0.6, upper: 0.8, color: "var(--md-sys-color-primary)" },
+      { lower: 0.4, upper: 0.6, color: "var(--md-sys-color-primary)" },
+      { lower: 0.2, upper: 0.4, color: "var(--md-sys-color-tertiary)" },
+      { lower: 0.0, upper: 0.2, color: "var(--md-sys-color-tertiary)" },].map(({ lower, color }, index) =>
         <Card key={index} className="flex-child" style={{
           maxWidth: 120,
-          "--md-elevated-card-container-color": getContainerColor(lower),
+          "--md-elevated-card-container-color": getContainerColor(lower, color, (index % 2) === 1),
         } as React.CSSProperties} >
-          <Ripple className="fill-parent fit-elevated-card-container-shape" onClick={openDialog} />
+          <Ripple className="fill-parent fit-elevated-card-container-shape" />
         </Card>
       )}
-    </div>
-    <Dialog open={isOpenDialog}
-      headline="Explanation"
-      actions={<Button buttonStyle="text" onClick={closeDialog}>close</Button>}
-      onScrimClick={closeDialog}>
-      <ListItem trailingSupportingText={
-        <Card className="demo-card high-power" />
-      } supportingText="97% or higher">High Power</ListItem>
-      <Divider />
-      <ListItem trailingSupportingText={
-        <Card className="demo-card normal-power" />
-      } supportingText="90% or higher">Normal Power</ListItem>
-      <Divider />
-      <ListItem trailingSupportingText={
-        <Card className="demo-card low-power" />
-      } supportingText="below 90%">Low Power</ListItem>
-    </Dialog>
-  </>;
+  </div>;
 }
 
 function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messageDataAnalysis: MessageDataAnalysis; messageData: CircularBuffer<MessageData>; onClick: () => unknown; }) {

@@ -20,18 +20,3 @@
     border-radius: var(--text-size);
     border-color: var(--md-sys-color-tertiary);
 }
-
-.demo-card {
-    height: 32px;
-    width: 32px;
-
-    &.high-power {
-        --md-elevated-card-container-color: var(--md-sys-color-tertiary);
-    }
-    &.normal-power {
-        --md-elevated-card-container-color: var(--md-sys-color-primary);
-    }
-    &.low-power {
-        --md-elevated-card-container-color: var(--md-sys-color-error);
-    }
-}

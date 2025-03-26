@@ -10,7 +10,7 @@ import { MessageDataKey } from "./common/MessageData";
 import { Page } from "./common/Page";
 import { isSocketError, socketStateToIcon } from "./common/SocketState";
 import getPage from "./pages";
-import { MotionOption, PageContext, ReactPageContext, SpeedMeterOption, TireOption } from "./pages/common/Context";
+import { MotionOption, WindowContext, ReactWindowContext, SpeedMeterOption, TireOption } from "./pages/common/Context";
 
 type WindowTag = { id: number; page: Page; };
 
@@ -166,8 +166,10 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
   const [isDragging, setDragging] = React.useState(false);
   const [isDragover, setDragover] = React.useState(false);
   const dragContext = React.useContext(ReactDragContext);
-  const windowContext = React.useMemo<PageContext>(() => {
+  // @TODO: swap windowContext when swap window
+  const windowContext = React.useMemo<WindowContext>(() => {
     return {
+      padding: "8px 16px 16px",
       tireOption, setTireOption,
       motionOption, setMotionOption,
       speedMeterOption, setSpeedMeterOption,
@@ -230,7 +232,9 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
         style={{
           opacity: isDragging || isDragover ? 0.5 : undefined,
           backgroundColor: isDragging ? "var(--md-sys-color-background)" : undefined,
-          transform: isDragover ? "scale(0.97)" : undefined,
+          backgroundImage: !isDragging && dragContext.value.source !== null ? `radial-gradient(${dividerColor} 5%, transparent 0)` : undefined,
+          backgroundSize: "12px 12px",
+          transform: isDragging || isDragover ? "scale(0.97)" : (dragContext.value.source !== null ? "scale(0.99)" : undefined),
           outline: dragContext.value.source !== null && !isDragging ? `1px dotted ${dividerColor}` : `0px dotted ${dividerColor}`,
           transition: `opacity ${Duration.M3["md.sys.motion.duration.short4"]}ms, outline ${Duration.M3["md.sys.motion.duration.short4"]}ms, transform ${Duration.M3["md.sys.motion.duration.medium4"]}ms ${Curves.M3.Emphasized}`,
         }}
@@ -241,11 +245,11 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
           {displayPage}
         </SharedAxis>
       </ListItem>
-      <ReactPageContext.Provider value={windowContext}>
+      <ReactWindowContext.Provider value={windowContext}>
         <SharedAxis className="flex-child" keyId={`${displayPage} ${messageDataAnalysis.id}`}>
           {getPage(displayPage)}
         </SharedAxis>
-      </ReactPageContext.Provider>
+      </ReactWindowContext.Provider>
     </div>
     <Dialog
       open={openDialog}

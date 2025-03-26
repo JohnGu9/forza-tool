@@ -6,11 +6,11 @@ import { ReactStreamAppContext } from "../common/AppContext";
 import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
 import CircularBuffer from "../common/CircularBuffer";
 import { DataType, dummyMessageData, getValidKeys, MessageData, MessageDataKey } from "../common/MessageData";
-import { ReactPageContext } from "./common/Context";
+import { ReactWindowContext } from "./common/Context";
 
 export default function Detail() {
   const { messageData } = React.useContext(ReactStreamAppContext);
-  const { detailOption, setDetailOption, showDetailDelta, setShowDetailDelta } = React.useContext(ReactPageContext);
+  const { padding, detailOption, setDetailOption, showDetailDelta, setShowDetailDelta } = React.useContext(ReactWindowContext);
   const data = showDetailDelta ?
     getDelta(messageData, detailOption as MessageDataKey) :
     messageData.map((data, index) => { return { index, value: data[detailOption as MessageDataKey] }; });
@@ -18,8 +18,8 @@ export default function Detail() {
   const currentDataType = lastData ? getDataTypeName(lastData.dataType) : "Unknown Data Type";
   const validKeys = getValidKeys(lastData?.dataType);
   const displayText = React.useMemo(() => capitalizeFirstLetter(detailOption), [detailOption]);
-  return <div className="fill-parent flex-column" style={{ padding: "8px 0" }}>
-    <div className="flex-child flex-column" style={{ padding: "0 16px" }}>
+  return <div className="fill-parent flex-column" style={{ padding }}>
+    <div className="flex-child flex-column">
       <Select label={currentDataType} displayText={displayText}>
         {keys.map(key => <SelectOption key={key} headline={key} disabled={!validKeys.has(key)} selected={detailOption === key} onClick={() => setDetailOption(key)} style={{ textTransform: "capitalize" }} />)}
       </Select>

@@ -30,7 +30,8 @@ export enum SpeedMeterOption {
     VelocityPredictionVsSpeed,
 };
 
-export type PageContext = {
+export type WindowContext = {
+    padding: string,
     showEnginePowerCurve: boolean,
     setShowEnginePowerCurve: (v: boolean) => unknown,
     tireOption: TireOption,
@@ -45,4 +46,4 @@ export type PageContext = {
     setShowDetailDelta: (v: boolean) => unknown,
 };
 
-export const ReactPageContext = React.createContext(undefined as unknown as PageContext);
+export const ReactWindowContext = React.createContext(undefined as unknown as WindowContext);

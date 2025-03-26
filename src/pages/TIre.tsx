@@ -8,16 +8,16 @@ import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
 import CircularBuffer from "../common/CircularBuffer";
 import { getValidKeys, MessageData } from "../common/MessageData";
 import { UnitSystem } from "../common/UnitConvert";
-import { ReactPageContext, TireOption } from "./common/Context";
+import { ReactWindowContext, TireOption } from "./common/Context";
 
 export default function Tire() {
-  const { tireOption, setTireOption } = React.useContext(ReactPageContext);
+  const { padding, tireOption, setTireOption } = React.useContext(ReactWindowContext);
   const { messageData } = React.useContext(ReactStreamAppContext);
   const { frontLeft, frontRight, rearLeft, rearRight } = getTargetData(messageData, tireOption);
   const displayText = React.useMemo(() => capitalizeFirstLetter(tireOption), [tireOption]);
   const lastData = messageData.getLast();
   const validKeys = getValidKeys(lastData?.dataType);
-  return <div className="fill-parent flex-column flex-space-between" style={{ alignItems: "stretch", padding: "16px " }}>
+  return <div className="fill-parent flex-column flex-space-between" style={{ alignItems: "stretch", padding }}>
     <Select label="option" displayText={displayText}>
       {Object.values(TireOption).map(key => <SelectOption key={key} headline={key} disabled={!validKeys.has(`${key}FrontLeft`)} selected={tireOption === key} onClick={() => setTireOption(key)} style={{ textTransform: "capitalize" }} />)}
     </Select>

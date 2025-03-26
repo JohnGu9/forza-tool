@@ -6,8 +6,10 @@ import { Card, CircularProgress, ListItem, Typography } from "rmcw/dist/componen
 import { ReactStreamAppContext } from "../common/AppContext";
 import { dummyMessageData, MessageData } from "../common/MessageData";
 import { ConsumptionEstimation } from "../common/MessageDataAnalysis";
+import { ReactWindowContext } from "./common/Context";
 
 export default function Estimation() {
+  const { padding } = React.useContext(ReactWindowContext);
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const lastData = messageData.getLast() ?? dummyMessageData;
   const perLapConsumption = messageDataAnalysis.consumptionEstimation.getPerLapConsumption();
@@ -28,7 +30,7 @@ export default function Estimation() {
     }
     return "estimation-circular-progress";
   }
-  return <div className="fill-parent" style={{ padding: 16, overflowY: "auto" }}>
+  return <div className="fill-parent" style={{ padding, overflowY: "auto" }}>
     <Card className="flex-column" style={{ width: "100%" }}>
       <ListItem
         trailingSupportingText={<div className="flex-row" style={{ gap: 8, alignItems: "center" }}>

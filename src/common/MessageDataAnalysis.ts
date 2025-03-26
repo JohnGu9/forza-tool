@@ -63,11 +63,13 @@ export class ConsumptionEstimation {
                 tireWear65: 0,
             };
         }
-        const maxTireWear = Math.max(data.tireWearFrontLeft, data.tireWearFrontRight, data.tireWearRearLeft, data.tireWearRearRight);
+        const sorted = [data.tireWearFrontLeft, data.tireWearFrontRight, data.tireWearRearLeft, data.tireWearRearRight].sort();
+        const minTireWear = sorted[0];
+        const maxTireWear = sorted[3];
         return {
             fuel,
             tireWear50: (0.5 - maxTireWear) / perLapConsumption.tireWear,
-            tireWear65: (0.65 - maxTireWear) / perLapConsumption.tireWear,
+            tireWear65: (0.65 - minTireWear) / perLapConsumption.tireWear,
         };
     }
 

@@ -8,14 +8,14 @@ import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
 import CircularBuffer from "../common/CircularBuffer";
 import { MessageData } from "../common/MessageData";
 import { getSpeedUnit, msTo } from "../common/UnitConvert";
-import { MotionOption, ReactPageContext } from "./common/Context";
+import { MotionOption, ReactWindowContext } from "./common/Context";
 
 export default function Motion() {
-  const { motionOption, setMotionOption } = React.useContext(ReactPageContext);
+  const { padding, motionOption, setMotionOption } = React.useContext(ReactWindowContext);
   const { messageData } = React.useContext(ReactStreamAppContext);
   const { x, y, z, scalar } = getTargetData(messageData, motionOption);
   const displayText = React.useMemo(() => capitalizeFirstLetter(motionOption), [motionOption]);
-  return <div className="fill-parent flex-column flex-space-between" style={{ alignItems: "stretch", padding: 16, gap: 16 }}>
+  return <div className="fill-parent flex-column flex-space-between" style={{ alignItems: "stretch", padding, gap: 16 }}>
     <Select label="option" displayText={displayText}>
       {Object.values(MotionOption).map(key => <SelectOption key={key} headline={key} selected={motionOption === key} onClick={() => setMotionOption(key as MotionOption)} style={{ textTransform: "capitalize" }} />)}
     </Select>

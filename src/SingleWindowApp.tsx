@@ -8,7 +8,7 @@ import { dummyMessageData, MessageData, MessageDataKey } from "./common/MessageD
 import { Page } from "./common/Page";
 import { isSocketError, socketStateToIcon } from "./common/SocketState";
 import getPage from "./pages";
-import { MotionOption, PageContext,ReactPageContext, SpeedMeterOption, TireOption } from "./pages/common/Context";
+import { MotionOption, WindowContext, ReactWindowContext, SpeedMeterOption, TireOption } from "./pages/common/Context";
 
 export default function SingleWindowApp({ streamAppContext }: { streamAppContext: StreamAppContext; }) {
   const { socketStats, openNetwork, openSettings, lastOpenedPage, setLastOpenedPage } = React.useContext(ReactAppContext);
@@ -25,8 +25,9 @@ export default function SingleWindowApp({ streamAppContext }: { streamAppContext
   const [showEnginePowerCurve, setShowEnginePowerCurve] = React.useState(true);
   const [detailOption, setDetailOption] = React.useState<MessageDataKey>("timestampMs");
   const [showDetailDelta, setShowDetailDelta] = React.useState(false);
-  const windowContext = React.useMemo<PageContext>(() => {
+  const windowContext = React.useMemo<WindowContext>(() => {
     return {
+      padding: "16px",
       tireOption, setTireOption,
       motionOption, setMotionOption,
       speedMeterOption, setSpeedMeterOption,
@@ -67,13 +68,13 @@ export default function SingleWindowApp({ streamAppContext }: { streamAppContext
       </List>
     </NavigationDrawer>
     <NavigationDrawerPadding opened style={{ height: "100%" }}>
-      <ReactPageContext.Provider value={windowContext}>
+      <ReactWindowContext.Provider value={windowContext}>
         <ReactStreamAppContext.Provider value={streamAppContext}>
           <SharedAxis className="fill-parent" keyId={`${page} ${streamAppContext.messageDataAnalysis.id}`}>
             {getPage(page)}
           </SharedAxis>
         </ReactStreamAppContext.Provider>
-      </ReactPageContext.Provider>
+      </ReactWindowContext.Provider>
     </NavigationDrawerPadding>
   </div>;
 }
