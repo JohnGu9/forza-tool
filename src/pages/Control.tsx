@@ -60,11 +60,11 @@ function SimpleCard({ title, data, onClick }: { title: string, data: DataType[];
           <AreaChart data={data}
             margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="index" type="number" tick={false} />
+            <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
             <YAxis domain={[0, 50, 100]} ticks={[0, 100]} />
             <Tooltip formatter={(value) => { return `${(value as number).toFixed(1)}%`; }}
               contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-            <Area type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" animationDuration={650} />
+            <Area type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -85,11 +85,11 @@ function EngineBraking({ data }: { data: DataType[]; }) {
         <AreaChart data={data}
           margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="index" type="number" tick={false} />
+          <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
           <YAxis domain={([min]) => { return [min * 1.05, 0]; }} tick={false} />
           <Tooltip formatter={(value) => { return `${(value as number).toFixed(1)} ${getPowerUnit(unitSystem)}`; }}
             contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-          <Area type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" animationDuration={650} />
+          <Area type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" isAnimationActive={false} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

@@ -7,12 +7,12 @@ import { Theme } from 'rmcw/dist/components3';
 
 import { AppContext, AppWindowMode, ListenAddress, ReactAppContext, StreamAppContext } from './common/AppContext';
 import CircularBuffer from './common/CircularBuffer';
+import { listenData } from './common/Ipc';
 import { MessageData, parseMessageData } from './common/MessageData';
 import { MessageDataAnalysis } from './common/MessageDataAnalysis';
 import { Page } from './common/Page';
 import { SocketState } from './common/SocketState';
 import { UnitSystem } from './common/UnitConvert';
-import { listenData } from './ipc';
 import MultiWindowApp from './MultiWindowApp';
 import Network from './pages/Network';
 import Settings from './pages/Settings';

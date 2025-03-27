@@ -6,11 +6,10 @@ import React from "react";
 import { Button, Dialog, Fab, Icon, IconButton, ListItem } from "rmcw/dist/components3";
 
 import { ReactAppContext, ReactStreamAppContext, StreamAppContext } from "./common/AppContext";
-import { MessageDataKey } from "./common/MessageData";
 import { Page } from "./common/Page";
 import { isSocketError, socketStateToIcon } from "./common/SocketState";
 import getPage from "./pages";
-import { MotionOption, WindowContext, ReactWindowContext, SpeedMeterOption, TireOption } from "./pages/common/Context";
+import { ReactWindowContext, useWindowContext } from "./pages/common/Context";
 
 type WindowTag = { id: number; page: Page; };
 
@@ -153,31 +152,18 @@ const dividerColor = "var(--md-divider-color, var(--md-sys-color-outline-variant
 
 function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTag, setPage: (page: Page) => unknown, closeWindow: () => unknown; }) {
   const { page: realPage } = windowTag;
+  const [hoverPage, setHoverPage] = React.useState<null | Page>(null);
   const [openDialog, setOpenDialog] = React.useState(false);
-  const closeDialog = React.useCallback(() => setOpenDialog(false), []);
-  const [showEnginePowerCurve, setShowEnginePowerCurve] = React.useState(true);
-  const [tireOption, setTireOption] = React.useState(TireOption.SlipAngle);
-  const [motionOption, setMotionOption] = React.useState(MotionOption.Acceleration);
-  const [speedMeterOption, setSpeedMeterOption] = React.useState(SpeedMeterOption.VelocityVsSpeed);
-  const [detailOption, setDetailOption] = React.useState<MessageDataKey>("timestampMs");
-  const [showDetailDelta, setShowDetailDelta] = React.useState(false);
+  const closeDialog = React.useCallback(() => { setOpenDialog(false); setHoverPage(null); }, []);
+
   const { usedPages } = React.useContext(ReactMultiWindowAppContext);
   const { messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const [isDragging, setDragging] = React.useState(false);
   const [isDragover, setDragover] = React.useState(false);
   const dragContext = React.useContext(ReactDragContext);
+
   // @TODO: swap windowContext when swap window
-  const windowContext = React.useMemo<WindowContext>(() => {
-    return {
-      padding: "8px 16px 16px",
-      tireOption, setTireOption,
-      motionOption, setMotionOption,
-      speedMeterOption, setSpeedMeterOption,
-      showEnginePowerCurve, setShowEnginePowerCurve,
-      detailOption, setDetailOption,
-      showDetailDelta, setShowDetailDelta
-    };
-  }, [detailOption, motionOption, showDetailDelta, showEnginePowerCurve, speedMeterOption, tireOption]);
+  const windowContext = useWindowContext("8px 16px 16px");
 
   function getDisplayPage() {
     if (isDragging) {
@@ -185,6 +171,9 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
     }
     if (isDragover) {
       return dragContext.value.source?.page ?? realPage;
+    }
+    if (hoverPage !== null) {
+      return hoverPage;
     }
     return realPage;
   }
@@ -239,10 +228,17 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
           transition: `opacity ${Duration.M3["md.sys.motion.duration.short4"]}ms, outline ${Duration.M3["md.sys.motion.duration.short4"]}ms, transform ${Duration.M3["md.sys.motion.duration.medium4"]}ms ${Curves.M3.Emphasized}`,
         }}
         trailingSupportingText={<span title="Swap Page">
-          <IconButton onClick={() => setOpenDialog(true)}><Icon style={{ color: openDialog ? "var(--md-sys-color-primary)" : undefined }}>swap_horiz</Icon></IconButton>
+          <FadeThrough keyId={openDialog ? 0 : 1}>
+            <IconButton onClick={() => setOpenDialog(true)}>
+              <Icon >
+                {openDialog ? "sync" : "swap_horiz"}
+              </Icon>
+            </IconButton>
+          </FadeThrough>
         </span>}>
-        <SharedAxis keyId={displayPage} transform={SharedAxisTransform.fromLeftToRight} style={{ color: openDialog ? "var(--md-sys-color-primary)" : undefined }}>
-          {displayPage}
+        <SharedAxis keyId={openDialog ? undefined : displayPage} transform={SharedAxisTransform.fromLeftToRight}
+          style={{ cursor: "grab" }}>
+          {openDialog ? undefined : displayPage}
         </SharedAxis>
       </ListItem>
       <ReactWindowContext.Provider value={windowContext}>
@@ -270,7 +266,14 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
       </>}>
       <div className="flex-column" style={{ width: 360, gap: 16 }}>
         {Object.values(Page).map(value =>
-          <Button key={value} buttonStyle={usedPages.has(value) ? "outlined" : "elevated"} disabled={realPage === value} onClick={() => { setPage(value); closeDialog(); }}>{value}</Button>)}
+          <Button key={value}
+            buttonStyle={usedPages.has(value) ? "outlined" : "elevated"}
+            disabled={realPage === value}
+            onClick={() => { setPage(value); closeDialog(); }}
+            onMouseEnter={() => setHoverPage(value)}
+            onMouseLeave={() => setHoverPage(null)}>
+            {value}
+          </Button>)}
       </div>
     </Dialog>
   </>;

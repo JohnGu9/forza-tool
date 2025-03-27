@@ -56,7 +56,7 @@ export default function Tachometer() {
             stroke={dividerColor}
             data={[{ name: "PowerLevel", value: powerLevel }, { name: "RemainingPowerCapacity", value: 1 - powerLevel }]} >
             <Cell fill={getPowerLevelProgressColor(powerLevel)} />
-            <Cell fill="var(--md-sys-color-surface-dim)" />
+            <Cell fill={dividerColor} />
           </Pie> : undefined}
           <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="70%" outerRadius="80%" fill="var(--md-sys-color-primary)" startAngle={startAngle} endAngle={endAngle} paddingAngle={0.5}
             stroke={dividerColor}
@@ -64,7 +64,7 @@ export default function Tachometer() {
             {markData.map((data, index) =>
               <Cell key={index} fill={data.mark ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)"} />)}
           </Pie>
-          <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="85%" outerRadius="90%" fill={getColor()} startAngle={startAngle} endAngle={endAngle}
+          <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="85%" outerRadius="90%" startAngle={startAngle} endAngle={endAngle}
             stroke={dividerColor}
             data={[{ name: "CurrentEngineRpm", value: lastData.currentEngineRpm }, { name: "RemainingRpmCapacity", value: lastData.engineMaxRpm - lastData.currentEngineRpm }]} >
             <Cell fill={getColor()} />
@@ -73,7 +73,6 @@ export default function Tachometer() {
           <Tooltip content={<CustomTooltip />} />
         </PieChart>
       </ResponsiveContainer>
-
     </div>
     <SharedAxis keyId={showPowerLevel ? 1 : 0}
       className="flex-row flex-space-between" style={{ height: columnHeight, alignItems: "stretch", gap: 16 }}>
@@ -250,7 +249,7 @@ function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: numb
       { lower: 0.0, upper: 0.2, color: "var(--md-sys-color-tertiary)" },].map(({ lower, color }, index) =>
         <Card key={index} className="flex-child" style={{
           maxWidth: 120,
-          "--md-elevated-card-container-color": getContainerColor(lower, color, (index % 2) === 1),
+          "--md-elevated-card-container-color": getContainerColor(lower, color, index !== 5 && (index % 2) === 1),
         } as React.CSSProperties} >
           <Ripple className="fill-parent fit-elevated-card-container-shape" />
         </Card>

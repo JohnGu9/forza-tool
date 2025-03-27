@@ -4,8 +4,6 @@
 // n represents the initial length of the array, not a maximum
 
 export default class CircularBuffer<T> {
-    static IndexError = {};
-
     protected _array: Array<T>;
     protected _length: number;
 

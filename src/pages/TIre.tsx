@@ -68,7 +68,7 @@ function SimpleCard({ title, data, option }: { title: string, data: DataType[]; 
           <YAxis domain={domain} ticks={ticks} />
           <Tooltip formatter={(value) => { return formatter(value as number); }}
             contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-          <Area type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" animationDuration={350} />
+          <Area type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" isAnimationActive={false} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

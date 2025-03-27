@@ -433,8 +433,9 @@ export function getValidKeys(dataType?: DataType) {
             return fm7ValidKeys;
         case DataType.FM8Dash:
             return fm8ValidKeys;
+        default:
+            return noValidKeys;
     }
-    return noValidKeys;
 }
 
 export function isValidProp(dataType: DataType | undefined, key: MessageDataKey) {

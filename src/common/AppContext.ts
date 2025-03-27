@@ -8,12 +8,12 @@ import { SocketState } from "./SocketState";
 import { UnitSystem } from "./UnitConvert";
 
 export type ListenAddress = [
-    string/* address */,
-    string/* port */,
-    boolean/* forward switch */,
-    string/* forward address */,
-    string/* forward port */,
-    number/* stamp, for manually renew socket on the same address:port */,
+    string  /* address */,
+    string  /* port */,
+    boolean /* forward switch */,
+    string  /* forward address */,
+    string  /* forward port */,
+    number  /* stamp, for manually renew socket on the same address:port */,
 ];
 
 export enum AppWindowMode {

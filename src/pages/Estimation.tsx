@@ -15,7 +15,6 @@ export default function Estimation() {
   const perLapConsumption = messageDataAnalysis.consumptionEstimation.getPerLapConsumption();
   const unitTimeConsumption = messageDataAnalysis.consumptionEstimation.getUnitTimeConsumption();
   const lapsEstimation = messageDataAnalysis.consumptionEstimation.estimateLaps();
-
   const remainEstimation = ConsumptionEstimation.estimateRemainLaps(perLapConsumption, lastData);
   const tireWearStats = getTireWearStats(lastData);
   function getCircularProgressClassName(name: string) {

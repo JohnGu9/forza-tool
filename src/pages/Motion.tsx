@@ -81,7 +81,7 @@ function SimpleCard({ title, data, type, domain }: { title: string, data: DataTy
     }
   }
 
-  return <Card className="flex-child flex-column" style={{ alignItems: "stretch", padding: 16 }}>
+  return <Card className="flex-child flex-column" style={{ alignItems: "stretch", padding: "8px 16px" }}>
     <div className="flex-child" style={{ overflow: "clip" }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 5, right: 0, left: -42, bottom: -16 }}>

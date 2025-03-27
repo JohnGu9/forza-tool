@@ -4,11 +4,11 @@ import { Divider, Icon, List, ListItem, NavigationDrawer, NavigationDrawerPaddin
 
 import { ReactAppContext, ReactStreamAppContext, StreamAppContext } from "./common/AppContext";
 import CircularBuffer from "./common/CircularBuffer";
-import { dummyMessageData, MessageData, MessageDataKey } from "./common/MessageData";
+import { dummyMessageData, MessageData } from "./common/MessageData";
 import { Page } from "./common/Page";
 import { isSocketError, socketStateToIcon } from "./common/SocketState";
 import getPage from "./pages";
-import { MotionOption, WindowContext, ReactWindowContext, SpeedMeterOption, TireOption } from "./pages/common/Context";
+import { ReactWindowContext, useWindowContext } from "./pages/common/Context";
 
 export default function SingleWindowApp({ streamAppContext }: { streamAppContext: StreamAppContext; }) {
   const { socketStats, openNetwork, openSettings, lastOpenedPage, setLastOpenedPage } = React.useContext(ReactAppContext);
@@ -19,23 +19,7 @@ export default function SingleWindowApp({ streamAppContext }: { streamAppContext
     setLastOpenedPage(value);
   }, [setLastOpenedPage]);
 
-  const [tireOption, setTireOption] = React.useState(TireOption.SlipAngle);
-  const [motionOption, setMotionOption] = React.useState(MotionOption.Acceleration);
-  const [speedMeterOption, setSpeedMeterOption] = React.useState(SpeedMeterOption.VelocityVsSpeed);
-  const [showEnginePowerCurve, setShowEnginePowerCurve] = React.useState(true);
-  const [detailOption, setDetailOption] = React.useState<MessageDataKey>("timestampMs");
-  const [showDetailDelta, setShowDetailDelta] = React.useState(false);
-  const windowContext = React.useMemo<WindowContext>(() => {
-    return {
-      padding: "16px",
-      tireOption, setTireOption,
-      motionOption, setMotionOption,
-      speedMeterOption, setSpeedMeterOption,
-      showEnginePowerCurve, setShowEnginePowerCurve,
-      detailOption, setDetailOption,
-      showDetailDelta, setShowDetailDelta
-    };
-  }, [detailOption, motionOption, showDetailDelta, showEnginePowerCurve, speedMeterOption, tireOption]);
+  const windowContext = useWindowContext("16px");
 
   return <div className="rmcw-drawer fill-parent">
     <NavigationDrawer opened className="flex-column" style={{

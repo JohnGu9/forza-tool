@@ -47,3 +47,24 @@ export type WindowContext = {
 };
 
 export const ReactWindowContext = React.createContext(undefined as unknown as WindowContext);
+
+export function useWindowContext(padding: string) {
+    const [showEnginePowerCurve, setShowEnginePowerCurve] = React.useState(true);
+    const [tireOption, setTireOption] = React.useState(TireOption.SlipAngle);
+    const [motionOption, setMotionOption] = React.useState(MotionOption.Acceleration);
+    const [speedMeterOption, setSpeedMeterOption] = React.useState(SpeedMeterOption.VelocityVsSpeed);
+    const [detailOption, setDetailOption] = React.useState<MessageDataKey>("timestampMs");
+    const [showDetailDelta, setShowDetailDelta] = React.useState(false);
+    const windowContext = React.useMemo<WindowContext>(() => {
+        return {
+            padding,
+            tireOption, setTireOption,
+            motionOption, setMotionOption,
+            speedMeterOption, setSpeedMeterOption,
+            showEnginePowerCurve, setShowEnginePowerCurve,
+            detailOption, setDetailOption,
+            showDetailDelta, setShowDetailDelta
+        };
+    }, [detailOption, motionOption, padding, showDetailDelta, showEnginePowerCurve, speedMeterOption, tireOption]);
+    return windowContext;
+}

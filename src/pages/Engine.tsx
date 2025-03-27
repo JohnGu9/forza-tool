@@ -11,7 +11,7 @@ import { getPowerUnit, getTorqueUnit, nmTo, UnitSystem, wTo } from "../common/Un
 import { ReactWindowContext } from "./common/Context";
 
 const columnHeight = 150;
-const chartsPadding = 32;
+const chartsPadding = 0;
 
 export default function Engine() {
   const { unitSystem, setUnitSystem } = React.useContext(ReactAppContext);
@@ -37,8 +37,8 @@ export default function Engine() {
     return undefined;
   }
   const powerUnitName = getPowerUnit(unitSystem);
-  return <div className="fill-parent flex-column">
-    <div className="flex-row flex-space-between" style={{ height: columnHeight, gap: 8, padding }}>
+  return <div className="fill-parent flex-column" style={{ padding }}>
+    <div className="flex-row flex-space-between" style={{ height: columnHeight, gap: 8, padding: "0 0 16px" }}>
       <SimpleCard title="RPM" content={lastMessageData.currentEngineRpm.toFixed(0)}
         tooltip="unit: Rev/Min"
         onClick={changeUnitSystem} />
@@ -57,11 +57,13 @@ export default function Engine() {
         <PowerLevelChart messageDataAnalysis={messageDataAnalysis} messageData={messageData} />}
     </SharedAxis>
     <div style={{ height: 16 }} aria-hidden />
-    <Ripple onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)}>
-      <SimpleRow title={`Power Level (Max Power ${wTo(messageDataAnalysis.maxPower.value, unitSystem).toFixed(1)} ${powerUnitName} - RPM ${messageDataAnalysis.maxPower.rpm.toFixed(1)})`} value={powerLevel} color={getPowerLevelProgressColor()} />
-      <SimpleRow title="Accelerator" value={lastMessageData.accelerator / 255} />
-      <div style={{ height: 16 }} aria-hidden />
-    </Ripple>
+    <Card>
+      <Ripple className="fit-elevated-card-container-shape" onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)}>
+        <SimpleRow title={`Power Level (${wTo(messageDataAnalysis.maxPower.value, unitSystem).toFixed(1)} ${powerUnitName} - ${messageDataAnalysis.maxPower.rpm.toFixed(1)} RPM)`} value={powerLevel} color={getPowerLevelProgressColor()} />
+        <SimpleRow title="Accelerator" value={lastMessageData.accelerator / 255} />
+        <div style={{ height: 12 }} aria-hidden />
+      </Ripple>
+    </Card>
   </div>;
 }
 
@@ -74,7 +76,7 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
   const powerLevel = maxPower === 0 ? 0 : currentPower / maxPower;
   return <ResponsiveContainer width="100%" height="100%">
     <AreaChart title="PowerCurve" data={data}
-      margin={{ top: 0, right: chartsPadding + 2, left: chartsPadding - 18 }}>
+      margin={{ top: 0, right: chartsPadding + 2, left: chartsPadding - 20 }}>
       <XAxis xAxisId={0} dataKey="rpm" type="number" domain={[lastMessageData.engineIdleRpm, lastMessageData.engineMaxRpm]} allowDataOverflow={false}
         ticks={getTicks(lastMessageData.engineMaxRpm, lastMessageData.engineIdleRpm, 1000)} />
       <YAxis yAxisId={1} type="number" domain={([, max]) => { return [0, max * 1.05]; }} hide />
@@ -135,7 +137,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
   }
   return <ResponsiveContainer width="100%" height="100%">
     <BarChart title="PowerLevel" data={data}
-      margin={{ top: 0, right: chartsPadding + 4, left: chartsPadding - 16 }}>
+      margin={{ top: 0, right: chartsPadding + 2, left: chartsPadding - 20 }}>
       <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
       <YAxis yAxisId={1} type="number" domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} allowDataOverflow={false} />
       <CartesianGrid strokeDasharray="3 3" />
@@ -209,8 +211,8 @@ function SimpleCard({ title, content, tooltip, onClick }: { title: string, conte
 }
 
 function SimpleRow({ title, value, color }: { title: string; value: number; color?: string; }) {
-  return <div className="flex-column" style={{ justifyContent: "space-around", padding: "8px 32px" }}>
-    <div className="flex-row flex-space-between" style={{ padding: "4px 0" }}>
+  return <div className="flex-column" style={{ justifyContent: "space-around", padding: "4px 16px" }}>
+    <div className="flex-row flex-space-between" style={{ padding: "8px 0" }}>
       <span>{title}</span>{(value * 100).toFixed(1)}%
     </div>
     <LinearProgress className="disable-progress-transition" value={value} style={{

@@ -18,8 +18,8 @@ export default function Detail() {
   const currentDataType = lastData ? getDataTypeName(lastData.dataType) : "Unknown Data Type";
   const validKeys = getValidKeys(lastData?.dataType);
   const displayText = React.useMemo(() => capitalizeFirstLetter(detailOption), [detailOption]);
-  return <div className="fill-parent flex-column" style={{ padding }}>
-    <div className="flex-child flex-column">
+  return <div className="fill-parent flex-column">
+    <div className="flex-child flex-column" style={{ padding }}>
       <Select label={currentDataType} displayText={displayText}>
         {keys.map(key => <SelectOption key={key} headline={key} disabled={!validKeys.has(key)} selected={detailOption === key} onClick={() => setDetailOption(key)} style={{ textTransform: "capitalize" }} />)}
       </Select>
@@ -39,6 +39,7 @@ export default function Detail() {
       </div>
     </div>
     <ListItem type="button" end={<Switch selected={showDetailDelta} />} onClick={() => setShowDetailDelta(!showDetailDelta)}>Show Delta</ListItem>
+    <div style={{ height: 8 }} aria-hidden />
   </div>;
 }
 
