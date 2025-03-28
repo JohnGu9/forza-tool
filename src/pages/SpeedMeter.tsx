@@ -41,7 +41,7 @@ export default function SpeedMeter() {
       return {
         value: lastData.velocityPrediction,
         title: "VelocityPrediction",
-        tooltip: `Inferring from previous data`,
+        tooltip: "Inferring from previous data",
         dataKey: "velocityPrediction",
       };
     }

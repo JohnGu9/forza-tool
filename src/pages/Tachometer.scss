@@ -1,8 +1,21 @@
-.tachometer-gear-position {
+.tachometer-background-transition {
+    transition: background-color 200ms;
+}
+
+.tachometer-round-shape {
+    border-radius: 100vmax;
+}
+
+.tachometer-background {
     position: absolute;
     inset: 0px;
+    bottom: -48px;
     pointer-events: none;
-    padding-top: 32px;
+}
+
+.tachometer-indication-light {
+    height: 64px;
+    width: 64px;
 }
 
 .tachometer-gear {

@@ -63,20 +63,7 @@ export default function Tachometer() {
   return <div className="fill-parent flex-column" style={{ padding, gap: 16 }}>
     <RpmIndicatorLights lower={lower} upper={upper} current={lastData.currentEngineRpm} />
     <div draggable className="flex-child" style={{ position: "relative" }}>
-      <FadeThrough keyId={lastData.gear} transitionStyle="M2" className="flex-column flex-space-evenly tachometer-gear-position">
-        <Card style={{ borderRadius: "24vmin", height: "24vmin", width: "24vmin" }}>
-          <div className="fill-parent flex-column flex-center" style={{
-            borderRadius: "24vmin",
-            backgroundColor: colors.backgroundColor,
-            transition: "background 200ms",
-          }}>
-            <span title="Gear" className="tachometer-gear" style={{ color: colors.color }}>
-              {lastData.gear}
-            </span>
-          </div>
-        </Card>
-      </FadeThrough>
-      <PowerIndicatorLights lowPowerLevel={lowPowerLevel} powerLevel={powerLevel} />
+      <GearMonitor lowPowerLevel={lowPowerLevel} powerLevel={powerLevel} gear={lastData.gear} colors={colors} />
       <ResponsiveContainer width="100%" height="100%">
         <PieChart margin={{ bottom: -48 }}>
           {showMore && !showPowerLevel ? <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="60%" outerRadius="65%" startAngle={startAngle} endAngle={endAngle}
@@ -114,28 +101,38 @@ export default function Tachometer() {
   </div>;
 }
 
-function PowerIndicatorLights({ lowPowerLevel, powerLevel }: { lowPowerLevel: boolean; powerLevel: number; }) {
-  return <div className="flex-row" style={{ position: "absolute", bottom: 16, left: 0, right: 0, justifyContent: "center", gap: 32 }}>
-    <Card style={{ height: 64, width: 64, borderRadius: 64 }}>
-      <span className="fill-parent fit-elevated-card-container-shape flex-row flex-center" style={{
-        borderRadius: 64,
-        backgroundColor: powerLevel > 0.99 ? "var(--md-sys-color-tertiary)" : undefined,
-        color: powerLevel > 0.99 ? "var(--md-sys-color-on-tertiary)" : undefined,
-        transition: "background 100ms",
-      }} title="Over 99% Power Level" >
-        <Icon>bolt</Icon>
-      </span>
-    </Card>
-    <Card style={{ height: 64, width: 64, borderRadius: 64 }}>
-      <span className="fill-parent flex-row flex-center" style={{
-        borderRadius: 64,
-        backgroundColor: lowPowerLevel ? "var(--md-sys-color-error)" : undefined,
-        color: lowPowerLevel ? "var(--md-sys-color-on-error)" : undefined,
-        transition: "background 100ms",
-      }} title="Below 90% Power Level" >
-        <Icon>keyboard_double_arrow_down</Icon>
-      </span>
-    </Card>
+function GearMonitor({ lowPowerLevel, powerLevel, gear, colors }: { lowPowerLevel: boolean; powerLevel: number; gear: number; colors: { color?: string, backgroundColor?: string; }; }) {
+  return <div className="tachometer-background flex-column flex-space-between">
+    <div style={{ height: 48 + 64 }} aria-hidden />
+    <FadeThrough keyId={gear} transitionStyle="M2" className="flex-column flex-space-evenly tachometer-gear-position">
+      <Card className="tachometer-round-shape" style={{ height: "24vmin", width: "24vmin" }}>
+        <div className="fill-parent flex-column flex-center tachometer-background-transition tachometer-round-shape"
+          style={{ backgroundColor: colors.backgroundColor }}>
+          <span title="Gear" className="tachometer-gear" style={{ color: colors.color }}>
+            {gear}
+          </span>
+        </div>
+      </Card>
+    </FadeThrough>
+    <div className="flex-row" style={{ paddingBottom: 16 + 48, gap: 32 }}>
+      <Card className="tachometer-round-shape tachometer-indication-light">
+        <span className="fill-parent flex-row flex-center tachometer-round-shape tachometer-background-transition" style={{
+          backgroundColor: powerLevel > 0.99 ? "var(--md-sys-color-tertiary)" : undefined,
+          color: powerLevel > 0.99 ? "var(--md-sys-color-on-tertiary)" : undefined,
+        }} title="Over 99% Power Level" >
+          <Icon>bolt</Icon>
+        </span>
+      </Card>
+      <Card className="tachometer-round-shape tachometer-indication-light">
+        <span className="fill-parent flex-row flex-center tachometer-round-shape tachometer-background-transition" style={{
+          backgroundColor: lowPowerLevel ? "var(--md-sys-color-error)" : undefined,
+          color: lowPowerLevel ? "var(--md-sys-color-on-error)" : undefined,
+          transition: "background 100ms",
+        }} title="Below 90% Power Level" >
+          <Icon>keyboard_double_arrow_down</Icon>
+        </span>
+      </Card>
+    </div>
   </div>;
 }
 

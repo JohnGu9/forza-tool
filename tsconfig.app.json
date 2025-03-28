@@ -28,7 +28,6 @@
     "declarationDir": "./types"
   },
   "include": [
-    "src",
-    "types"
+    "src"
   ]
 }

@@ -101,6 +101,15 @@ export default function App() {
     localStorage.setItem("app-window-mode", JSON.stringify(newState));
     _setAppWindowMode(newState);
   }, []);
+  React.useEffect(() => {
+    switch (appWindowMode) {
+      case AppWindowMode.Single: {
+        localStorage.removeItem("multi-page");
+        break;
+      }
+      case AppWindowMode.Multi:
+    }
+  }, [appWindowMode]);
 
   function recoverLastOpenedPage() {
     const lastOpenedPage = localStorage.getItem("last-opened-page");

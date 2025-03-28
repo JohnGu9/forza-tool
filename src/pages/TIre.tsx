@@ -59,6 +59,16 @@ function SimpleCard({ title, data, option }: { title: string, data: DataType[]; 
   const { unitSystem } = React.useContext(ReactAppContext);
   const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1].value);
   const { formatter, progress, domain, ticks } = React.useMemo(() => getConfiguration(option, unitSystem), [option, unitSystem]);
+
+  function getColor(value: number) {
+    if (value < 1) {
+      return undefined;
+    }
+    if (value < 1.6) {
+      return "var(--md-sys-color-tertiary)";
+    }
+    return "var(--md-sys-color-error)";
+  }
   return <Card className="flex-column flex-space-evenly" style={{ alignItems: "stretch", padding: 16 }}>
     <div className="flex-child" style={{ overflow: "clip" }}>
       <ResponsiveContainer width="100%" height="100%">
@@ -75,7 +85,9 @@ function SimpleCard({ title, data, option }: { title: string, data: DataType[]; 
     <div className="flex-row flex-space-between" style={{ padding: "4px 0" }}>
       <span>{title}</span>{formatter(value)}
     </div>
-    <LinearProgress className="disable-progress-transition" value={progress(value)} />
+    <LinearProgress className="only-color-transition"
+      style={{ "--md-linear-progress-active-indicator-color": getColor(value) } as React.CSSProperties}
+      value={progress(value)} />
   </Card>;
 }
 
