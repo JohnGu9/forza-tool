@@ -40,12 +40,12 @@ export default function Estimation() {
           <span title={`RearRight: ${toPercentage(lastData.tireWearRearRight)}`}><CircularProgress className={getCircularProgressClassName("tireWearRearRight")} value={1 - lastData.tireWearRearRight} /></span>
         </div>}
         supportingText={<span title="Max"><span>{toPercentage(tireWearStats.max[1])}</span> / <span title="Min">{toPercentage(tireWearStats.min[1])}</span></span>}>Tire Wear</ListItem>
-      <Item trailingSupportingText={toPercentage(perLapConsumption.tireWear)}>Per Lap</Item>
-      <Item trailingSupportingText={`${toPercentage(unitTimeConsumption.tireWear * 600)} / ${toPercentage(unitTimeConsumption.tireWear * 1200)}`}>Per 10/20 Minute</Item>
+      <Item trailingSupportingText={toPercentage(perLapConsumption.tireWear)} emphasize>Per Lap</Item>
+      <Item trailingSupportingText={`${toPercentage(unitTimeConsumption.tireWear * 600)} / ${toPercentage(unitTimeConsumption.tireWear * 1200)}`} emphasize>Per 10/20 Minute</Item>
       <Item trailingSupportingText={(lapsEstimation.tireWear * 0.5).toFixed(1)}>Laps of 50% Tire Wear</Item>
       <Item trailingSupportingText={(lapsEstimation.tireWear * 0.65).toFixed(1)}>Laps of 65% Tire Wear</Item>
-      <Item trailingSupportingText={(remainEstimation.tireWear50).toFixed(1)}>Laps of Until 50% Tire Wear</Item>
-      <Item trailingSupportingText={(remainEstimation.tireWear65).toFixed(1)}>Laps of Until 65% Tire Wear</Item>
+      <Item trailingSupportingText={(remainEstimation.tireWear50).toFixed(1)} emphasize>Laps of Until 50% Tire Wear</Item>
+      <Item trailingSupportingText={(remainEstimation.tireWear65).toFixed(1)} emphasize>Laps of Until 65% Tire Wear</Item>
       <Typography.Label.Small tag="div" style={{ padding: "8px 16px 16px", opacity: 0.5 }}>* Only work for Forza Motorsport</Typography.Label.Small>
     </Card>
     <div style={{ height: 16 }} aria-hidden />
@@ -53,17 +53,18 @@ export default function Estimation() {
       <ListItem
         trailingSupportingText={<span title={toPercentage(lastData.fuel)}><CircularProgress className="estimation-circular-progress" value={lastData.fuel} /></span>}
         supportingText={toPercentage(lastData.fuel)}>Fuel</ListItem>
-      <Item trailingSupportingText={toPercentage(perLapConsumption.fuel)}>Per Lap</Item>
-      <Item trailingSupportingText={`${toPercentage(unitTimeConsumption.fuel * 600)} / ${toPercentage(unitTimeConsumption.fuel * 1200)}`}>Per 10/20 Minute</Item>
+      <Item trailingSupportingText={toPercentage(perLapConsumption.fuel)} emphasize>Per Lap</Item>
+      <Item trailingSupportingText={`${toPercentage(unitTimeConsumption.fuel * 600)} / ${toPercentage(unitTimeConsumption.fuel * 1200)}`} emphasize>Per 10/20 Minute</Item>
       <Item trailingSupportingText={(lapsEstimation.fuel).toFixed(1)}>Laps of Full Fuel</Item>
-      <Item trailingSupportingText={(remainEstimation.fuel).toFixed(1)}>Laps of Remain Fuel</Item>
+      <Item trailingSupportingText={(remainEstimation.fuel).toFixed(1)} emphasize>Laps of Remain Fuel</Item>
       <Typography.Label.Small tag="div" style={{ padding: "8px 16px 16px", opacity: 0.5 }}>* Only work for Dash</Typography.Label.Small>
     </Card>
   </div>;
 }
 
-function Item({ trailingSupportingText, children }: { trailingSupportingText: React.ReactNode; children?: React.ReactNode; }) {
-  return <ListItem trailingSupportingText={<Typography.Title.Medium tag="span">{trailingSupportingText}</Typography.Title.Medium>}>{children}</ListItem>;
+function Item({ trailingSupportingText, emphasize, children }: { trailingSupportingText: React.ReactNode; children?: React.ReactNode; emphasize?: boolean; }) {
+  return <ListItem trailingSupportingText={<Typography.Title.Medium tag="span">{trailingSupportingText}</Typography.Title.Medium>}
+    style={{ backgroundColor: emphasize ? "var(--md-sys-color-background)" : undefined }}>{children}</ListItem>;
 }
 
 function toPercentage(value: number) {

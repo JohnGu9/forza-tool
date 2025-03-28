@@ -37,6 +37,11 @@ div.app-theme[data-dark-mode] {
   align-items: center;
 }
 
+.flex-center {
+  justify-content: center;
+  align-items: center;
+}
+
 .flex-child {
   flex: 1 1;
   min-height: 0;
@@ -46,4 +51,9 @@ div.app-theme[data-dark-mode] {
 .disable-progress-transition {
   --rmcw-linear-progress-transition: none;
   --rmcw-circular-progress-transition: none;
+}
+
+.only-color-transition {
+  --rmcw-linear-progress-transition: background-color 200ms;
+  --rmcw-circular-progress-transition: stroke 200ms;
 }

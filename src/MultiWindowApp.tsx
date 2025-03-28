@@ -1,6 +1,6 @@
 import "./MultiWindowApp.scss";
 
-import { FadeThrough, SharedAxis, SharedAxisTransform } from "material-design-transform";
+import { FadeThrough, MaterialDesignTransformContext, MaterialDesignTransformContextType, SharedAxis, SharedAxisTransform } from "material-design-transform";
 import { Curves, Duration } from "material-design-transform/dist/common";
 import React from "react";
 import { Button, Dialog, Fab, Icon, IconButton, ListItem } from "rmcw/dist/components3";
@@ -91,52 +91,57 @@ export default function MultiWindowApp({ streamAppContext }: { streamAppContext:
     return windows[0].id + 1;
   }
 
-  return <ReactMultiWindowAppContext.Provider value={multiPageAppContext}>
-    <div className="fill-parent flex-row">
-      <div className="flex-column app-navigation-rails">
-        <span title="Add Window">
-          <Fab icon={<Icon>add</Icon>} onClick={() => setWindows([{ id: getNewWindowId(), page: getUnusedPage(windows) }, ...windows])} />
-        </span>
-        <div className="flex-child" />
-        <span title="Clear Data">
-          <IconButton onClick={resetData}><Icon>clear_all</Icon></IconButton>
-        </span>
-        <span title={`Socket: ${socketStats}`}>
-          <FadeThrough keyId={socketStats} transitionStyle="M3">
-            <IconButton onClick={openNetwork}>
-              <Icon style={{ color: isSocketError(socketStats) ? "var(--md-sys-color-error)" : undefined, transition: "color 200ms" }}>{socketStateToIcon(socketStats)}</Icon>
-            </IconButton>
-          </FadeThrough>
-        </span>
-        <span title="Settings">
-          <IconButton onClick={openSettings}><Icon>settings</Icon></IconButton>
-        </span>
+  return <MaterialDesignTransformContext.Provider value={materialDesignTransformContext}>
+    <ReactMultiWindowAppContext.Provider value={multiPageAppContext}>
+      <div className="fill-parent flex-row">
+        <div className="flex-column app-navigation-rails">
+          <span title="Add Window">
+            <Fab icon={<Icon>add</Icon>} onClick={() => setWindows([{ id: getNewWindowId(), page: getUnusedPage(windows) }, ...windows])} />
+          </span>
+          <div className="flex-child" />
+          <span title="Clear Data">
+            <IconButton onClick={resetData}><Icon>clear_all</Icon></IconButton>
+          </span>
+          <span title={`Socket: ${socketStats}`}>
+            <FadeThrough keyId={socketStats} transitionStyle="M3">
+              <IconButton onClick={openNetwork}>
+                <Icon style={{ color: isSocketError(socketStats) ? "var(--md-sys-color-error)" : undefined, transition: "color 200ms" }}>{socketStateToIcon(socketStats)}</Icon>
+              </IconButton>
+            </FadeThrough>
+          </span>
+          <span title="Settings">
+            <IconButton onClick={openSettings}><Icon>settings</Icon></IconButton>
+          </span>
+        </div>
+
+        <ReactDragContext.Provider value={dragContext}>
+          <ReactStreamAppContext.Provider value={streamAppContext}>
+            <FadeThrough keyId={windows.length} className="flex-row flex-child">
+              {windows.map((value) =>
+                <SingleWindow key={value.id}
+                  windowTag={value}
+                  setPage={(page) => {
+                    const index = windows.findIndex(v => v.id === value.id);
+                    if (index === -1) return; // unlikely
+                    setWindows([...windows.slice(0, index), { id: value.id, page }, ...windows.slice(index + 1)]);
+                    setLastOpenedPage(page);
+                  }}
+                  closeWindow={() => {
+                    const index = windows.findIndex(v => v.id === value.id);
+                    if (index === -1) return;
+                    setWindows([...windows.slice(0, index), ...windows.slice(index + 1)]);
+                  }} />)}
+            </FadeThrough>
+          </ReactStreamAppContext.Provider>
+        </ReactDragContext.Provider>
+
       </div>
-
-      <ReactDragContext.Provider value={dragContext}>
-        <ReactStreamAppContext.Provider value={streamAppContext}>
-          <FadeThrough keyId={windows.length} className="flex-row flex-child">
-            {windows.map((value) =>
-              <SingleWindow key={value.id}
-                windowTag={value}
-                setPage={(page) => {
-                  const index = windows.findIndex(v => v.id === value.id);
-                  if (index === -1) return;
-                  setWindows([...windows.slice(0, index), { id: value.id, page }, ...windows.slice(index + 1)]);
-                  setLastOpenedPage(page);
-                }}
-                closeWindow={() => {
-                  const index = windows.findIndex(v => v.id === value.id);
-                  if (index === -1) return;
-                  setWindows([...windows.slice(0, index), ...windows.slice(index + 1)]);
-                }} />)}
-          </FadeThrough>
-        </ReactStreamAppContext.Provider>
-      </ReactDragContext.Provider>
-
-    </div>
-  </ReactMultiWindowAppContext.Provider>;
+    </ReactMultiWindowAppContext.Provider>
+  </MaterialDesignTransformContext.Provider>;
 }
+
+const materialDesignTransformContext: MaterialDesignTransformContextType = { transitionStyle: "M3", sharedAxis: { transform: SharedAxisTransform.fromBottomToTop, unit: "px" } };
+
 
 function getUnusedPage(windows: WindowTag[]) {
   const used = new Set(windows.map(v => v.page));
@@ -228,10 +233,10 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
           transition: `opacity ${Duration.M3["md.sys.motion.duration.short4"]}ms, outline ${Duration.M3["md.sys.motion.duration.short4"]}ms, transform ${Duration.M3["md.sys.motion.duration.medium4"]}ms ${Curves.M3.Emphasized}`,
         }}
         trailingSupportingText={<span title="Swap Page">
-          <FadeThrough keyId={openDialog ? 0 : 1}>
+          <FadeThrough keyId={openDialog || dragContext.value.source !== null ? 0 : 1}>
             <IconButton onClick={() => setOpenDialog(true)}>
               <Icon >
-                {openDialog ? "sync" : "swap_horiz"}
+                {openDialog || dragContext.value.source !== null ? "sync" : "swap_horiz"}
               </Icon>
             </IconButton>
           </FadeThrough>
@@ -253,11 +258,13 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
       onEscapeKey={closeDialog}
       headline="Swap Page"
       actions={<>
-        <Button className="close-window-button" buttonStyle="filled" onClick={async () => {
-          setOpenDialog(false);
-          await new Promise((resolve) => setTimeout(resolve, 150));
-          closeWindow();
-        }}
+        <Button className="close-window-button"
+          buttonStyle="filled"
+          onClick={async () => {
+            setOpenDialog(false);
+            await new Promise((resolve) => setTimeout(resolve, 150));
+            closeWindow();
+          }}
           icon={<Icon>close</Icon>}>
           Remove Window
         </Button>
@@ -267,7 +274,7 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
       <div className="flex-column" style={{ width: 360, gap: 16 }}>
         {Object.values(Page).map(value =>
           <Button key={value}
-            buttonStyle={usedPages.has(value) ? "outlined" : "elevated"}
+            buttonStyle={getButtonStyle(value, realPage, displayPage, usedPages)}
             disabled={realPage === value}
             onClick={() => { setPage(value); closeDialog(); }}
             onMouseEnter={() => setHoverPage(value)}
@@ -277,4 +284,17 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
       </div>
     </Dialog>
   </>;
+}
+
+function getButtonStyle(value: Page, realPage: Page, displayPage: Page, usedPages: Set<Page>) {
+  if (value === realPage) {
+    return "elevated";
+  }
+  if (value === displayPage) {
+    return "elevated";
+  }
+  if (usedPages.has(value)) {
+    return "filled-tonal";
+  }
+  return "filled";
 }

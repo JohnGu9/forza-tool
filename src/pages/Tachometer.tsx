@@ -4,7 +4,7 @@ import { FadeThrough, SharedAxis } from "material-design-transform";
 import React from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis } from "recharts";
 import { NameType, Payload, ValueType } from "recharts/types/component/DefaultTooltipContent";
-import { Card, Ripple, Typography } from "rmcw/dist/components3";
+import { Card, Icon, Ripple, Typography } from "rmcw/dist/components3";
 
 import { AppWindowMode, ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
@@ -31,25 +31,52 @@ export default function Tachometer() {
   const powerLevel = messageDataAnalysis.maxPower.value === 0 ? 0 : Math.max(lastData.power / messageDataAnalysis.maxPower.value, 0);
   const isRange = lastData.currentEngineRpm >= lower && lastData.currentEngineRpm < upper;
   const lowPowerLevel = powerLevel < 0.9 && messageDataAnalysis.isFullAcceleratorForAWhile;
-  function getColor() {
+  function getColors() {
     if (lowPowerLevel) {
-      return "var(--md-sys-color-error)";
+      return {
+        color: "var(--md-sys-color-background)",
+        graphColor: "var(--md-sys-color-error)",
+        backgroundColor: "var(--md-sys-color-error)",
+      };
     }
     if (isRange) {
-      return "var(--md-sys-color-tertiary)";
+      if (powerLevel > 0.99) {
+        return {
+          color: "var(--md-sys-color-background)",
+          graphColor: "var(--md-sys-color-tertiary)",
+          backgroundColor: "var(--md-sys-color-tertiary)",
+        };
+      }
+      return {
+        color: "var(--md-sys-color-tertiary)",
+        graphColor: "var(--md-sys-color-tertiary)",
+        backgroundColor: undefined,
+      };
     }
-    return "var(--md-sys-color-primary)";
+    return {
+      color: "var(--md-sys-color-primary)",
+      graphColor: "var(--md-sys-color-primary)",
+      backgroundColor: undefined,
+    };
   }
+  const colors = getColors();
   return <div className="fill-parent flex-column" style={{ padding, gap: 16 }}>
-    <IndicatorLights lower={lower} upper={upper} current={lastData.currentEngineRpm} lowPowerLevel={lowPowerLevel} />
+    <RpmIndicatorLights lower={lower} upper={upper} current={lastData.currentEngineRpm} />
     <div draggable className="flex-child" style={{ position: "relative" }}>
       <FadeThrough keyId={lastData.gear} transitionStyle="M2" className="flex-column flex-space-evenly tachometer-gear-position">
-        <Typography.Display.Large tag="span" title="Gear" className="tachometer-gear" style={{
-          color: getColor(),
-          fontSize: powerLevel > 0.99 ? "16vmin" : undefined,
-          outline: powerLevel > 0.99 ? "1rem solid" : "0rem solid",
-        } as React.CSSProperties}>{lastData.gear}</Typography.Display.Large>
+        <Card style={{ borderRadius: "24vmin", height: "24vmin", width: "24vmin" }}>
+          <div className="fill-parent flex-column flex-center" style={{
+            borderRadius: "24vmin",
+            backgroundColor: colors.backgroundColor,
+            transition: "background 200ms",
+          }}>
+            <span title="Gear" className="tachometer-gear" style={{ color: colors.color }}>
+              {lastData.gear}
+            </span>
+          </div>
+        </Card>
       </FadeThrough>
+      <PowerIndicatorLights lowPowerLevel={lowPowerLevel} powerLevel={powerLevel} />
       <ResponsiveContainer width="100%" height="100%">
         <PieChart margin={{ bottom: -48 }}>
           {showMore && !showPowerLevel ? <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="60%" outerRadius="65%" startAngle={startAngle} endAngle={endAngle}
@@ -67,7 +94,7 @@ export default function Tachometer() {
           <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="85%" outerRadius="90%" startAngle={startAngle} endAngle={endAngle}
             stroke={dividerColor}
             data={[{ name: "CurrentEngineRpm", value: lastData.currentEngineRpm }, { name: "RemainingRpmCapacity", value: lastData.engineMaxRpm - lastData.currentEngineRpm }]} >
-            <Cell fill={getColor()} />
+            <Cell fill={colors.graphColor} />
             <Cell fill={dividerColor} />
           </Pie>
           <Tooltip content={<CustomTooltip />} />
@@ -84,6 +111,31 @@ export default function Tachometer() {
           {showMore ? <SimpleCard title="Power Level" content={`${(powerLevel * 100).toFixed(1)}%`} tooltip={``} onClick={switchDisplay} /> : undefined}
         </>}
     </SharedAxis>
+  </div>;
+}
+
+function PowerIndicatorLights({ lowPowerLevel, powerLevel }: { lowPowerLevel: boolean; powerLevel: number; }) {
+  return <div className="flex-row" style={{ position: "absolute", bottom: 16, left: 0, right: 0, justifyContent: "center", gap: 32 }}>
+    <Card style={{ height: 64, width: 64, borderRadius: 64 }}>
+      <span className="fill-parent fit-elevated-card-container-shape flex-row flex-center" style={{
+        borderRadius: 64,
+        backgroundColor: powerLevel > 0.99 ? "var(--md-sys-color-tertiary)" : undefined,
+        color: powerLevel > 0.99 ? "var(--md-sys-color-on-tertiary)" : undefined,
+        transition: "background 100ms",
+      }} title="Over 99% Power Level" >
+        <Icon>bolt</Icon>
+      </span>
+    </Card>
+    <Card style={{ height: 64, width: 64, borderRadius: 64 }}>
+      <span className="fill-parent flex-row flex-center" style={{
+        borderRadius: 64,
+        backgroundColor: lowPowerLevel ? "var(--md-sys-color-error)" : undefined,
+        color: lowPowerLevel ? "var(--md-sys-color-on-error)" : undefined,
+        transition: "background 100ms",
+      }} title="Below 90% Power Level" >
+        <Icon>keyboard_double_arrow_down</Icon>
+      </span>
+    </Card>
   </div>;
 }
 
@@ -193,7 +245,7 @@ function getBound(sorted: { x: number, y: number; }[], maxIndex: number, thresho
   return { lower, upper };
 }
 
-function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: number, upper: number, current: number; lowPowerLevel: boolean; }) {
+function RpmIndicatorLights({ lower, upper, current }: { lower: number, upper: number, current: number; }) {
   function getProgress(lower: number, upper: number, current: number) {
     if (lower === upper) {
       return 0;
@@ -217,16 +269,9 @@ function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: numb
     }
   }, [overProgress]);
 
-  function getContainerColor(lower: number, color: string, lowPowerFlash: boolean) {
+  function getContainerColor(lower: number, color: string) {
     if (!isMainSwitchOn) {
       return undefined;
-    }
-    if (lowPowerLevel) {
-      if (lowPowerFlash) {
-        return "var(--md-sys-color-error)";
-      } else {
-        return undefined;
-      }
     }
     if (progress <= lower) {
       return undefined;
@@ -247,11 +292,11 @@ function IndicatorLights({ lower, upper, current, lowPowerLevel }: { lower: numb
       { lower: 0.4, upper: 0.6, color: "var(--md-sys-color-primary)" },
       { lower: 0.2, upper: 0.4, color: "var(--md-sys-color-tertiary)" },
       { lower: 0.0, upper: 0.2, color: "var(--md-sys-color-tertiary)" },].map(({ lower, color }, index) =>
-        <Card key={index} className="flex-child" style={{
-          maxWidth: 120,
-          "--md-elevated-card-container-color": getContainerColor(lower, color, index !== 5 && (index % 2) === 1),
-        } as React.CSSProperties} >
-          <Ripple className="fill-parent fit-elevated-card-container-shape" />
+        <Card key={index} className="flex-child" style={{ maxWidth: 120 }} >
+          <div className="fill-parent fit-elevated-card-container-shape" style={{
+            backgroundColor: getContainerColor(lower, color),
+            transition: "background 100ms",
+          }} />
         </Card>
       )}
   </div>;

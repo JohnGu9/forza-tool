@@ -6,13 +6,12 @@
 }
 
 .tachometer-gear {
-    --text-size: 20vmin;
+    --text-size: 16vmin;
     font-size: var(--text-size);
     text-align: center;
     line-height: var(--text-size);
     transition:
         color 200ms,
-        outline 200ms,
         font-size 200ms;
     -webkit-text-stroke: 1px var(--md-divider-color, var(--md-sys-color-outline-variant, #cac4d0));
     width: var(--text-size);

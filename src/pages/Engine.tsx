@@ -215,7 +215,7 @@ function SimpleRow({ title, value, color }: { title: string; value: number; colo
     <div className="flex-row flex-space-between" style={{ padding: "8px 0" }}>
       <span>{title}</span>{(value * 100).toFixed(1)}%
     </div>
-    <LinearProgress className="disable-progress-transition" value={value} style={{
+    <LinearProgress className="only-color-transition" value={value} style={{
       "--md-linear-progress-active-indicator-color": color,
     } as React.CSSProperties} />
   </div>;
