@@ -194,8 +194,8 @@ export class MessageDataAnalysis {
     }
 };
 
-const MaxFdTolerationFactor = 8;
-const MinFdTolerationFactor = 2 / 3;
+const MaxFdTolerationFactor = 16;
+const MinFdTolerationFactor = 1;
 function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData) {
     if (lastMessageData.power <= 0 ||
         lastMessageData.currentEngineRpm === lastMessageData.engineMaxRpm ||
@@ -204,7 +204,8 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData) 
     }
 
     const powerPrediction = 1000 * lastMessageData.torque * lastMessageData.currentEngineRpm / 9550;
-    if (Math.abs(powerPrediction - lastMessageData.power) > 500) { // There is diff, I don't know why? Power delay?
+    const powerDiff = lastMessageData.power / powerPrediction;
+    if (powerDiff < 0.999 || powerDiff > 1.001) { // There is diff, I don't know why? Power delay?
         return false;
     }
 

@@ -6,5 +6,6 @@ export enum Page {
     SpeedMeter = "SpeedMeter",
     Control = "Control",
     Motion = "Motion",
+    PowerVerification = "Power Verification",
     Detail = "Detail",
 };

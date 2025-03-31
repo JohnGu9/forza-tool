@@ -63,7 +63,7 @@ const defaultDomain: AxisDomain = ([min, max]: [number, number]) => {
   return [-range, range];
 };
 
-function SimpleCard({ title, data, type, domain }: { title: string, data: DataType[]; type: MotionOption; domain?: AxisDomain, }) {
+function SimpleCard({ title, data, type, domain }: { title: string, data: DataType[], type: MotionOption, domain?: AxisDomain, }) {
   const value = data.length === 0 ? 0 : data[data.length - 1].value;
   const { unitSystem } = React.useContext(ReactAppContext);
 

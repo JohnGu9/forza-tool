@@ -91,8 +91,8 @@ export default function SpeedMeter() {
           <Tooltip formatter={(value) => `${(value as number).toFixed(1)} ${getSpeedUnit(unitSystem)}`}
             contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
           <Legend />
+          <Area type="monotone" dataKey={compareTarget.second.dataKey} stroke="var(--md-sys-color-primary)" fillOpacity={0.2} fill="var(--md-sys-color-primary)" isAnimationActive={false} />
           <Area type="monotone" dataKey={compareTarget.first.dataKey} stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" isAnimationActive={false} />
-          <Area type="monotone" dataKey={compareTarget.second.dataKey} stroke="var(--md-sys-color-primary)" fillOpacity={0.6} fill="var(--md-sys-color-primary)" isAnimationActive={false} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
