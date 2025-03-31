@@ -158,8 +158,10 @@ export class MessageDataAnalysis {
             const timeDeltaSmall = lastMessageData.timestampMs - beforeLast.timestampMs;
             this.velocityPrediction.push(timeDeltaSmall <= 0 ? 0 : getVelocityPrediction(beforeLast, timeDeltaSmall / 1000));
 
-            if (lastMessageData.trackOrdinal !== beforeLast.trackOrdinal ||
-                this.consumptionEstimation.getStartFuel() < lastMessageData.fuel) {
+            if (lastMessageData.trackOrdinal !== beforeLast.trackOrdinal) {
+                this.consumptionEstimation.reset();
+                this.consumptionEstimation.setStart(lastMessageData);
+            } else if (this.consumptionEstimation.getStartFuel() < lastMessageData.fuel) {
                 this.consumptionEstimation.setStart(lastMessageData);
             } else if (lastMessageData.lap !== beforeLast.lap) { // new lap
                 if (lastMessageData.lap - beforeLast.lap === 1) {
@@ -200,6 +202,12 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData) 
         lastMessageData.currentEngineRpm === lastMessageData.engineIdleRpm) {
         return false;
     }
+
+    const powerPrediction = 1000 * lastMessageData.torque * lastMessageData.currentEngineRpm / 9550;
+    if (Math.abs(powerPrediction - lastMessageData.power) > 500) { // There is diff, I don't know why? Power delay?
+        return false;
+    }
+
     type Element = { power: number, rpm: number, torque: number; };
 
     const powerCurveData = { power: lastMessageData.power, torque: lastMessageData.torque, rpm: lastMessageData.currentEngineRpm };
@@ -285,9 +293,8 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData) 
             updateMaxPower();
             return true;
         } else { // not max power
-            if (fd0 >= 0) { // analysis.powerCurve[lastIndex] is invalid
-                analysis.powerCurve[lastIndex] = powerCurveData;
-                return true;
+            if (fd0 >= 0) { // powerCurveData is invalid
+                return false;
             }
             const minFdToleration = MinFdTolerationFactor * getDerivative({ power: analysis.maxPower.value, rpm: analysis.maxPower.rpm }, { power: 0, rpm: lastMessageData.engineMaxRpm });
             if (fd0 < minFdToleration) {
@@ -324,21 +331,28 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData) 
     const fd0 = getDerivative(data0, powerCurveData);
     const torqueFd0 = getDerivative({ power: data0.torque, rpm: data0.rpm }, { power: powerCurveData.torque, rpm: powerCurveData.rpm });
 
-    if ((insertIndex - 2) >= 0 && (insertIndex + 1) <= (analysis.powerCurve.length - 1)) { // likely
-        const data00 = analysis.powerCurve[insertIndex - 2];
-        const data11 = analysis.powerCurve[insertIndex + 1];
-        const torqueFd00 = getDerivative({ power: data00.torque, rpm: data00.rpm }, { power: data0.torque, rpm: data0.rpm });
-        const torqueFd11 = getDerivative({ power: data1.torque, rpm: data1.rpm }, { power: data11.torque, rpm: data11.rpm });
 
-        if (torqueFd00 < 0 && torqueFd11 < 0 && originTorqueFd < 0) {
-            const maxTorqueFdToleration = 0.9 * Math.max(originTorqueFd, torqueFd00, torqueFd11);
-            if (torqueFd0 > maxTorqueFdToleration || torqueFd1 > maxTorqueFdToleration) {
-                return false;
+    function validTorqueFd(maxFdFactor = 0.5) {
+        if ((insertIndex - 2) >= 0 && (insertIndex + 1) <= (analysis.powerCurve.length - 1)) { // likely
+            const data00 = analysis.powerCurve[insertIndex - 2];
+            const data11 = analysis.powerCurve[insertIndex + 1];
+            const torqueFd00 = getDerivative({ power: data00.torque, rpm: data00.rpm }, { power: data0.torque, rpm: data0.rpm });
+            const torqueFd11 = getDerivative({ power: data1.torque, rpm: data1.rpm }, { power: data11.torque, rpm: data11.rpm });
+
+            if (torqueFd00 < 0 && torqueFd11 < 0 && originTorqueFd < 0) {
+                const maxTorqueFdToleration = maxFdFactor * Math.max(originTorqueFd, torqueFd00, torqueFd11);
+                if (torqueFd0 > maxTorqueFdToleration || torqueFd1 > maxTorqueFdToleration) {
+                    return false;
+                }
             }
         }
+        return true;
     }
 
     if (isMaxPower) {
+        if (!validTorqueFd()) {
+            return false;
+        }
         const maxFdToleration = MaxFdTolerationFactor * getDerivative({ power: 0, rpm: lastMessageData.engineIdleRpm }, powerCurveData);
         const minFdToleration = MinFdTolerationFactor * getDerivative(powerCurveData, { power: 0, rpm: lastMessageData.engineMaxRpm });
 
@@ -395,6 +409,9 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData) 
             return res;
         }
         if (powerCurveData.rpm < analysis.maxPower.rpm) {
+            if (!validTorqueFd()) {
+                return false;
+            }
             if (fd0 <= 0 && fd0 <= originFd) {
                 return false;
             }
@@ -406,8 +423,17 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData) 
             const m = merge(isData0Invalid ? undefined : data0, powerCurveData, isData1Invalid ? undefined : data1);
             analysis.powerCurve = [...analysis.powerCurve.slice(0, insertIndex - 1), ...m, ...analysis.powerCurve.slice(insertIndex + 1)];
             return true;
-        } else {
-            if (fd1 >= 0 && fd1 >= originFd) {
+        } else { // powerCurveData.rpm > analysis.maxPower.rpm
+            if (!validTorqueFd(1)) {
+                return false;
+            }
+            if (isSameRpm(analysis.maxPower.rpm)) {
+                return false;
+            }
+            if (fd1 >= 0) {
+                return false;
+            }
+            if (fd1 >= originFd * MinFdTolerationFactor) {
                 return false;
             }
             if (fd0 < minFdToleration) {

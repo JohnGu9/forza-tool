@@ -53,7 +53,7 @@ export default function Engine() {
     </div>
     <SharedAxis className="flex-child" keyId={showEnginePowerCurve ? 1 : 0} style={{ overflow: "clip" }}>
       {showEnginePowerCurve ?
-        <PowerCurveChart messageDataAnalysis={messageDataAnalysis} lastMessageData={lastMessageData} /> :
+        <PowerCurveChart messageDataAnalysis={messageDataAnalysis} messageData={messageData} /> :
         <PowerLevelChart messageDataAnalysis={messageDataAnalysis} messageData={messageData} />}
     </SharedAxis>
     <div style={{ height: 16 }} aria-hidden />
@@ -67,13 +67,20 @@ export default function Engine() {
   </div>;
 }
 
-function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageDataAnalysis: MessageDataAnalysis; lastMessageData: MessageData; }) {
+function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnalysis: MessageDataAnalysis; messageData: CircularBuffer<MessageData>; }) {
   const { unitSystem } = React.useContext(ReactAppContext);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const data = React.useMemo(() => toData(messageDataAnalysis, unitSystem), [unitSystem, messageDataAnalysis.stamp]);
   const maxPower = wTo(messageDataAnalysis.maxPower.value, unitSystem);
+
+  const lastMessageData = messageData.isEmpty() ? dummyMessageData : messageData.getLastUnsafe();
   const currentPower = wTo(Math.max(lastMessageData.power, 0), unitSystem);
-  const powerLevel = maxPower === 0 ? 0 : currentPower / maxPower;
+  function getPowerLevel(power: number) {
+    return maxPower === 0 ? 0 : power / maxPower;
+  }
+  const powerLevel = getPowerLevel(currentPower);
+  const lastData = messageData.slice(Math.round(-messageData.getElementCount() / 4));
+
   return <ResponsiveContainer width="100%" height="100%">
     <AreaChart title="PowerCurve" data={data}
       margin={{ top: 0, right: chartsPadding + 2, left: chartsPadding - 20 }}>
@@ -83,24 +90,26 @@ function PowerCurveChart({ messageDataAnalysis, lastMessageData }: { messageData
       <YAxis yAxisId={0} type="number" domain={([, max]) => { return [0, max * 1.05]; }}
         ticks={getTicks(maxPower * 1.05, 0, 50)} />
       <CartesianGrid strokeDasharray="3 3" />
-      <Tooltip formatter={(value, name) => {
-        switch (name) {
-          case "power":
-            return `${(value as number).toFixed(1)} (${((value as number) / maxPower * 100).toFixed(1)}%)`;
-          default:
-            return (value as number).toFixed(1);
-        }
-      }}
-        labelFormatter={label => (label as number).toFixed(1)}
-        contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
+      <Tooltip labelFormatter={label => (label as number).toFixed(1)}
+        contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }}
+        formatter={(value, name) => {
+          switch (name) {
+            case "power":
+              return `${(value as number).toFixed(1)} (${((value as number) / maxPower * 100).toFixed(1)}%)`;
+            default:
+              return (value as number).toFixed(1);
+          }
+        }} />
       <Legend />
       <Area yAxisId={1} type="monotone" dataKey="torque" stroke="var(--md-sys-color-primary)" fillOpacity={0.6} fill="var(--md-sys-color-primary)" isAnimationActive={false} />
       <Area yAxisId={0} type="monotone" dataKey="power" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" isAnimationActive={false} />
       <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeDasharray="3 3" y={maxPower} label={maxPower.toFixed(1)} ifOverflow="visible" isFront={true} />
       <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeDasharray="3 3" x={messageDataAnalysis.maxPower.rpm} label={messageDataAnalysis.maxPower.rpm.toFixed(1)} ifOverflow="visible" isFront={true} />
-      {/* <ReferenceLine stroke="var(--md-sys-color-tertiary)" x={lastMessageData.currentEngineRpm} ifOverflow="visible" isFront={true} /> */}
       <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeOpacity={powerLevel} y={currentPower} ifOverflow="visible" isFront={true} />
-      <ReferenceDot stroke="none" fill={mergeColor("#82ca9d", "#ffffff", powerLevel)} yAxisId={0} xAxisId={0} r={3} x={lastMessageData.currentEngineRpm} y={currentPower} ifOverflow="visible" isFront={true} />
+      {lastData.map((data, index) => {
+        const power = wTo(Math.max(data.power, 0), unitSystem);
+        return <ReferenceDot key={index} stroke="none" fill={mergeColor("#82ca9d", "#ffffff", getPowerLevel(power))} fillOpacity={Math.pow((index + 1) / lastData.length, 2)} yAxisId={0} xAxisId={0} r={3} x={data.currentEngineRpm} y={power} ifOverflow="visible" isFront={true} />;
+      })}
     </AreaChart>
   </ResponsiveContainer>;
 }

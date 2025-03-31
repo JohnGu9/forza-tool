@@ -1,7 +1,7 @@
 import "./Estimation.scss";
 
 import React from "react";
-import { Card, CircularProgress, ListItem, Typography } from "rmcw/dist/components3";
+import { Card, CircularProgress, Icon, ListItem, Typography } from "rmcw/dist/components3";
 
 import { ReactStreamAppContext } from "../common/AppContext";
 import { dummyMessageData, MessageData } from "../common/MessageData";
@@ -32,6 +32,7 @@ export default function Estimation() {
   return <div className="fill-parent" style={{ padding, overflowY: "auto" }}>
     <Card className="flex-column" style={{ width: "100%" }}>
       <ListItem
+        start={<Icon>tire_repair</Icon>}
         trailingSupportingText={<div className="flex-row" style={{ gap: 8, alignItems: "center" }}>
           <span title={`FrontLeft: ${toPercentage(lastData.tireWearFrontLeft)}`}><CircularProgress className={getCircularProgressClassName("tireWearFrontLeft")} value={1 - lastData.tireWearFrontLeft} /></span>
           <span title={`FrontRight: ${toPercentage(lastData.tireWearFrontRight)}`}><CircularProgress className={getCircularProgressClassName("tireWearFrontRight")} value={1 - lastData.tireWearFrontRight} /></span>
@@ -51,6 +52,7 @@ export default function Estimation() {
     <div style={{ height: 16 }} aria-hidden />
     <Card className="flex-column" style={{ width: "100%" }}>
       <ListItem
+        start={<Icon>local_gas_station</Icon>}
         trailingSupportingText={<span title={toPercentage(lastData.fuel)}><CircularProgress className="estimation-circular-progress" value={lastData.fuel} /></span>}
         supportingText={toPercentage(lastData.fuel)}>Fuel</ListItem>
       <Item trailingSupportingText={toPercentage(perLapConsumption.fuel)} emphasize>Per Lap</Item>
