@@ -30,6 +30,12 @@ export enum SpeedMeterOption {
     VelocityPredictionVsSpeed,
 };
 
+
+export enum PowerVerificationOption {
+    Diff,
+    Ratio,
+};
+
 export type WindowContext = {
     padding: string,
     showEnginePowerCurve: boolean,
@@ -40,6 +46,8 @@ export type WindowContext = {
     setMotionOption: (v: MotionOption) => unknown,
     speedMeterOption: SpeedMeterOption,
     setSpeedMeterOption: (v: SpeedMeterOption) => unknown,
+    powerVerificationOption: PowerVerificationOption,
+    setPowerVerificationOption: (v: PowerVerificationOption) => unknown,
     detailOption: MessageDataKey,
     setDetailOption: (v: MessageDataKey) => unknown,
     showDetailDelta: boolean,
@@ -53,6 +61,7 @@ export function useWindowContext(padding: string) {
     const [tireOption, setTireOption] = React.useState(TireOption.SlipAngle);
     const [motionOption, setMotionOption] = React.useState(MotionOption.Acceleration);
     const [speedMeterOption, setSpeedMeterOption] = React.useState(SpeedMeterOption.VelocityVsSpeed);
+    const [powerVerificationOption, setPowerVerificationOption] = React.useState(PowerVerificationOption.Ratio);
     const [detailOption, setDetailOption] = React.useState<MessageDataKey>("timestampMs");
     const [showDetailDelta, setShowDetailDelta] = React.useState(false);
     const windowContext = React.useMemo<WindowContext>(() => {
@@ -62,9 +71,10 @@ export function useWindowContext(padding: string) {
             motionOption, setMotionOption,
             speedMeterOption, setSpeedMeterOption,
             showEnginePowerCurve, setShowEnginePowerCurve,
+            powerVerificationOption, setPowerVerificationOption,
             detailOption, setDetailOption,
             showDetailDelta, setShowDetailDelta
         };
-    }, [detailOption, motionOption, padding, showDetailDelta, showEnginePowerCurve, speedMeterOption, tireOption]);
+    }, [detailOption, motionOption, padding, powerVerificationOption, showDetailDelta, showEnginePowerCurve, speedMeterOption, tireOption]);
     return windowContext;
 }

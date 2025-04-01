@@ -113,6 +113,7 @@ export class MessageDataAnalysis {
 
     maxPower: { value: number, rpm: number, torque: number; } = { value: 0, rpm: 0, torque: 0 };
     powerCurve: { rpm: number, power: number, torque: number; }[] = [];
+    powerDiff: CircularBuffer<number>;
     distance: CircularBuffer<number>;
     velocity: CircularBuffer<number>;
     velocityPrediction: CircularBuffer<number>;
@@ -120,6 +121,7 @@ export class MessageDataAnalysis {
     isFullAcceleratorForAWhile = false; // @TODO: maybe remove this
 
     constructor(capacity: number) {
+        this.powerDiff = new CircularBuffer<number>(capacity);
         this.distance = new CircularBuffer<number>(capacity);
         this.velocity = new CircularBuffer<number>(capacity);
         this.velocityPrediction = new CircularBuffer<number>(capacity);
@@ -131,6 +133,7 @@ export class MessageDataAnalysis {
 
         this.maxPower = { value: 0, rpm: 0, torque: 0 };
         this.powerCurve = [];
+        this.powerDiff.clear();
         this.distance.clear();
         this.velocity.clear();
         this.velocityPrediction.clear();
@@ -144,8 +147,14 @@ export class MessageDataAnalysis {
         const lastMessageData = lastData[lastData.length - 1];
         const isFullAcceleratorForAWhile = lastData.every(v => v.accelerator > 248 && v.gear === lastData[0].gear);
 
-        if (validData(this, lastMessageData)) {
-            changed = true;
+        const powerPrediction = 1000 * lastMessageData.torque * lastMessageData.currentEngineRpm / 9550;
+        const powerDiff = lastMessageData.power / powerPrediction;// There is diff, I don't know why? Power delay?
+        this.powerDiff.push(powerDiff);
+
+        if ((powerDiff > 0.998 && powerDiff < 1.002)) {
+            if (validData(this, lastMessageData)) {
+                changed = true;
+            }
         }
 
         if (lastData.length > 1) {
@@ -194,18 +203,12 @@ export class MessageDataAnalysis {
     }
 };
 
-const MaxFdTolerationFactor = 16;
-const MinFdTolerationFactor = 1;
+const MaxFdTolerationFactor = 8;
+const MinFdTolerationFactor = 2 / 3;
 function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData) {
     if (lastMessageData.power <= 0 ||
         lastMessageData.currentEngineRpm === lastMessageData.engineMaxRpm ||
         lastMessageData.currentEngineRpm === lastMessageData.engineIdleRpm) {
-        return false;
-    }
-
-    const powerPrediction = 1000 * lastMessageData.torque * lastMessageData.currentEngineRpm / 9550;
-    const powerDiff = lastMessageData.power / powerPrediction;
-    if (powerDiff < 0.999 || powerDiff > 1.001) { // There is diff, I don't know why? Power delay?
         return false;
     }
 
@@ -331,7 +334,6 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData) 
 
     const fd0 = getDerivative(data0, powerCurveData);
     const torqueFd0 = getDerivative({ power: data0.torque, rpm: data0.rpm }, { power: powerCurveData.torque, rpm: powerCurveData.rpm });
-
 
     function validTorqueFd(maxFdFactor = 0.5) {
         if ((insertIndex - 2) >= 0 && (insertIndex + 1) <= (analysis.powerCurve.length - 1)) { // likely

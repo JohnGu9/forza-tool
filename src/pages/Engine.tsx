@@ -79,7 +79,9 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
     return maxPower === 0 ? 0 : power / maxPower;
   }
   const powerLevel = getPowerLevel(currentPower);
-  const lastData = messageData.slice(Math.round(-messageData.getElementCount() / 4));
+  const sliceLength = Math.round(-messageData.getElementCount() / 4);
+  const lastData = messageData.slice(sliceLength);
+  const powerDiff = messageDataAnalysis.powerDiff.slice(sliceLength);
 
   return <ResponsiveContainer width="100%" height="100%">
     <AreaChart title="PowerCurve" data={data}
@@ -107,8 +109,10 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
       <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeDasharray="3 3" x={messageDataAnalysis.maxPower.rpm} label={messageDataAnalysis.maxPower.rpm.toFixed(1)} ifOverflow="visible" isFront={true} />
       <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeOpacity={powerLevel} y={currentPower} ifOverflow="visible" isFront={true} />
       {lastData.map((data, index) => {
+        const diff = powerDiff[index];
+        const isValidData = (diff < 0.998 || diff > 1.002);
         const power = wTo(Math.max(data.power, 0), unitSystem);
-        return <ReferenceDot key={index} stroke="none" fill={mergeColor("#82ca9d", "#ffffff", getPowerLevel(power))} fillOpacity={Math.pow((index + 1) / lastData.length, 2)} yAxisId={0} xAxisId={0} r={3} x={data.currentEngineRpm} y={power} ifOverflow="visible" isFront={true} />;
+        return <ReferenceDot key={index} stroke="none" fill={isValidData ? "var(--md-sys-color-error)" : mergeColor("#82ca9d", "#ffffff", getPowerLevel(power))} fillOpacity={Math.pow((index + 1) / lastData.length, 2)} yAxisId={0} xAxisId={0} r={3} x={data.currentEngineRpm} y={power} ifOverflow="visible" isFront={true} />;
       })}
     </AreaChart>
   </ResponsiveContainer>;
