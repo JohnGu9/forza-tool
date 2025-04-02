@@ -56,12 +56,12 @@ function SimpleCard({ title, data, onClick }: { title: string, data: DataType[];
   return <Card className="flex-child" style={{ flex: "2 2" }}>
     <Ripple className="fill-parent flex-column flex-space-evenly fit-elevated-card-container-shape" style={{ alignItems: "stretch", padding: 16 }} onClick={onClick}>
       <div className="flex-child" style={{ overflow: "clip" }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
           <AreaChart data={data}
             margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
-            <YAxis domain={[0, 50, 100]} ticks={[0, 100]} />
+            <YAxis domain={[0, 100]} ticks={[0, 50, 100]} />
             <Tooltip formatter={(value) => { return `${(value as number).toFixed(1)}%`; }}
               contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
             <Area type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" isAnimationActive={false} />
@@ -81,7 +81,7 @@ function EngineBraking({ data }: { data: DataType[]; }) {
   const value = data.length === 0 ? 0 : data[data.length - 1].value;
   return <Card className="flex-child flex-column flex-space-evenly" style={{ flex: "3 3", alignItems: "stretch", padding: 16 }}>
     <div className="flex-child" style={{ overflow: "clip" }}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
         <AreaChart data={data}
           margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>
           <CartesianGrid strokeDasharray="3 3" />

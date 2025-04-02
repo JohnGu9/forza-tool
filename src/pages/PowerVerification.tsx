@@ -29,7 +29,7 @@ export default function PowerVerification() {
     <Card className="fill-parent">
       <Ripple className="fill-parent fit-elevated-card-container-shape" style={{ padding: "8px 16px" }}
         onClick={() => setPowerVerificationOption(getNextOption(powerVerificationOption))}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
           {getChart(powerVerificationOption, power, messageDataAnalysis, unitSystem)}
         </ResponsiveContainer>
       </Ripple>

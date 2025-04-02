@@ -25,7 +25,7 @@ export default function Detail() {
       </Select>
       <div style={{ height: 16 }} aria-hidden />
       <div className="flex-child" style={{ overflow: "clip" }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
           <LineChart data={data}
             margin={{ top: 16, right: 2, left: 0, bottom: 24 }}>
             <CartesianGrid strokeDasharray="3 3" />

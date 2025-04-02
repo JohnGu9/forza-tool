@@ -37,7 +37,7 @@ export default function Engine() {
     return undefined;
   }
   const powerUnitName = getPowerUnit(unitSystem);
-  return <div className="fill-parent flex-column" style={{ padding }}>
+  return <div className="fill-parent flex-column" style={{ padding, alignItems: "stretch" }}>
     <div className="flex-row flex-space-between" style={{ height: columnHeight, gap: 8, padding: "0 0 16px" }}>
       <SimpleCard title="RPM" content={lastMessageData.currentEngineRpm.toFixed(0)}
         tooltip="unit: Rev/Min"
@@ -51,7 +51,7 @@ export default function Engine() {
         tooltip={`unit: ${powerUnitName}`}
         onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)} />
     </div>
-    <SharedAxis className="flex-child" keyId={showEnginePowerCurve ? 1 : 0} style={{ overflow: "clip" }}>
+    <SharedAxis className="flex-child" keyId={showEnginePowerCurve ? 1 : 0}>
       {showEnginePowerCurve ?
         <PowerCurveChart messageDataAnalysis={messageDataAnalysis} messageData={messageData} /> :
         <PowerLevelChart messageDataAnalysis={messageDataAnalysis} messageData={messageData} />}
@@ -83,7 +83,7 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
   const lastData = messageData.slice(sliceLength);
   const powerDiff = messageDataAnalysis.powerDiff.slice(sliceLength);
 
-  return <ResponsiveContainer width="100%" height="100%">
+  return <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
     <AreaChart title="PowerCurve" data={data}
       margin={{ top: 0, right: chartsPadding + 2, left: chartsPadding - 20 }}>
       <XAxis xAxisId={0} dataKey="rpm" type="number" domain={[lastMessageData.engineIdleRpm, lastMessageData.engineMaxRpm]} allowDataOverflow={false}
@@ -148,7 +148,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
     }
     return "var(--md-sys-color-error)";
   }
-  return <ResponsiveContainer width="100%" height="100%">
+  return <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
     <BarChart title="PowerLevel" data={data}
       margin={{ top: 0, right: chartsPadding + 2, left: chartsPadding - 12 }}>
       <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />

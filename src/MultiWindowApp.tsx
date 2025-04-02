@@ -208,18 +208,21 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
           dragContext.setValue({ source: null, target: null });
           setDragging(false);
         }}
-        onDragOver={isDragging ? undefined : e => {
+        onDragOver={e => {
           e.preventDefault();
           e.dataTransfer.dropEffect = "move";
+          if (isDragging) return;
           setDragover(true);
           dragContext.setValue({ ...dragContext.value, target: windowTag });
         }}
-        onDragLeave={isDragging ? undefined : () => {
+        onDragLeave={() => {
+          if (isDragging) return;
           dragContext.setValue({ ...dragContext.value, target: null });
           setDragover(false);
         }}
-        onDrop={isDragging ? undefined : e => {
+        onDrop={e => {
           e.preventDefault();
+          if (isDragging) return;
           setDragover(false);
           dragContext.swapWindow();
         }}
@@ -271,7 +274,7 @@ function SingleWindow({ windowTag, setPage, closeWindow }: { windowTag: WindowTa
         <div className="flex-child" />
         <Button buttonStyle="text" onClick={closeDialog}>Close</Button>
       </>}>
-      <div className="flex-column" style={{ width: 360, gap: 16 }}>
+      <div className="flex-column" style={{ width: 360, gap: 16, pointerEvents: openDialog ? undefined : "none" }}>
         {Object.values(Page).map(value =>
           <Button key={value}
             buttonStyle={getButtonStyle(value, realPage, displayPage, usedPages)}

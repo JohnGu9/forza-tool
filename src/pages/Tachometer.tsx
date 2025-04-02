@@ -64,7 +64,7 @@ export default function Tachometer() {
     <RpmIndicatorLights lower={lower} upper={upper} current={lastData.currentEngineRpm} />
     <div draggable className="flex-child" style={{ position: "relative" }}>
       <GearMonitor lowPowerLevel={lowPowerLevel} powerLevel={powerLevel} gear={lastData.gear} colors={colors} />
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
         <PieChart margin={{ bottom: -48 }}>
           {showMore && !showPowerLevel ? <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="60%" outerRadius="65%" startAngle={startAngle} endAngle={endAngle}
             stroke={dividerColor}
@@ -314,7 +314,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
   }
   return <Card className="flex-child">
     <Ripple className="fill-parent fit-elevated-card-container-shape" style={{ padding: 8 }} onClick={onClick}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
         <BarChart title="PowerLevel" data={data} margin={{ left: -56, bottom: -24, top: 4, right: 4 }}>
           <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
           <YAxis dataKey="value" type="number" yAxisId={1} domain={[0, 100]} tick={false} allowDataOverflow={false} />

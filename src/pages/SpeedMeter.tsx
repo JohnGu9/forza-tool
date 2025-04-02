@@ -82,7 +82,7 @@ export default function SpeedMeter() {
       <SimpleCard title="Ratio" content={`${(ratio * 100).toFixed(1)} %`} tooltip={`${compareTarget.first.title} / ${compareTarget.second.title}`} onClick={onClick} />
     </div>
     <div className="flex-child" style={{ overflow: "clip" }}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
         <AreaChart data={data}
           margin={{ top: 4, right: 2, left: 0, bottom: 8 }}>
           <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} hide />

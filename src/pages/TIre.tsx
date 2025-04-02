@@ -58,24 +58,15 @@ function getTargetData(messageData: CircularBuffer<MessageData>, option: TireOpt
 function SimpleCard({ title, data, option }: { title: string, data: DataType[]; option: TireOption; }) {
   const { unitSystem } = React.useContext(ReactAppContext);
   const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1].value);
-  const { formatter, progress, domain, ticks } = React.useMemo(() => getConfiguration(option, unitSystem), [option, unitSystem]);
+  const { formatter, progress, domain, ticks, getColor, tickFormatter } = React.useMemo(() => getConfiguration(option, unitSystem), [option, unitSystem]);
 
-  function getColor(value: number) {
-    if (value < 1) {
-      return undefined;
-    }
-    if (value < 1.6) {
-      return "var(--md-sys-color-tertiary)";
-    }
-    return "var(--md-sys-color-error)";
-  }
   return <Card className="flex-column flex-space-evenly" style={{ alignItems: "stretch", padding: 16 }}>
     <div className="flex-child" style={{ overflow: "clip" }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 5, right: 0, left: -36, bottom: -10 }}>
+      <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
+        <AreaChart data={data} margin={{ top: 5, right: 0, left: -24, bottom: -10 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="index" type="number" name="XAxis" domain={['dataMin', 'dataMax']} tick={false} />
-          <YAxis domain={domain} ticks={ticks} />
+          <YAxis domain={domain} ticks={ticks} tickFormatter={tickFormatter} />
           <Tooltip formatter={(value) => { return formatter(value as number); }}
             contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
           <Area type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" isAnimationActive={false} />
@@ -96,6 +87,8 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
   ticks: (string | number)[] | undefined;
   domain: AxisDomain | undefined;
   progress: (value: number) => number;
+  getColor: (value: number) => string | undefined,
+  tickFormatter?: ((value: unknown, index: number) => string),
 } {
   switch (type) {
     case TireOption.SlipAngle:
@@ -105,6 +98,7 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
         ticks: [-1, 0, 1],
         domain: ([dataMin, dataMax]: [number, number]) => { const absMax = Math.max(Math.abs(dataMin), Math.abs(dataMax), 1) + 0.2; return [-absMax, absMax]; },
         progress: (value: number) => Math.abs(value),
+        getColor,
       };
     case TireOption.CombinedSlip:
       return {
@@ -112,6 +106,7 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
         ticks: [0, 1],
         domain: ([, max]) => { return [0, max * 1.05]; },
         progress: (value: number) => value,
+        getColor,
       };
     case TireOption.TireWear:
       return {
@@ -119,32 +114,55 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
         ticks: [0, 1],
         domain: () => { return [0, 1]; },
         progress: (value: number) => value,
+        getColor,
       };
-    case TireOption.Temp:
+    case TireOption.Temp: {
+      function getColor(value: number) {
+        if (value < 185) {
+          return undefined;
+        }
+        if (value < 239) {
+          return "var(--md-sys-color-tertiary)";
+        }
+        return "var(--md-sys-color-error)";
+      }
+      function domain([min, max]: [number, number]): [number, number] {
+        return [Math.min(min, 140), Math.max(max, 248)];
+      }
+      function progress(value: number) { return value / 239; }
+
+      const ticks = [185, 239];
       switch (unitSystem) {
         case UnitSystem.Imperial:
           return {
             formatter: (value: number) => `${value.toFixed(1)} °F`,
-            ticks: undefined,
-            domain: undefined,
-            progress: (value: number) => value / 275,
+            ticks,
+            domain,
+            progress,
+            getColor,
           };
         default: {
-          const toC = (value: number) => (value - 32) * 5 / 9;
+          function toC(value: number) {
+            return (value - 32) * 5 / 9;
+          }
           return {
             formatter: (value: number) => `${toC(value).toFixed(1)} °C`,
-            ticks: undefined,
-            domain: undefined,
-            progress: (value: number) => value / 275,
+            ticks,
+            domain,
+            progress,
+            getColor,
+            tickFormatter: (value) => toC(value as number).toFixed(0),
           };
         }
       }
+    }
     case TireOption.WheelRotationSpeed:
       return {
         formatter: (value: number) => `${value.toFixed(1)} Radians/Sec`,
         ticks: undefined,
         domain: undefined,
         progress: () => 0,
+        getColor,
       };
     case TireOption.SurfaceRumble:
     case TireOption.WheelOnRumbleStrip:
@@ -156,6 +174,17 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
         ticks: [0, 0.5, 1],
         domain: [0, 1],
         progress: (value: number) => value,
+        getColor,
       };
   }
+}
+
+function getColor(value: number) {
+  if (value < 1) {
+    return undefined;
+  }
+  if (value < 1.6) {
+    return "var(--md-sys-color-tertiary)";
+  }
+  return "var(--md-sys-color-error)";
 }
