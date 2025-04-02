@@ -72,7 +72,7 @@ function SimpleCard({ title, data, option }: { title: string, data: DataType[]; 
   return <Card className="flex-column flex-space-evenly" style={{ alignItems: "stretch", padding: 16 }}>
     <div className="flex-child" style={{ overflow: "clip" }}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 5, right: 0, left: -32, bottom: -10 }}>
+        <AreaChart data={data} margin={{ top: 5, right: 0, left: -36, bottom: -10 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="index" type="number" name="XAxis" domain={['dataMin', 'dataMax']} tick={false} />
           <YAxis domain={domain} ticks={ticks} />
@@ -100,12 +100,18 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
   switch (type) {
     case TireOption.SlipAngle:
     case TireOption.SlipRatio:
-    case TireOption.CombinedSlip:
       return {
         formatter: (value: number) => `${(value * 100).toFixed(1)}%`,
         ticks: [-1, 0, 1],
         domain: ([dataMin, dataMax]: [number, number]) => { const absMax = Math.max(Math.abs(dataMin), Math.abs(dataMax), 1) + 0.2; return [-absMax, absMax]; },
         progress: (value: number) => Math.abs(value),
+      };
+    case TireOption.CombinedSlip:
+      return {
+        formatter: (value: number) => `${(value * 100).toFixed(1)}%`,
+        ticks: [0, 1],
+        domain: ([, max]) => { return [0, max * 1.05]; },
+        progress: (value: number) => value,
       };
     case TireOption.TireWear:
       return {

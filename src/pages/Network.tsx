@@ -50,7 +50,7 @@ export default function Network({ opened, close }: {
         supportingText={`Current forwarding: ${currentForwarding}`} />
       <div style={{ height: 16 }} aria-hidden />
       <TextField type="number" min="1" label="Data Buffer Length" value={newDataBufferLength} onChange={e => setNewDataBufferLength(e.target.value)}
-        supportingText={`Determines how much data is displayed in the charts. Current: ${dataBufferLength}. (Recommend: 200 ~ 500)`} />
+        supportingText={`Determines how much data is displayed in the charts. More data will consume more compute resource. Current: ${dataBufferLength}. (Recommend: 200 ~ 500)`} />
       <div style={{ height: 32 }} aria-hidden />
       <Button onClick={() => {
         const newValue = [...listenAddress] as ListenAddress;

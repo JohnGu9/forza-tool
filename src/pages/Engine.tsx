@@ -59,7 +59,7 @@ export default function Engine() {
     <div style={{ height: 16 }} aria-hidden />
     <Card>
       <Ripple className="fit-elevated-card-container-shape" onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)}>
-        <SimpleRow title={`Power Level (${wTo(messageDataAnalysis.maxPower.value, unitSystem).toFixed(1)} ${powerUnitName} - ${messageDataAnalysis.maxPower.rpm.toFixed(1)} RPM)`} value={powerLevel} color={getPowerLevelProgressColor()} />
+        <SimpleRow title={`Power Level (as Max ${wTo(messageDataAnalysis.maxPower.value, unitSystem).toFixed(1)} ${powerUnitName} - ${messageDataAnalysis.maxPower.rpm.toFixed(1)} RPM)`} value={powerLevel} color={getPowerLevelProgressColor()} />
         <SimpleRow title="Accelerator" value={lastMessageData.accelerator / 255} />
         <div style={{ height: 12 }} aria-hidden />
       </Ripple>
@@ -97,9 +97,9 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
         formatter={(value, name) => {
           switch (name) {
             case "power":
-              return `${(value as number).toFixed(1)} (${((value as number) / maxPower * 100).toFixed(1)}%)`;
+              return `${(value as number).toFixed(1)} ${getPowerUnit(unitSystem)} (${((value as number) / maxPower * 100).toFixed(1)}%)`;
             default:
-              return (value as number).toFixed(1);
+              return `${(value as number).toFixed(1)} ${getTorqueUnit(unitSystem)}`;
           }
         }} />
       <Legend />
@@ -112,7 +112,7 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
         const diff = powerDiff[index];
         const isValidData = (diff < 0.998 || diff > 1.002);
         const power = wTo(Math.max(data.power, 0), unitSystem);
-        return <ReferenceDot key={index} stroke="none" fill={isValidData ? "var(--md-sys-color-error)" : mergeColor("#82ca9d", "#ffffff", getPowerLevel(power))} fillOpacity={Math.pow((index + 1) / lastData.length, 2)} yAxisId={0} xAxisId={0} r={3} x={data.currentEngineRpm} y={power} ifOverflow="visible" isFront={true} />;
+        return <ReferenceDot key={index} stroke="none" fill={isValidData ? "var(--md-sys-color-error)" : mergeColor("#82ca9d", "#ffffff", getPowerLevel(power))} fillOpacity={Math.pow((index + 1) / lastData.length, 3)} yAxisId={0} xAxisId={0} r={3} x={data.currentEngineRpm} y={power} ifOverflow="visible" isFront={true} />;
       })}
     </AreaChart>
   </ResponsiveContainer>;
@@ -142,17 +142,20 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
   function getColor(value: { "power level": number; }) {
     if (value["power level"] >= 97) {
       return "var(--md-sys-color-tertiary)";
-    };
+    }
     if (value["power level"] >= 90) {
       return "var(--md-sys-color-primary)";
-    };
+    }
     return "var(--md-sys-color-error)";
   }
   return <ResponsiveContainer width="100%" height="100%">
     <BarChart title="PowerLevel" data={data}
-      margin={{ top: 0, right: chartsPadding + 2, left: chartsPadding - 20 }}>
+      margin={{ top: 0, right: chartsPadding + 2, left: chartsPadding - 12 }}>
       <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
-      <YAxis yAxisId={1} type="number" domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} allowDataOverflow={false} />
+      <YAxis yAxisId={1} type="number" domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} allowDataOverflow={false}
+        tickFormatter={(value) => {
+          return `${value}%`;
+        }} />
       <CartesianGrid strokeDasharray="3 3" />
       <Tooltip formatter={(value) => { return (value as number).toFixed(1); }}
         contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
