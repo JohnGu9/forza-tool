@@ -1,5 +1,4 @@
 import React from "react";
-import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, Ripple, Typography } from "rmcw/dist/components3";
 
 import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
@@ -8,6 +7,7 @@ import { MessageData } from "../common/MessageData";
 import { MessageDataAnalysis } from "../common/MessageDataAnalysis";
 import { getSpeedUnit, msTo, UnitSystem } from "../common/UnitConvert";
 import { ReactWindowContext, SpeedMeterOption } from "./common/Context";
+import useEcharts from "./common/Echarts";
 
 const columnHeight = 150;
 
@@ -75,26 +75,55 @@ export default function SpeedMeter() {
   const compareTarget = getCompareTarget();
   const ratio = compareTarget.second.value === 0 ? 0 : compareTarget.first.value / compareTarget.second.value;
 
+  const ref = useEcharts<HTMLDivElement>({
+    grid: {
+      left: 32,
+      top: 32,
+      right: 0,
+      bottom: 8
+    },
+    legend: {},
+    tooltip: {
+      show: true,
+      trigger: 'axis',
+      valueFormatter: (value: number) => {
+        return `${value.toFixed(6)} ${getSpeedUnit(unitSystem)}`;
+      }
+    },
+    yAxis: {
+      type: 'value',
+      min: 0,
+      max: (value: { max: number; }) => { return value.max * 1.05; },
+      axisLabel: {
+        formatter: (value: number) => {
+          return value.toFixed(0);
+        },
+      },
+    },
+    series: [
+      {
+        name: compareTarget.first.title,
+        data: data.map(v => [v.index, v[compareTarget.first.dataKey as "speed"]]),
+        type: 'line',
+        areaStyle: {},
+        symbolSize: 0,
+      },
+      {
+        name: compareTarget.second.title,
+        data: data.map(v => [v.index, v[compareTarget.second.dataKey as "speed"]]),
+        type: 'line',
+        areaStyle: {},
+        symbolSize: 0,
+      },
+    ]
+  });
   return <div className="fill-parent flex-column" style={{ padding }}>
     <div className="flex-row flex-space-between" style={{ height: columnHeight, alignItems: "stretch", gap: 16, padding: "0 0 16px" }}>
       <SimpleCard title={compareTarget.first.title} content={compareTarget.first.value.toFixed(1)} tooltip={compareTarget.first.tooltip} onClick={onClick} />
       <SimpleCard title={compareTarget.second.title} content={compareTarget.second.value.toFixed(1)} tooltip={compareTarget.second.tooltip} onClick={onClick} />
       <SimpleCard title="Ratio" content={`${(ratio * 100).toFixed(1)} %`} tooltip={`${compareTarget.first.title} / ${compareTarget.second.title}`} onClick={onClick} />
     </div>
-    <div className="flex-child" style={{ overflow: "clip" }}>
-      <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
-        <AreaChart data={data}
-          margin={{ top: 4, right: 2, left: 0, bottom: 8 }}>
-          <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} hide />
-          <YAxis tickFormatter={value => value.toFixed(1)} />
-          <CartesianGrid strokeDasharray="3 3" />
-          <Tooltip formatter={(value) => `${(value as number).toFixed(1)} ${getSpeedUnit(unitSystem)}`}
-            contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-          <Legend />
-          <Area type="monotone" dataKey={compareTarget.second.dataKey} stroke="var(--md-sys-color-primary)" fillOpacity={0.2} fill="var(--md-sys-color-primary)" isAnimationActive={false} />
-          <Area type="monotone" dataKey={compareTarget.first.dataKey} stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" isAnimationActive={false} />
-        </AreaChart>
-      </ResponsiveContainer>
+    <div ref={ref} className="flex-child" style={{ overflow: "clip" }}>
     </div>
   </div>;
 }

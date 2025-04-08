@@ -1,6 +1,4 @@
 import React from "react";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { AxisDomain } from "recharts/types/util/types";
 import { Card, Select, SelectOption } from "rmcw/dist/components3";
 
 import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
@@ -9,6 +7,7 @@ import CircularBuffer from "../common/CircularBuffer";
 import { MessageData } from "../common/MessageData";
 import { getSpeedUnit, msTo } from "../common/UnitConvert";
 import { MotionOption, ReactWindowContext } from "./common/Context";
+import useEcharts from "./common/Echarts";
 
 export default function Motion() {
   const { padding, motionOption, setMotionOption } = React.useContext(ReactWindowContext);
@@ -23,7 +22,16 @@ export default function Motion() {
       <SimpleCard title="Axis X" data={x} type={motionOption} />
       <SimpleCard title="Axis Y" data={y} type={motionOption} />
       <SimpleCard title="Axis Z" data={z} type={motionOption} />
-      <SimpleCard title="Scalar" data={scalar} type={motionOption} domain={(([, max]) => [0, max * 1.05])} />
+      <SimpleCard title="Scalar" data={scalar} type={motionOption} yAxis={{
+        type: 'value',
+        min: 0,
+        max: (value: { max: number; }) => { return value.max * 1.05; },
+        axisLabel: {
+          formatter: (value: number) => {
+            return value.toFixed(0);
+          },
+        },
+      }} />
     </div>
   </div>;
 }
@@ -58,41 +66,58 @@ function getTargetData(messageData: CircularBuffer<MessageData>, type: MotionOpt
   return { x, y, z, scalar };
 }
 
-const defaultDomain: AxisDomain = ([min, max]: [number, number]) => {
-  const range = Math.max(Math.abs(min), Math.abs(max));
-  return [-range, range];
-};
-
-function SimpleCard({ title, data, type, domain }: { title: string, data: DataType[], type: MotionOption, domain?: AxisDomain, }) {
+function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataType[], type: MotionOption, yAxis?: unknown, }) {
   const value = data.length === 0 ? 0 : data[data.length - 1].value;
   const { unitSystem } = React.useContext(ReactAppContext);
 
   function formatter(value: number) {
     switch (type) {
       case MotionOption.Acceleration:
-        return `${value.toFixed(1)} m/s²`;
+        return `${value.toFixed(3)} m/s²`;
       case MotionOption.Velocity:
-        return `${msTo(value, unitSystem).toFixed(1)} ${getSpeedUnit(unitSystem)}`;
+        return `${msTo(value, unitSystem).toFixed(3)} ${getSpeedUnit(unitSystem)}`;
       case MotionOption.AngularVelocity:
       case MotionOption.AngularVelocityGlobal:
         return `${value.toFixed(3)} RPS`;
       case MotionOption.Position:
-        return `${value.toFixed(1)} m`;
+        return `${value.toFixed(3)} m`;
     }
   }
+  yAxis ??= {
+    type: 'value',
+    min: (value: { min: number; max: number; }) => { return value.min; },
+    max: (value: { min: number; max: number; }) => { return value.max; },
+    axisLabel: {
+      formatter: (value: number) => {
+        return value.toFixed(1);
+      },
+    },
+  };
+  const ref = useEcharts<HTMLDivElement>({
+    grid: {
+      left: 32,
+      top: 8,
+      right: 0,
+      bottom: 8
+    },
+    tooltip: {
+      show: true,
+      trigger: 'axis',
+      valueFormatter: formatter
+    },
+    yAxis,
+    series: [
+      {
+        data: data.map(v => [v.index, v.value]),
+        type: 'line',
+        areaStyle: {},
+        symbolSize: 0,
+      },
+    ],
+  });
 
   return <Card className="flex-child flex-column" style={{ alignItems: "stretch", padding: "8px 16px" }}>
-    <div className="flex-child" style={{ overflow: "clip" }}>
-      <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
-        <AreaChart data={data} margin={{ top: 5, right: 0, left: -42, bottom: -16 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="index" type="number" tick={false} domain={['dataMin', 'dataMax']} />
-          <YAxis dataKey="value" domain={domain ?? defaultDomain} ticks={[0]} />
-          <Tooltip formatter={(value) => { return formatter(value as number); }}
-            contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-          <Area type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" isAnimationActive={false} />
-        </AreaChart>
-      </ResponsiveContainer>
+    <div ref={ref} className="flex-child" style={{ overflow: "clip" }}>
     </div>
     <div className="flex-row flex-space-between">
       <span>{title}</span>{formatter(value)}

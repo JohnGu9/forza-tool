@@ -1,5 +1,4 @@
 import React from "react";
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ListItem, Select, SelectOption, Switch } from "rmcw/dist/components3";
 
 import { ReactStreamAppContext } from "../common/AppContext";
@@ -7,6 +6,7 @@ import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
 import CircularBuffer from "../common/CircularBuffer";
 import { DataType, dummyMessageData, getValidKeys, MessageData, MessageDataKey } from "../common/MessageData";
 import { ReactWindowContext } from "./common/Context";
+import useEcharts from "./common/Echarts";
 
 export default function Detail() {
   const { messageData } = React.useContext(ReactStreamAppContext);
@@ -18,25 +18,31 @@ export default function Detail() {
   const currentDataType = lastData ? getDataTypeName(lastData.dataType) : "Unknown Data Type";
   const validKeys = getValidKeys(lastData?.dataType);
   const displayText = React.useMemo(() => capitalizeFirstLetter(detailOption), [detailOption]);
+  const ref = useEcharts<HTMLDivElement>({
+    grid: {
+      left: 32,
+      top: 32,
+      right: 0,
+      bottom: 32
+    },
+    tooltip: {
+      trigger: 'axis',
+    },
+    series: [
+      {
+        data: data.map(v => [v.index, v.value]),
+        type: 'line',
+        symbolSize: 0,
+      }
+    ]
+  });
   return <div className="fill-parent flex-column">
     <div className="flex-child flex-column" style={{ padding }}>
       <Select label={currentDataType} displayText={displayText}>
         {keys.map(key => <SelectOption key={key} headline={key} disabled={!validKeys.has(key)} selected={detailOption === key} onClick={() => setDetailOption(key)} style={{ textTransform: "capitalize" }} />)}
       </Select>
       <div style={{ height: 16 }} aria-hidden />
-      <div className="flex-child" style={{ overflow: "clip" }}>
-        <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
-          <LineChart data={data}
-            margin={{ top: 16, right: 2, left: 0, bottom: 24 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} hide />
-            <YAxis dataKey="value" type="number" domain={['dataMin', 'dataMax']} tickFormatter={value => value.toFixed(1)} />
-            <Tooltip formatter={(value) => (value as number).toFixed(6)}
-              contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-            <Line type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" dot={false} animationDuration={350} strokeLinecap="round" />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      <div ref={ref} className="flex-child" style={{ width: "100%", overflow: "clip" }} />
     </div>
     <ListItem type="button" end={<Switch selected={showDetailDelta} />} onClick={() => setShowDetailDelta(!showDetailDelta)}>Show Delta</ListItem>
     <div style={{ height: 8 }} aria-hidden />

@@ -2,21 +2,16 @@ import "./Tachometer.scss";
 
 import { FadeThrough, SharedAxis } from "material-design-transform";
 import React from "react";
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, TooltipProps, XAxis, YAxis } from "recharts";
-import { NameType, Payload, ValueType } from "recharts/types/component/DefaultTooltipContent";
-import { Card, Icon, Ripple, Typography } from "rmcw/dist/components3";
+import { Card, Ripple, Typography } from "rmcw/dist/components3";
 
 import { AppWindowMode, ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
 import { dummyMessageData, isValidProp, MessageData } from "../common/MessageData";
 import { ConsumptionEstimation, MessageDataAnalysis } from "../common/MessageDataAnalysis";
 import { ReactWindowContext } from "./common/Context";
+import useEcharts from "./common/Echarts";
 
-const startAngle = 225;
-const endAngle = -45;
 const columnHeight = 150;
-
-const dividerColor = "var(--md-divider-color, var(--md-sys-color-outline-variant, #cac4d0))";
 
 export default function Tachometer() {
   const { padding } = React.useContext(ReactWindowContext);
@@ -27,9 +22,8 @@ export default function Tachometer() {
   const switchDisplay = React.useCallback(() => setShowPowerLevel(value => !value), []);
   const lastData = messageData.getLast() ?? { currentEngineRpm: 0, engineMaxRpm: 6000, power: 0, gear: 0, accelerator: 0 };
   const { lower, upper } = getRange(messageDataAnalysis);
-  const markData = React.useMemo(() => getMarkData(lastData.engineMaxRpm, { lower, upper }), [lastData.engineMaxRpm, lower, upper]);
   const powerLevel = messageDataAnalysis.maxPower.value === 0 ? 0 : Math.max(lastData.power / messageDataAnalysis.maxPower.value, 0);
-  const isRange = lastData.currentEngineRpm >= lower && lastData.currentEngineRpm < upper;
+  const isInRange = lastData.currentEngineRpm >= lower && lastData.currentEngineRpm < upper;
   const lowPowerLevel = powerLevel < 0.9 && messageDataAnalysis.isFullAcceleratorForAWhile;
   function getColors() {
     if (lowPowerLevel) {
@@ -39,7 +33,7 @@ export default function Tachometer() {
         backgroundColor: "var(--md-sys-color-error)",
       };
     }
-    if (isRange) {
+    if (isInRange) {
       if (powerLevel > 0.99) {
         return {
           color: "var(--md-sys-color-background)",
@@ -60,33 +54,138 @@ export default function Tachometer() {
     };
   }
   const colors = getColors();
+
+  function getAngle(startAngle: number, endAngle: number, r: number) {
+    return startAngle * (1 - r) + endAngle * r;
+  }
+
+  const ref = useEcharts<HTMLDivElement>((element) => {
+    const style = getComputedStyle(element);
+    return {
+      xAxis: null,
+      yAxis: null,
+      tooltip: {},
+      angleAxis: [
+        {
+          polarIndex: 0,
+          startAngle: 225,
+          endAngle: -45,
+          max: lastData.engineMaxRpm,
+          axisLabel: {
+            formatter: (value: number) => {
+              return value.toFixed(0);
+            }
+          },
+        },
+        {
+          polarIndex: 1,
+          startAngle: 315,
+          endAngle: 225,
+          max: 1,
+          axisLabel: {
+            customValues: [0.2, 0.4, 0.6, 0.8],
+            formatter: (value: number) => {
+              return `${(value * 100).toFixed(0)}%`;
+            }
+          },
+        },
+      ],
+      radiusAxis: [
+        {
+          polarIndex: 0,
+          type: 'category',
+          data: ['RPM',],
+          axisLabel: {
+            show: false,
+          },
+        },
+        {
+          polarIndex: 1,
+          type: 'category',
+          data: ['Power Level',],
+          axisLabel: {
+            show: false,
+          },
+        },
+      ],
+      polar: [
+        {
+          polarIndex: 0,
+          radius: ['75%', '90%']
+        },
+        {
+          polarIndex: 1,
+          radius: ['75%', '90%']
+        },
+      ],
+      series: [
+        {
+          type: 'bar',
+          polarIndex: 0,
+          data: [{
+            value: lastData.currentEngineRpm,
+            itemStyle: {
+              color: style.getPropertyValue('--md-sys-color-primary'),
+              borderColor: style.getPropertyValue('--md-sys-color-tertiary'),
+              borderWidth: isInRange ? 8 : 0,
+              borderRadius: "2%",
+            },
+          }],
+          coordinateSystem: 'polar'
+        },
+        {
+          type: 'bar',
+          polarIndex: 1,
+          data: [
+            {
+              value: powerLevel,
+              itemStyle: {
+                color: style.getPropertyValue('--md-sys-color-tertiary'),
+                borderColor: style.getPropertyValue('--md-sys-color-primary'),
+                borderWidth: isInRange ? 8 : 0,
+                borderRadius: "2%",
+              },
+            },
+          ],
+          label: {
+            show: true,
+            position: 'middle',
+            rotate: 0,
+            formatter: (params: { value: number; }) => {
+              return `${(params.value * 100).toFixed(1)}%`;
+            },
+          },
+          coordinateSystem: 'polar'
+        },
+        {
+          type: 'pie',
+          z: 3,
+          radius: ['75%', '90%'],
+          center: ['50%', '50%'],
+          // adjust the start and end angle
+          startAngle: getAngle(225, -45, lower / lastData.engineMaxRpm),
+          endAngle: getAngle(225, -45, upper / lastData.engineMaxRpm),
+          data: [
+            {
+              name: 'High Power RPM Range',
+              value: 1,
+              itemStyle: {
+                color: 'rgba(0, 0, 0, 0)',
+                borderColor: style.getPropertyValue('--md-sys-color-tertiary'),
+                borderWidth: 8,
+                borderRadius: "2%",
+              }
+            },
+          ]
+        },
+      ]
+    };
+  });
   return <div className="fill-parent flex-column" style={{ padding, gap: 16 }}>
     <RpmIndicatorLights lower={lower} upper={upper} current={lastData.currentEngineRpm} />
-    <div draggable className="flex-child" style={{ position: "relative" }}>
-      <GearMonitor lowPowerLevel={lowPowerLevel} powerLevel={powerLevel} gear={lastData.gear} colors={colors} />
-      <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
-        <PieChart margin={{ bottom: -48 }}>
-          {showMore && !showPowerLevel ? <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="60%" outerRadius="65%" startAngle={startAngle} endAngle={endAngle}
-            stroke={dividerColor}
-            data={[{ name: "PowerLevel", value: powerLevel }, { name: "RemainingPowerCapacity", value: 1 - powerLevel }]} >
-            <Cell fill={getPowerLevelProgressColor(powerLevel)} />
-            <Cell fill={dividerColor} />
-          </Pie> : undefined}
-          <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="70%" outerRadius="80%" fill="var(--md-sys-color-primary)" startAngle={startAngle} endAngle={endAngle} paddingAngle={0.5}
-            stroke={dividerColor}
-            data={markData}>
-            {markData.map((data, index) =>
-              <Cell key={index} fill={data.mark ? "var(--md-sys-color-tertiary)" : "var(--md-sys-color-primary)"} />)}
-          </Pie>
-          <Pie isAnimationActive={false} dataKey="value" nameKey="name" innerRadius="85%" outerRadius="90%" startAngle={startAngle} endAngle={endAngle}
-            stroke={dividerColor}
-            data={[{ name: "CurrentEngineRpm", value: lastData.currentEngineRpm }, { name: "RemainingRpmCapacity", value: lastData.engineMaxRpm - lastData.currentEngineRpm }]} >
-            <Cell fill={colors.graphColor} />
-            <Cell fill={dividerColor} />
-          </Pie>
-          <Tooltip content={<CustomTooltip />} />
-        </PieChart>
-      </ResponsiveContainer>
+    <div className="flex-child" style={{ position: "relative" }}>
+      <div ref={ref} className="fill-parent" style={{ position: "absolute" }} />
+      <GearMonitor gear={lastData.gear} colors={colors} />
     </div>
     <SharedAxis keyId={showPowerLevel ? 1 : 0}
       className="flex-row flex-space-between" style={{ height: columnHeight, alignItems: "stretch", gap: 16 }}>
@@ -101,109 +200,25 @@ export default function Tachometer() {
   </div>;
 }
 
-function GearMonitor({ lowPowerLevel, powerLevel, gear, colors }: { lowPowerLevel: boolean; powerLevel: number; gear: number; colors: { color?: string, backgroundColor?: string; }; }) {
-  return <div className="tachometer-background flex-column flex-space-between">
-    <div style={{ height: 48 + 64 }} aria-hidden />
+function GearMonitor({ gear, colors }: { gear: number; colors: { color?: string, backgroundColor?: string; }; }) {
+  function gearToString(gear: number) {
+    if (gear === 0) {
+      return "R";
+    }
+    return gear;
+  }
+  return <div className="tachometer-background flex-column flex-space-between" style={{ justifyContent: "center" }}>
     <FadeThrough keyId={gear} transitionStyle="M2" className="flex-column flex-space-evenly tachometer-gear-position">
       <Card className="tachometer-round-shape" style={{ height: "24vmin", width: "24vmin" }}>
         <div className="fill-parent flex-column flex-center tachometer-background-transition tachometer-round-shape"
           style={{ backgroundColor: colors.backgroundColor }}>
           <span title="Gear" className="tachometer-gear" style={{ color: colors.color }}>
-            {gear}
+            {gearToString(gear)}
           </span>
         </div>
       </Card>
     </FadeThrough>
-    <div className="flex-row" style={{ paddingBottom: 16 + 48, gap: 32 }}>
-      <Card className="tachometer-round-shape tachometer-indication-light">
-        <span className="fill-parent flex-row flex-center tachometer-round-shape tachometer-background-transition" style={{
-          backgroundColor: powerLevel > 0.99 ? "var(--md-sys-color-tertiary)" : undefined,
-          color: powerLevel > 0.99 ? "var(--md-sys-color-on-tertiary)" : undefined,
-        }} title="Over 99% Power Level" >
-          <Icon>bolt</Icon>
-        </span>
-      </Card>
-      <Card className="tachometer-round-shape tachometer-indication-light">
-        <span className="fill-parent flex-row flex-center tachometer-round-shape tachometer-background-transition" style={{
-          backgroundColor: lowPowerLevel ? "var(--md-sys-color-error)" : undefined,
-          color: lowPowerLevel ? "var(--md-sys-color-on-error)" : undefined,
-          transition: "background 100ms",
-        }} title="Below 90% Power Level" >
-          <Icon>keyboard_double_arrow_down</Icon>
-        </span>
-      </Card>
-    </div>
   </div>;
-}
-
-function getPowerLevelProgressColor(powerLevel: number) {
-  if (powerLevel > 0.99) {
-    return "var(--md-sys-color-tertiary)";
-  }
-  if (powerLevel < 0.9) {
-    return "var(--md-sys-color-error)";
-  }
-  return "var(--md-sys-color-primary)";
-}
-
-function CustomTooltip({ active, payload }: TooltipProps<ValueType, NameType>) {
-  if (active && payload && payload.length) {
-    function getText(payload: Payload<ValueType, NameType>[]) {
-      switch (payload[0].name) {
-        case "CurrentEngineRpm":
-          return `${payload[0].name}: ${(payload[0].value as number).toFixed(1)}`;
-        case "PowerLevel":
-          return `${payload[0].name}: ${(payload[0].value as number * 100).toFixed(1)}%`;
-        default:
-          return payload[0].name;
-      }
-    }
-    return <Card style={{ padding: "8px 16px" }}>
-      <p >{getText(payload)}</p>
-    </Card>;
-  }
-  return null;
-};
-
-function getMarkData(max: number, range: { lower: number, upper: number; }) {
-  const res: { name: string; value: number; mark: boolean; }[] = [];
-  function addSection(start: number, end: number, mark = false) {
-    res.push({ name: `RPM: ${start.toFixed(1)} - ${end.toFixed(1)}`, value: (end - start), mark });
-  }
-
-  const beforeLower = Math.floor(range.lower / 1000);
-  for (let i = 0; i < beforeLower; i++) {
-    addSection(i * 1000, (i + 1) * 1000);
-  }
-  const beforeLowerMod = range.lower % 1000;
-  addSection(beforeLower * 1000, beforeLower * 1000 + beforeLowerMod);
-
-  const afterUpper = Math.floor(range.upper / 1000);
-  const afterUpperMod = range.upper % 1000;
-
-  if (afterUpper !== beforeLower) {
-    addSection(beforeLower * 1000 + beforeLowerMod, (beforeLower + 1) * 1000, true);
-    for (let i = beforeLower + 1; i < afterUpper; i++) {
-      addSection(i * 1000, (i + 1) * 1000, true);
-    }
-    addSection(afterUpper * 1000, afterUpper * 1000 + afterUpperMod, true);
-  } else { // afterUpper === beforeLower
-    addSection(beforeLower * 1000 + beforeLowerMod, afterUpper * 1000 + afterUpperMod, true);
-  }
-
-  if ((afterUpper + 1) * 1000 < max) {
-    addSection(afterUpper * 1000 + afterUpperMod, (afterUpper + 1) * 1000);
-    const rest = Math.floor(max / 1000);
-    for (let i = afterUpper + 1; i < rest; i++) {
-      addSection(i * 1000, (i + 1) * 1000);
-    }
-    const restMod = max % 1000;
-    addSection(rest * 1000, rest * 1000 + restMod);
-  } else {
-    addSection(afterUpper * 1000 + afterUpperMod, max);
-  }
-
-  return res;
 }
 
 function getRange(messageDataAnalysis: MessageDataAnalysis) {
@@ -305,28 +320,54 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
   });
   function getColor(value: { "power level": number; }) {
     if (value["power level"] >= 97) {
-      return "var(--md-sys-color-tertiary)";
+      return "--md-sys-color-tertiary";
     };
     if (value["power level"] >= 90) {
-      return "var(--md-sys-color-primary)";
+      return "--md-sys-color-primary";
     };
-    return "var(--md-sys-color-error)";
+    return "--md-sys-color-error";
   }
+  const ref = useEcharts<HTMLDivElement>((element) => {
+    const style = getComputedStyle(element);
+    return {
+      grid: {
+        left: 32,
+        top: 8,
+        right: 0,
+        bottom: 8
+      },
+      tooltip: {
+        show: true,
+        trigger: 'axis',
+        formatter: (params: { value: [number, number]; } | { value: [number, number]; }[]) => {
+          if (Array.isArray(params)) {
+            params = params[0];
+          }
+          return `${params.value[1].toFixed(1)}%`;
+        },
+      },
+      yAxis: {
+        show: true,
+        type: "value",
+        min: 0,
+        max: 100,
+      },
+      series: [
+        {
+          type: 'bar',
+          data: data.map((item) => {
+            return {
+              value: [item.index, item["power level"]],
+              itemStyle: { color: style.getPropertyValue(getColor(item)) },
+            };
+          }),
+        }
+      ]
+    };
+  });
   return <Card className="flex-child">
     <Ripple className="fill-parent fit-elevated-card-container-shape" style={{ padding: 8 }} onClick={onClick}>
-      <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
-        <BarChart title="PowerLevel" data={data} margin={{ left: -56, bottom: -24, top: 4, right: 4 }}>
-          <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
-          <YAxis dataKey="value" type="number" yAxisId={1} domain={[0, 100]} tick={false} allowDataOverflow={false} />
-          <CartesianGrid strokeDasharray="3 3" />
-          <Tooltip formatter={(value) => { return (value as number).toFixed(1); }}
-            contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-          <Bar yAxisId={1} dataKey="power level" fill="var(--md-sys-color-tertiary)" unit="%" isAnimationActive={false} >
-            {data.map((value) =>
-              <Cell key={value.index} fill={getColor(value)} />)}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      <div ref={ref} className="fill-parent" />
     </Ripple>
   </Card>;
 }

@@ -1,6 +1,5 @@
 import { SharedAxis } from "material-design-transform";
 import React from "react";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, ReferenceDot, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, LinearProgress, Ripple, Typography } from "rmcw/dist/components3";
 
 import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
@@ -9,9 +8,9 @@ import { dummyMessageData, MessageData } from "../common/MessageData";
 import { MessageDataAnalysis } from "../common/MessageDataAnalysis";
 import { getPowerUnit, getTorqueUnit, nmTo, UnitSystem, wTo } from "../common/UnitConvert";
 import { ReactWindowContext } from "./common/Context";
+import useEcharts from "./common/Echarts";
 
 const columnHeight = 150;
-const chartsPadding = 0;
 
 export default function Engine() {
   const { unitSystem, setUnitSystem } = React.useContext(ReactAppContext);
@@ -39,15 +38,17 @@ export default function Engine() {
   const powerUnitName = getPowerUnit(unitSystem);
   return <div className="fill-parent flex-column" style={{ padding, alignItems: "stretch" }}>
     <div className="flex-row flex-space-between" style={{ height: columnHeight, gap: 8, padding: "0 0 16px" }}>
-      <SimpleCard title="RPM" content={lastMessageData.currentEngineRpm.toFixed(0)}
+      <SimpleCard title="RPM"
+        content={lastMessageData.currentEngineRpm.toFixed(0)}
         tooltip="unit: Rev/Min"
         onClick={changeUnitSystem} />
       *
-      <SimpleCard title="Torque" content={nmTo(Math.max(lastMessageData.torque, 0), unitSystem).toFixed(1)}
+      <SimpleCard title={`Torque (${getTorqueUnit(unitSystem)})`}
+        content={nmTo(Math.max(lastMessageData.torque, 0), unitSystem).toFixed(1)}
         tooltip={`unit: ${getTorqueUnit(unitSystem)}`}
         onClick={changeUnitSystem} />
       =
-      <SimpleCard title="Power" content={wTo(Math.max(lastMessageData.power, 0), unitSystem).toFixed(1)}
+      <SimpleCard title={`Power (${powerUnitName})`} content={wTo(Math.max(lastMessageData.power, 0), unitSystem).toFixed(1)}
         tooltip={`unit: ${powerUnitName}`}
         onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)} />
     </div>
@@ -78,55 +79,135 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
   function getPowerLevel(power: number) {
     return maxPower === 0 ? 0 : power / maxPower;
   }
-  const powerLevel = getPowerLevel(currentPower);
   const sliceLength = Math.round(-messageData.getElementCount() / 4);
   const lastData = messageData.slice(sliceLength);
   const powerDiff = messageDataAnalysis.powerDiff.slice(sliceLength);
 
-  return <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
-    <AreaChart title="PowerCurve" data={data}
-      margin={{ top: 0, right: chartsPadding + 2, left: chartsPadding - 20 }}>
-      <XAxis xAxisId={0} dataKey="rpm" type="number" domain={[lastMessageData.engineIdleRpm, lastMessageData.engineMaxRpm]} allowDataOverflow={false}
-        ticks={getTicks(lastMessageData.engineMaxRpm, lastMessageData.engineIdleRpm, 1000)} />
-      <YAxis yAxisId={1} type="number" domain={([, max]) => { return [0, max * 1.05]; }} hide />
-      <YAxis yAxisId={0} type="number" domain={([, max]) => { return [0, max * 1.05]; }}
-        ticks={getTicks(maxPower * 1.05, 0, 50)} />
-      <CartesianGrid strokeDasharray="3 3" />
-      <Tooltip labelFormatter={label => (label as number).toFixed(1)}
-        contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }}
-        formatter={(value, name) => {
-          switch (name) {
-            case "power":
-              return `${(value as number).toFixed(1)} ${getPowerUnit(unitSystem)} (${((value as number) / maxPower * 100).toFixed(1)}%)`;
-            default:
-              return `${(value as number).toFixed(1)} ${getTorqueUnit(unitSystem)}`;
-          }
-        }} />
-      <Legend />
-      <Area yAxisId={1} type="monotone" dataKey="torque" stroke="var(--md-sys-color-primary)" fillOpacity={0.2} fill="var(--md-sys-color-primary)" isAnimationActive={false} />
-      <Area yAxisId={0} type="monotone" dataKey="power" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" isAnimationActive={false} />
-      <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeDasharray="3 3" y={maxPower} label={maxPower.toFixed(1)} ifOverflow="visible" isFront={true} />
-      <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeDasharray="3 3" x={messageDataAnalysis.maxPower.rpm} label={messageDataAnalysis.maxPower.rpm.toFixed(1)} ifOverflow="visible" isFront={true} />
-      <ReferenceLine stroke="var(--md-sys-color-tertiary)" strokeOpacity={powerLevel} y={currentPower} ifOverflow="visible" isFront={true} />
-      {lastData.map((data, index) => {
-        const diff = powerDiff[index];
-        const isValidData = (diff < 0.998 || diff > 1.002);
-        const power = wTo(Math.max(data.power, 0), unitSystem);
-        return <ReferenceDot key={index} stroke="none" fill={isValidData ? "var(--md-sys-color-error)" : mergeColor("#82ca9d", "#ffffff", getPowerLevel(power))} fillOpacity={Math.pow((index + 1) / lastData.length, 3)} yAxisId={0} xAxisId={0} r={3} x={data.currentEngineRpm} y={power} ifOverflow="visible" isFront={true} />;
-      })}
-    </AreaChart>
-  </ResponsiveContainer>;
+  const ref = useEcharts<HTMLDivElement>((element) => {
+    const style = getComputedStyle(element);
+    return {
+      grid: {
+        left: 64,
+        top: 32,
+        right: 52,
+        bottom: 32
+      },
+      tooltip: {
+        show: true,
+        trigger: 'axis',
+        valueFormatter: (value: number) => {
+          return value.toFixed(3);
+        }
+      },
+      xAxis: [
+        {
+          show: true,
+          type: "value",
+          min: lastMessageData.engineIdleRpm,
+          max: lastMessageData.engineMaxRpm,
+          axisLabel: {
+            formatter: (value: number) => {
+              return value.toFixed(0);
+            },
+          },
+        },
+      ],
+      yAxis: [
+        {
+          show: true,
+          type: "value",
+          min: 0,
+          max: (value: { max: number; }) => { return value.max * 1.05; },
+          axisLabel: {
+            formatter: (value: number) => {
+              return `${value.toFixed(0)} ${getTorqueUnit(unitSystem)}`;
+            },
+          },
+        },
+        {
+          show: true,
+          type: "value",
+          min: 0,
+          max: (value: { max: number; }) => { return value.max * 1.05; },
+          axisLabel: {
+            formatter: (value: number) => {
+              return `${value.toFixed(0)} ${getPowerUnit(unitSystem)}`;
+            },
+          },
+        }
+      ],
+      series: [
+        {
+          xAxisIndex: 0,
+          yAxisIndex: 0,
+          name: "Torque",
+          data: data.map(v => [v.rpm, v.torque]),
+          type: 'line',
+          areaStyle: {},
+          symbolSize: 0,
+          smooth: true
+        },
+        {
+          xAxisIndex: 0,
+          yAxisIndex: 1,
+          name: "Power",
+          data: data.map(v => [v.rpm, v.power]),
+          type: 'line',
+          areaStyle: {},
+          symbolSize: 0,
+          smooth: true,
+          markPoint: {
+            symbol: 'circle',
+            data: lastData.map((v, index) => {
+              const diff = powerDiff[index];
+              const power = wTo(v.power, unitSystem);
+              return {
+                coord: [v.currentEngineRpm, power],
+                symbolSize: Math.pow((index + 1) / lastData.length, 3) * 8,
+                itemStyle: {
+                  color: diff > 0.998 && diff < 1.002 ?
+                    mergeColor(style.getPropertyValue('--md-sys-color-tertiary'), "#ffffff", getPowerLevel(power)) :
+                    style.getPropertyValue('--md-sys-color-error')
+                },
+              };
+            })
+          },
+          markLine: {
+            data: [
+              {
+                name: "Current",
+                yAxis: currentPower,
+                label: {
+                  formatter: '{b}',
+                }
+              },
+              {
+                name: "Max Power",
+                xAxis: messageDataAnalysis.maxPower.rpm,
+                label: {
+                  formatter: '{b}',
+                }
+              }
+            ]
+          },
+        },
+      ],
+    };
+  });
+  return <div ref={ref} className="fill-parent" />;
+}
+
+function colorToNumbers(color: string) {
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
+  return { r, g, b };
 }
 
 // color: string (hex format like #ffffff)
 // factor: number (0~1, 0 mean 1000% color0, 1 mean 100% color1)
 function mergeColor(color0: string, color1: string, factor: number) {
-  function colorToNumbers(color: string) {
-    const r = parseInt(color.slice(1, 3), 16);
-    const g = parseInt(color.slice(3, 5), 16);
-    const b = parseInt(color.slice(5, 7), 16);
-    return { r, g, b };
-  }
+
   const color0Value = colorToNumbers(color0);
   const color1Value = colorToNumbers(color1);
   const r = Math.round(color0Value.r * (1 - factor) + color1Value.r * factor);
@@ -141,31 +222,55 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
   });
   function getColor(value: { "power level": number; }) {
     if (value["power level"] >= 97) {
-      return "var(--md-sys-color-tertiary)";
+      return "--md-sys-color-tertiary";
     }
     if (value["power level"] >= 90) {
-      return "var(--md-sys-color-primary)";
+      return "--md-sys-color-primary";
     }
-    return "var(--md-sys-color-error)";
+    return "--md-sys-color-error";
   }
-  return <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
-    <BarChart title="PowerLevel" data={data}
-      margin={{ top: 0, right: chartsPadding + 2, left: chartsPadding - 12 }}>
-      <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
-      <YAxis yAxisId={1} type="number" domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]} allowDataOverflow={false}
-        tickFormatter={(value) => {
-          return `${value}%`;
-        }} />
-      <CartesianGrid strokeDasharray="3 3" />
-      <Tooltip formatter={(value) => { return (value as number).toFixed(1); }}
-        contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-      <Legend />
-      <Bar yAxisId={1} dataKey="power level" fill="var(--md-sys-color-tertiary)" unit="%" isAnimationActive={false} >
-        {data.map((value) =>
-          <Cell key={value.index} fill={getColor(value)} />)}
-      </Bar>
-    </BarChart>
-  </ResponsiveContainer>;
+  const ref = useEcharts<HTMLDivElement>((element) => {
+    const style = getComputedStyle(element);
+    return {
+      grid: {
+        left: 42,
+        top: 8,
+        right: 0,
+        bottom: 8
+      },
+      tooltip: {
+        show: true,
+        trigger: 'axis',
+        valueFormatter: (value: number) => {
+          return `${value.toFixed(3)}%`;
+        },
+      },
+      yAxis: {
+        type: 'value',
+        min: 0,
+        max: 100,
+        axisLabel: {
+          formatter: (value: number) => {
+            return `${value.toFixed(0)}%`;
+          },
+        },
+      },
+      series: [
+        {
+          data: data.map(v => {
+            return {
+              value: [v.index, v["power level"]],
+              itemStyle: {
+                color: style.getPropertyValue(getColor(v))
+              },
+            };
+          }),
+          type: 'bar',
+        },
+      ],
+    };
+  });
+  return <div ref={ref} className="fill-parent" />;
 }
 
 function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
@@ -204,16 +309,6 @@ function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
     reduceItems.push(res[endIndex]);
   }
   return reduceItems;
-}
-
-function getTicks(max: number, min: number, gap: number) {
-  const sections = max / gap;
-  const startSections = min / gap;
-  const ticks = [];
-  for (let i = Math.ceil(startSections); i <= sections; i++) {
-    ticks.push(i * gap);
-  }
-  return ticks;
 }
 
 function SimpleCard({ title, content, tooltip, onClick }: { title: string, content: string; tooltip: string; onClick: () => unknown; }) {

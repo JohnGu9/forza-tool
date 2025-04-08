@@ -1,6 +1,5 @@
 import { SharedAxis } from "material-design-transform";
 import React from "react";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, LinearProgress, Ripple } from "rmcw/dist/components3";
 
 import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
@@ -8,6 +7,7 @@ import CircularBuffer from "../common/CircularBuffer";
 import { MessageData } from "../common/MessageData";
 import { getPowerUnit, UnitSystem, wTo } from "../common/UnitConvert";
 import { ReactWindowContext } from "./common/Context";
+import useEcharts from "./common/Echarts";
 
 export default function Control() {
   const { padding } = React.useContext(ReactWindowContext);
@@ -53,21 +53,41 @@ function getTargetData(messageData: CircularBuffer<MessageData>, unitSystem: Uni
 
 function SimpleCard({ title, data, onClick }: { title: string, data: DataType[]; onClick: () => unknown; }) {
   const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1].value);
+  const ref = useEcharts<HTMLDivElement>({
+    grid: {
+      left: 32,
+      top: 8,
+      right: 0,
+      bottom: 8
+    },
+    yAxis: {
+      type: 'value',
+      min: 0,
+      max: 100,
+    },
+    tooltip: {
+      show: true,
+      trigger: 'axis',
+      formatter: (params: { value: [number, number]; } | { value: [number, number]; }[]) => {
+        if (Array.isArray(params)) {
+          params = params[0];
+        }
+        return `${params.value[1].toFixed(1)}%`;
+      },
+    },
+    series: [
+      {
+        data: data.map(v => [v.index, v.value]),
+        type: 'line',
+        areaStyle: {},
+        showAllSymbol: true,
+        symbolSize: 0,
+      }
+    ]
+  });
   return <Card className="flex-child" style={{ flex: "2 2" }}>
     <Ripple className="fill-parent flex-column flex-space-evenly fit-elevated-card-container-shape" style={{ alignItems: "stretch", padding: 16 }} onClick={onClick}>
-      <div className="flex-child" style={{ overflow: "clip" }}>
-        <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
-          <AreaChart data={data}
-            margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
-            <YAxis domain={[0, 100]} ticks={[0, 50, 100]} />
-            <Tooltip formatter={(value) => { return `${(value as number).toFixed(1)}%`; }}
-              contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-            <Area type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" isAnimationActive={false} />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
+      <div ref={ref} className="flex-child" style={{ width: "100%", overflow: "clip" }} />
       <div className="flex-row flex-space-between" style={{ padding: "4px 0" }}>
         <span>{title}</span>{(value).toFixed(1)}%
       </div>
@@ -79,20 +99,37 @@ function SimpleCard({ title, data, onClick }: { title: string, data: DataType[];
 function EngineBraking({ data }: { data: DataType[]; }) {
   const { unitSystem } = React.useContext(ReactAppContext);
   const value = data.length === 0 ? 0 : data[data.length - 1].value;
+  const ref = useEcharts<HTMLDivElement>({
+    grid: {
+      left: 32,
+      top: 8,
+      right: 0,
+      bottom: 8
+    },
+    yAxis: {
+      type: 'value',
+    },
+    tooltip: {
+      show: true,
+      trigger: 'axis',
+      formatter: (params: { value: [number, number]; } | { value: [number, number]; }[]) => {
+        if (Array.isArray(params)) {
+          params = params[0];
+        }
+        return `${params.value[1].toFixed(1)} ${getPowerUnit(unitSystem)}`;
+      },
+    },
+    series: [
+      {
+        data: data.map(v => [v.index, v.value]),
+        type: 'line',
+        areaStyle: {},
+        symbolSize: 0,
+      }
+    ]
+  });
   return <Card className="flex-child flex-column flex-space-evenly" style={{ flex: "3 3", alignItems: "stretch", padding: 16 }}>
-    <div className="flex-child" style={{ overflow: "clip" }}>
-      <ResponsiveContainer width="100%" height="100%" minHeight="0" minWidth="0">
-        <AreaChart data={data}
-          margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="index" type="number" domain={['dataMin', 'dataMax']} tick={false} />
-          <YAxis domain={([min]) => { return [min * 1.05, 0]; }} tick={false} />
-          <Tooltip formatter={(value) => { return `${(value as number).toFixed(1)} ${getPowerUnit(unitSystem)}`; }}
-            contentStyle={{ backgroundColor: "var(--md-sys-color-surface)" }} />
-          <Area type="monotone" dataKey="value" stroke="var(--md-sys-color-tertiary)" fillOpacity={0.6} fill="var(--md-sys-color-tertiary)" isAnimationActive={false} />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
+    <div ref={ref} className="flex-child" />
     <div className="flex-row flex-space-between" style={{ padding: "4px 0" }}>
       <span>Engine Braking</span>
       <span>{(value).toFixed(1)} {getPowerUnit(unitSystem)}</span>
