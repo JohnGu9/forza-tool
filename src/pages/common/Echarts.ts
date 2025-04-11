@@ -4,7 +4,7 @@ import React from "react";
 // reference: https://echarts.apache.org/en/option.html
 // `echarts.EChartsCoreOption` is totally ultra-stupid useless type declaration
 export default function useEcharts<T extends HTMLElement>(
-    option: echarts.EChartsCoreOption | ((element: T, chart: echarts.ECharts) => echarts.EChartsCoreOption),
+    option: echarts.EChartsCoreOption | ((element: T, style: CSSStyleDeclaration, chart: echarts.ECharts) => echarts.EChartsCoreOption),
     notMerge?: boolean, lazyUpdate?: boolean) {
     const ref = React.useRef<T>(null);
     const [chart, setChart] = React.useState(null as echarts.ECharts | null);
@@ -23,6 +23,9 @@ export default function useEcharts<T extends HTMLElement>(
             const style = getComputedStyle(ref.current!);
             chart.setOption({
                 animation: false,
+                textStyle: {
+                    fontFamily: 'Roboto'
+                },
                 color: [
                     style.getPropertyValue('--md-sys-color-primary'),
                     style.getPropertyValue('--md-sys-color-tertiary'),
@@ -47,7 +50,7 @@ export default function useEcharts<T extends HTMLElement>(
                         },
                     },
                 },
-                ...(typeof option === 'function' ? option(ref.current!, chart) : option)
+                ...(typeof option === 'function' ? option(ref.current!, style, chart) : option)
             }, notMerge, lazyUpdate);
         }
     }, [chart, lazyUpdate, notMerge, option]);

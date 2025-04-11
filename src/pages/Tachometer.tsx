@@ -7,7 +7,7 @@ import { Card, Ripple, Typography } from "rmcw/dist/components3";
 import { AppWindowMode, ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
 import { dummyMessageData, isValidProp, MessageData } from "../common/MessageData";
-import { ConsumptionEstimation, MessageDataAnalysis } from "../common/MessageDataAnalysis";
+import { ConsumptionEstimation, MessageDataAnalysis, rpmToKey } from "../common/MessageDataAnalysis";
 import { ReactWindowContext } from "./common/Context";
 import useEcharts from "./common/Echarts";
 
@@ -59,8 +59,7 @@ export default function Tachometer() {
     return startAngle * (1 - r) + endAngle * r;
   }
 
-  const ref = useEcharts<HTMLDivElement>((element) => {
-    const style = getComputedStyle(element);
+  const ref = useEcharts<HTMLDivElement>((_element, style) => {
     return {
       xAxis: null,
       yAxis: null,
@@ -209,7 +208,7 @@ function GearMonitor({ gear, colors }: { gear: number; colors: { color?: string,
   }
   return <div className="tachometer-background flex-column flex-space-between" style={{ justifyContent: "center" }}>
     <FadeThrough keyId={gear} transitionStyle="M2" className="flex-column flex-space-evenly tachometer-gear-position">
-      <Card className="tachometer-round-shape" style={{ height: "24vmin", width: "24vmin" }}>
+      <Card className="tachometer-round-shape">
         <div className="fill-parent flex-column flex-center tachometer-background-transition tachometer-round-shape"
           style={{ backgroundColor: colors.backgroundColor }}>
           <span title="Gear" className="tachometer-gear" style={{ color: colors.color }}>
@@ -223,13 +222,13 @@ function GearMonitor({ gear, colors }: { gear: number; colors: { color?: string,
 
 function getRange(messageDataAnalysis: MessageDataAnalysis) {
   const sorted = messageDataAnalysis.powerCurve.map(({ rpm, power }) => {
-    const key = rpm.toFixed(1);
+    const key = rpmToKey(rpm);
     return { x: rpm, y: power, key };
   });
   if (sorted.length === 0) {
     return { lower: 0, upper: 0 };
   }
-  const maxKey = messageDataAnalysis.maxPower.rpm.toFixed(1);
+  const maxKey = rpmToKey(messageDataAnalysis.maxPower.rpm);
   const maxIndex = sorted.findIndex(data => data.key === maxKey);
   if (maxIndex === -1) {
     return { lower: 0, upper: 0 };
@@ -315,20 +314,16 @@ function RpmIndicatorLights({ lower, upper, current }: { lower: number, upper: n
 }
 
 function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messageDataAnalysis: MessageDataAnalysis; messageData: CircularBuffer<MessageData>; onClick: () => unknown; }) {
-  const data = messageData.map((data, index) => {
-    return { index, "power level": Math.max(data.power / messageDataAnalysis.maxPower.value, 0) * 100 };
-  });
-  function getColor(value: { "power level": number; }) {
-    if (value["power level"] >= 97) {
+  function getColor(powerLevel: number) {
+    if (powerLevel >= 97) {
       return "--md-sys-color-tertiary";
     };
-    if (value["power level"] >= 90) {
+    if (powerLevel >= 90) {
       return "--md-sys-color-primary";
     };
     return "--md-sys-color-error";
   }
-  const ref = useEcharts<HTMLDivElement>((element) => {
-    const style = getComputedStyle(element);
+  const ref = useEcharts<HTMLDivElement>((_element, style) => {
     return {
       grid: {
         left: 32,
@@ -355,12 +350,14 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
       series: [
         {
           type: 'bar',
-          data: data.map((item) => {
+          data: messageData.map((data, index) => {
+            const powerLevel = Math.max(data.power / messageDataAnalysis.maxPower.value, 0) * 100;
             return {
-              value: [item.index, item["power level"]],
-              itemStyle: { color: style.getPropertyValue(getColor(item)) },
+              value: [index, powerLevel],
+              itemStyle: { color: style.getPropertyValue(getColor(powerLevel)) },
             };
           }),
+          large: true,
         }
       ]
     };

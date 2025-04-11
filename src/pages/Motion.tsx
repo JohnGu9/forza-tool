@@ -37,7 +37,7 @@ export default function Motion() {
 }
 
 
-type DataType = { index: number; value: number; };
+type DataType = [number, number];
 
 function getTargetData(messageData: CircularBuffer<MessageData>, type: MotionOption) {
   const length = messageData.getElementCount();
@@ -57,17 +57,17 @@ function getTargetData(messageData: CircularBuffer<MessageData>, type: MotionOpt
   const keys = getKeys();
   let index = 0;
   for (const data of messageData) {
-    x[index] = { index, value: data[keys.x as "accelerationX"] };
-    y[index] = { index, value: data[keys.y as "accelerationY"] };
-    z[index] = { index, value: data[keys.z as "accelerationZ"] };
-    scalar[index] = { index, value: Math.pow(Math.pow(x[index].value, 2) + Math.pow(y[index].value, 2) + Math.pow(z[index].value, 2), 1 / 2) };
+    x[index] = [index, data[keys.x as "accelerationX"]];
+    y[index] = [index, data[keys.y as "accelerationY"]];
+    z[index] = [index, data[keys.z as "accelerationZ"]];
+    scalar[index] = [index, Math.pow(Math.pow(x[index][1], 2) + Math.pow(y[index][1], 2) + Math.pow(z[index][1], 2), 1 / 2)];
     index++;
   }
   return { x, y, z, scalar };
 }
 
 function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataType[], type: MotionOption, yAxis?: unknown, }) {
-  const value = data.length === 0 ? 0 : data[data.length - 1].value;
+  const value = data.length === 0 ? 0 : data[data.length - 1][1];
   const { unitSystem } = React.useContext(ReactAppContext);
 
   function formatter(value: number) {
@@ -108,9 +108,11 @@ function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataTyp
     yAxis,
     series: [
       {
-        data: data.map(v => [v.index, v.value]),
+        data: data,
         type: 'line',
-        areaStyle: {},
+        areaStyle: {
+          opacity: 0.6,
+        },
         symbolSize: 0,
       },
     ],

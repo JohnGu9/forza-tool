@@ -30,7 +30,7 @@ export default function Control() {
   </div>;
 }
 
-type DataType = { index: number; value: number; };
+type DataType = [number, number];
 
 function getTargetData(messageData: CircularBuffer<MessageData>, unitSystem: UnitSystem) {
   let index = 0;
@@ -41,18 +41,18 @@ function getTargetData(messageData: CircularBuffer<MessageData>, unitSystem: Uni
   const handbrake = new Array<DataType>(length);
   const engineBraking = new Array<DataType>(length);
   for (const data of messageData) {
-    clutch[index] = { index, value: data.clutch / 255 * 100 };
-    accelerator[index] = { index, value: data.accelerator / 255 * 100 };
-    brake[index] = { index, value: data.brake / 255 * 100 };
-    handbrake[index] = { index, value: data.handbrake / 255 * 100 };
-    engineBraking[index] = { index, value: wTo(Math.min(data.power, 0), unitSystem) };
+    clutch[index] = [index, data.clutch / 255 * 100];
+    accelerator[index] = [index, data.accelerator / 255 * 100];
+    brake[index] = [index, data.brake / 255 * 100];
+    handbrake[index] = [index, data.handbrake / 255 * 100];
+    engineBraking[index] = [index, wTo(Math.min(data.power, 0), unitSystem)];
     index += 1;
   }
   return { clutch, accelerator, brake, handbrake, engineBraking };
 }
 
 function SimpleCard({ title, data, onClick }: { title: string, data: DataType[]; onClick: () => unknown; }) {
-  const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1].value);
+  const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1][1]);
   const ref = useEcharts<HTMLDivElement>({
     grid: {
       left: 32,
@@ -68,18 +68,17 @@ function SimpleCard({ title, data, onClick }: { title: string, data: DataType[];
     tooltip: {
       show: true,
       trigger: 'axis',
-      formatter: (params: { value: [number, number]; } | { value: [number, number]; }[]) => {
-        if (Array.isArray(params)) {
-          params = params[0];
-        }
-        return `${params.value[1].toFixed(1)}%`;
+      valueFormatter: (value: number) => {
+        return `${value.toFixed(1)}%`;
       },
     },
     series: [
       {
-        data: data.map(v => [v.index, v.value]),
+        data: data,
         type: 'line',
-        areaStyle: {},
+        areaStyle: {
+          opacity: 0.6,
+        },
         showAllSymbol: true,
         symbolSize: 0,
       }
@@ -98,7 +97,7 @@ function SimpleCard({ title, data, onClick }: { title: string, data: DataType[];
 
 function EngineBraking({ data }: { data: DataType[]; }) {
   const { unitSystem } = React.useContext(ReactAppContext);
-  const value = data.length === 0 ? 0 : data[data.length - 1].value;
+  const value = data.length === 0 ? 0 : data[data.length - 1][1];
   const ref = useEcharts<HTMLDivElement>({
     grid: {
       left: 32,
@@ -112,18 +111,17 @@ function EngineBraking({ data }: { data: DataType[]; }) {
     tooltip: {
       show: true,
       trigger: 'axis',
-      formatter: (params: { value: [number, number]; } | { value: [number, number]; }[]) => {
-        if (Array.isArray(params)) {
-          params = params[0];
-        }
-        return `${params.value[1].toFixed(1)} ${getPowerUnit(unitSystem)}`;
+      valueFormatter: (value: number) => {
+        return `${value.toFixed(3)} ${getPowerUnit(unitSystem)}`;
       },
     },
     series: [
       {
-        data: data.map(v => [v.index, v.value]),
+        data: data,
         type: 'line',
-        areaStyle: {},
+        areaStyle: {
+          opacity: 0.6,
+        },
         symbolSize: 0,
       }
     ]

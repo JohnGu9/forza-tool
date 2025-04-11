@@ -29,7 +29,7 @@ export default function Tire() {
   </div>;
 }
 
-type DataType = { index: number; value: number; };
+type DataType = [number, number];
 
 function getTargetData(messageData: CircularBuffer<MessageData>, option: TireOption) {
   const keyFrontLeft = `${option}FrontLeft`;
@@ -45,10 +45,10 @@ function getTargetData(messageData: CircularBuffer<MessageData>, option: TireOpt
 
   let index = 0;
   for (const data of messageData) {
-    frontLeft[index] = { index, value: data[keyFrontLeft as "tireSlipAngleFrontLeft"] };
-    frontRight[index] = { index, value: data[keyFrontRight as "tireSlipAngleFrontLeft"] };
-    rearLeft[index] = { index, value: data[keyRearLeft as "tireSlipAngleFrontLeft"] };
-    rearRight[index] = { index, value: data[keyRearRight as "tireSlipAngleFrontLeft"] };
+    frontLeft[index] = [index, data[keyFrontLeft as "tireSlipAngleFrontLeft"]];
+    frontRight[index] = [index, data[keyFrontRight as "tireSlipAngleFrontLeft"]];
+    rearLeft[index] = [index, data[keyRearLeft as "tireSlipAngleFrontLeft"]];
+    rearRight[index] = [index, data[keyRearRight as "tireSlipAngleFrontLeft"]];
     index++;
   }
   return { frontLeft, frontRight, rearLeft, rearRight };
@@ -56,7 +56,7 @@ function getTargetData(messageData: CircularBuffer<MessageData>, option: TireOpt
 
 function SimpleCard({ title, data, option }: { title: string, data: DataType[]; option: TireOption; }) {
   const { unitSystem } = React.useContext(ReactAppContext);
-  const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1].value);
+  const value = data.length === 0 ? 0 : Math.abs(data[data.length - 1][1]);
   const { formatter, progress, min, max, getColor } = React.useMemo(() => getConfiguration(option, unitSystem), [option, unitSystem]);
 
   const ref = useEcharts<HTMLDivElement>({
@@ -81,9 +81,11 @@ function SimpleCard({ title, data, option }: { title: string, data: DataType[]; 
     },
     series: [
       {
-        data: data.map(v => [v.index, v.value]),
+        data: data,
         type: 'line',
-        areaStyle: {},
+        areaStyle: {
+          opacity: 0.6,
+        },
         symbolSize: 0,
       },
     ],

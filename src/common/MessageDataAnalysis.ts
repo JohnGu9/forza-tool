@@ -203,6 +203,10 @@ export class MessageDataAnalysis {
     }
 };
 
+export function rpmToKey(rpm: number) {
+    return rpm.toFixed(0);
+}
+
 const MaxFdTolerationFactor = 16;
 const MinFdTolerationFactor = 2 / 3;
 function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData) {
@@ -219,12 +223,12 @@ function validData(analysis: MessageDataAnalysis, lastMessageData: MessageData) 
         analysis.maxPower = { value: powerCurveData.power, torque: powerCurveData.torque, rpm: powerCurveData.rpm };
     }
 
-    const rpmKey = powerCurveData.rpm.toFixed(0);
+    const rpmKey = rpmToKey(powerCurveData.rpm);
     function isSameRpm(rpm: number) {
-        return rpm.toFixed(0) === rpmKey;
+        return rpmToKey(rpm) === rpmKey;
     }
     function isMaxPowerData(data: Element) {
-        return data.rpm.toFixed(0) === analysis.maxPower.rpm.toFixed(0);
+        return rpmToKey(data.rpm) === rpmToKey(analysis.maxPower.rpm);
     }
 
     if (analysis.powerCurve.length === 0) {

@@ -15,8 +15,7 @@ export default function PowerVerification() {
   const { unitSystem } = React.useContext(ReactAppContext);
   const data = getTargetData(messageData, messageDataAnalysis, unitSystem);
 
-  const ref = useEcharts<HTMLDivElement>((element) => {
-    const style = getComputedStyle(element);
+  const ref = useEcharts<HTMLDivElement>((_element, style) => {
     return {
       grid: {
         left: 64,
@@ -53,6 +52,7 @@ export default function PowerVerification() {
             };
           }),
           type: 'bar',
+          large: true,
         },
         {
           name: "Torque * RPM",
@@ -63,13 +63,13 @@ export default function PowerVerification() {
             };
           }),
           type: 'bar',
+          large: true,
         },
       ],
     };
   });
 
-  const ref0 = useEcharts<HTMLDivElement>((element) => {
-    const style = getComputedStyle(element);
+  const ref0 = useEcharts<HTMLDivElement>((_element, style) => {
     return {
       grid: {
         left: 64,
@@ -86,12 +86,15 @@ export default function PowerVerification() {
       },
       yAxis: {
         type: 'value',
-        min: (value: { min: number; }) => { return value.min - 0.005; },
-        max: (value: { max: number; }) => { return value.max + 0.005; },
+        min: (value: { min: number; }) => { return value.min - 0.001; },
+        max: (value: { max: number; }) => { return value.max + 0.001; },
         axisLabel: {
           formatter: (value: number) => {
             return `${(value * 100).toFixed(1)}%`;
           },
+        },
+        splitLine: {
+          show: false,
         },
       },
       series: [
@@ -104,6 +107,7 @@ export default function PowerVerification() {
             };
           }),
           type: 'bar',
+          large: true,
         },
       ],
     };
@@ -113,7 +117,7 @@ export default function PowerVerification() {
     <Card className="flex-child" style={{ flex: "3 3" }}>
       <div ref={ref} className="fill-parent" />
     </Card>
-    <Card className="flex-child" >
+    <Card className="flex-child">
       <div ref={ref0} className="fill-parent" />
     </Card>
   </div>;

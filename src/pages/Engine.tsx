@@ -70,8 +70,6 @@ export default function Engine() {
 
 function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnalysis: MessageDataAnalysis; messageData: CircularBuffer<MessageData>; }) {
   const { unitSystem } = React.useContext(ReactAppContext);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const data = React.useMemo(() => toData(messageDataAnalysis, unitSystem), [unitSystem, messageDataAnalysis.stamp]);
   const maxPower = wTo(messageDataAnalysis.maxPower.value, unitSystem);
 
   const lastMessageData = messageData.isEmpty() ? dummyMessageData : messageData.getLastUnsafe();
@@ -83,14 +81,13 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
   const lastData = messageData.slice(sliceLength);
   const powerDiff = messageDataAnalysis.powerDiff.slice(sliceLength);
 
-  const ref = useEcharts<HTMLDivElement>((element) => {
-    const style = getComputedStyle(element);
+  const ref = useEcharts<HTMLDivElement>((_element, style) => {
     return {
       grid: {
-        left: 64,
-        top: 32,
+        left: 60,
+        top: 24,
         right: 52,
-        bottom: 32
+        bottom: 24
       },
       tooltip: {
         show: true,
@@ -120,8 +117,15 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
           max: (value: { max: number; }) => { return value.max * 1.05; },
           axisLabel: {
             formatter: (value: number) => {
-              return `${value.toFixed(0)} ${getTorqueUnit(unitSystem)}`;
+              const result = `${value.toFixed(0)} ${getTorqueUnit(unitSystem)}`;
+              if (result.length > 8) {
+                return `${result.slice(0, 6)} ...`;
+              }
+              return result;
             },
+          },
+          splitLine: {
+            show: false,
           },
         },
         {
@@ -141,26 +145,32 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
           xAxisIndex: 0,
           yAxisIndex: 0,
           name: "Torque",
-          data: data.map(v => [v.rpm, v.torque]),
+          data: messageDataAnalysis.powerCurve.map(v => [v.rpm, nmTo(v.torque, unitSystem)]),
           type: 'line',
-          areaStyle: {},
+          areaStyle: {
+            opacity: 0.6,
+          },
           symbolSize: 0,
-          smooth: true
+          smooth: true,
+          large: true,
         },
         {
           xAxisIndex: 0,
           yAxisIndex: 1,
           name: "Power",
-          data: data.map(v => [v.rpm, v.power]),
+          data: messageDataAnalysis.powerCurve.map(v => [v.rpm, wTo(v.power, unitSystem)]),
           type: 'line',
-          areaStyle: {},
+          areaStyle: {
+            opacity: 0.6,
+          },
           symbolSize: 0,
           smooth: true,
+          large: true,
           markPoint: {
             symbol: 'circle',
             data: lastData.map((v, index) => {
               const diff = powerDiff[index];
-              const power = wTo(v.power, unitSystem);
+              const power = wTo(Math.max(v.power, 0), unitSystem);
               return {
                 coord: [v.currentEngineRpm, power],
                 symbolSize: Math.pow((index + 1) / lastData.length, 3) * 8,
@@ -175,14 +185,14 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
           markLine: {
             data: [
               {
-                name: "Current",
+                name: ` ${currentPower.toFixed(0)} ${getPowerUnit(unitSystem)}`,
                 yAxis: currentPower,
                 label: {
                   formatter: '{b}',
                 }
               },
               {
-                name: "Max Power",
+                name: "Max Power RPM",
                 xAxis: messageDataAnalysis.maxPower.rpm,
                 label: {
                   formatter: '{b}',
@@ -217,25 +227,21 @@ function mergeColor(color0: string, color1: string, factor: number) {
 }
 
 function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnalysis: MessageDataAnalysis; messageData: CircularBuffer<MessageData>; }) {
-  const data = messageData.map((data, index) => {
-    return { index, "power level": Math.max(data.power / messageDataAnalysis.maxPower.value, 0) * 100 };
-  });
-  function getColor(value: { "power level": number; }) {
-    if (value["power level"] >= 97) {
+  function getColor(powerLevel: number) {
+    if (powerLevel >= 97) {
       return "--md-sys-color-tertiary";
     }
-    if (value["power level"] >= 90) {
+    if (powerLevel >= 90) {
       return "--md-sys-color-primary";
     }
     return "--md-sys-color-error";
   }
-  const ref = useEcharts<HTMLDivElement>((element) => {
-    const style = getComputedStyle(element);
+  const ref = useEcharts<HTMLDivElement>((_element, style) => {
     return {
       grid: {
         left: 42,
         top: 8,
-        right: 0,
+        right: 32,
         bottom: 8
       },
       tooltip: {
@@ -254,61 +260,49 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
             return `${value.toFixed(0)}%`;
           },
         },
+        splitLine: {
+          show: false,
+        },
       },
       series: [
         {
-          data: data.map(v => {
+          data: messageData.map((data, index) => {
+            const powerLevel = Math.max(data.power / messageDataAnalysis.maxPower.value, 0) * 100;
             return {
-              value: [v.index, v["power level"]],
+              value: [index, powerLevel],
               itemStyle: {
-                color: style.getPropertyValue(getColor(v))
+                color: style.getPropertyValue(getColor(powerLevel))
               },
             };
           }),
           type: 'bar',
+          large: true,
+          markLine: {
+            data: [
+              {
+                name: "97%",
+                yAxis: 97,
+                label: {
+                  formatter: '{b}',
+                },
+                lineStyle: {
+                  color: style.getPropertyValue("--md-sys-color-tertiary")
+                },
+              },
+              {
+                name: "90%",
+                yAxis: 90,
+                label: {
+                  formatter: '{b}',
+                }
+              }
+            ]
+          },
         },
       ],
     };
   });
   return <div ref={ref} className="fill-parent" />;
-}
-
-function toData(messageAnalysis: MessageDataAnalysis, unit: UnitSystem) {
-  const res: { rpm: number; torque: number; power: number; }[] = [];
-  for (const { power, torque, rpm } of messageAnalysis.powerCurve) {
-    res.push({ rpm: rpm, power: wTo(Math.max(power, 0), unit), torque: nmTo(Math.max(torque, 0), unit) });
-  }
-  if (res.length === 0) {
-    return res;
-  }
-  // only show part of data, reduce render work
-  const targetDrawPointAmount = 256;
-  const rpmGap = Math.max(20.0/* at least every 20 rpm show 1 data */, (res[res.length - 1].rpm - res[0].rpm) / targetDrawPointAmount);
-  const reduceItems = [res[0]];
-  const endIndex = res.length - 1;
-  for (let i = 1; i < endIndex;) {
-    const data = res[i];
-    const lastData: { rpm: number; torque: number; power: number; }[] = [];
-    let maxPowerIndex: number | undefined = undefined;
-    for (; i < endIndex && (res[i].rpm - data.rpm) < rpmGap; i++) {
-      if (Math.abs(messageAnalysis.maxPower.rpm - res[i].rpm) < 0.1) {
-        maxPowerIndex = i;
-      }
-      lastData.push(res[i]);
-    }
-    function getTarget() {
-      if (maxPowerIndex !== undefined) {
-        return res[maxPowerIndex];
-      }
-      return lastData[0];
-    }
-    const target = getTarget();
-    reduceItems.push(target);
-  }
-  if (endIndex !== 0) {
-    reduceItems.push(res[endIndex]);
-  }
-  return reduceItems;
 }
 
 function SimpleCard({ title, content, tooltip, onClick }: { title: string, content: string; tooltip: string; onClick: () => unknown; }) {

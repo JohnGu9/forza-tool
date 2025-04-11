@@ -4,6 +4,8 @@
 
 .tachometer-round-shape {
     border-radius: 100vmax;
+    width: 24vmin;
+    height: 24vmin;
 }
 
 .tachometer-background {
@@ -25,7 +27,6 @@
     transition:
         color 200ms,
         font-size 200ms;
-    -webkit-text-stroke: 1px var(--md-divider-color, var(--md-sys-color-outline-variant, #cac4d0));
     width: var(--text-size);
     height: var(--text-size);
     border-radius: var(--text-size);

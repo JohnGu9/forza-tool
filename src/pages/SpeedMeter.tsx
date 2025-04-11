@@ -105,14 +105,18 @@ export default function SpeedMeter() {
         name: compareTarget.first.title,
         data: data.map(v => [v.index, v[compareTarget.first.dataKey as "speed"]]),
         type: 'line',
-        areaStyle: {},
+        areaStyle: {
+          opacity: 0.6,
+        },
         symbolSize: 0,
       },
       {
         name: compareTarget.second.title,
         data: data.map(v => [v.index, v[compareTarget.second.dataKey as "speed"]]),
         type: 'line',
-        areaStyle: {},
+        areaStyle: {
+          opacity: 0.6,
+        },
         symbolSize: 0,
       },
     ]
