@@ -7,7 +7,7 @@ import CircularBuffer from "../common/CircularBuffer";
 import { getValidKeys, MessageData } from "../common/MessageData";
 import { UnitSystem } from "../common/UnitConvert";
 import { ReactWindowContext, TireOption } from "./common/Context";
-import { useEcharts } from "./common/Echarts";
+import { OptionDataValue, useEcharts } from "./common/Echarts";
 
 export default function Tire() {
   const { padding, tireOption, setTireOption } = React.useContext(ReactWindowContext);
@@ -103,7 +103,7 @@ function SimpleCard({ title, data, option }: { title: string, data: DataType[]; 
 }
 
 function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
-  formatter: (value: string | number) => string;
+  formatter: (value: OptionDataValue | OptionDataValue[]) => string;
   min: ((value: { min: number, max: number; }) => number) | number;
   max: ((value: { min: number, max: number; }) => number) | number;
   progress: (value: number) => number;

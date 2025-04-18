@@ -71,8 +71,8 @@ export default function Tachometer() {
           endAngle: -45,
           max: lastData.engineMaxRpm,
           axisLabel: {
-            formatter: (value) => {
-              return (value as number).toFixed(0);
+            formatter: (value: number) => {
+              return value.toFixed(0);
             }
           },
         },
@@ -83,8 +83,8 @@ export default function Tachometer() {
           max: 1,
           axisLabel: {
             customValues: [0.2, 0.4, 0.6, 0.8],
-            formatter: (value) => {
-              return `${(value as number * 100).toFixed(0)}%`;
+            formatter: (value: number) => {
+              return `${(value * 100).toFixed(0)}%`;
             }
           },
         },

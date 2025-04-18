@@ -26,16 +26,16 @@ export default function PowerVerification() {
       tooltip: {
         show: true,
         trigger: 'axis',
-        formatter: (params: unknown) => {
+        formatter: (params) => {
           if (Array.isArray(params)) {
-            return (params as { seriesName: string, marker: string; value: [number, number]; }[]).map(v => {
+            return params.map(v => {
               switch (v.seriesName) {
                 case "Power": {
-                  const targetData = data[Math.round(v.value[0])];
-                  return `${v.marker} ${v.seriesName}: ${(v.value[1]).toFixed(3)} ${getPowerUnit(unitSystem)} (${(targetData.diff * 100).toFixed(3)}% | ${(targetData.Power + targetData["Torque * RPM"]).toFixed(3)} ${getPowerUnit(unitSystem)})`;
+                  const targetData = data[Math.round((v.value as [number, number])[0])];
+                  return `${v.marker} ${v.seriesName}: ${((v.value as [number, number])[1]).toFixed(3)} ${getPowerUnit(unitSystem)} (${(targetData.diff * 100).toFixed(3)}% | ${(targetData.Power + targetData["Torque * RPM"]).toFixed(3)} ${getPowerUnit(unitSystem)})`;
                 }
                 default:
-                  return `${v.marker} ${v.seriesName}: ${(-v.value[1]).toFixed(3)} ${getPowerUnit(unitSystem)}`;
+                  return `${v.marker} ${v.seriesName}: ${(-(v.value as [number, number])[1]).toFixed(3)} ${getPowerUnit(unitSystem)}`;
               }
             }).join("<br/>");
           }

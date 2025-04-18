@@ -172,6 +172,7 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
               const diff = powerDiff[index];
               const power = wTo(Math.max(v.power, 0), unitSystem);
               return {
+                name: "",
                 coord: [v.currentEngineRpm, power],
                 symbolSize: Math.pow((index + 1) / lastData.length, 3) * 8,
                 itemStyle: {

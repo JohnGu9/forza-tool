@@ -7,8 +7,7 @@ import CircularBuffer from "../common/CircularBuffer";
 import { MessageData } from "../common/MessageData";
 import { getSpeedUnit, msTo } from "../common/UnitConvert";
 import { MotionOption, ReactWindowContext } from "./common/Context";
-import { useEcharts } from "./common/Echarts";
-import { Axis } from "./common/Echarts/Axis";
+import { OptionDataValue, useEcharts } from "./common/Echarts";
 
 export default function Motion() {
   const { padding, motionOption, setMotionOption } = React.useContext(ReactWindowContext);
@@ -28,7 +27,7 @@ export default function Motion() {
         min: 0,
         max: (value: { max: number; }) => { return value.max * 1.05; },
         axisLabel: {
-          formatter: (value) => {
+          formatter: (value: number) => {
             return (value as number).toFixed(0);
           },
         },
@@ -67,11 +66,11 @@ function getTargetData(messageData: CircularBuffer<MessageData>, type: MotionOpt
   return { x, y, z, scalar };
 }
 
-function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataType[], type: MotionOption, yAxis?: Partial<Axis>, }) {
+function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataType[], type: MotionOption, yAxis?: unknown, }) {
   const value = data.length === 0 ? 0 : data[data.length - 1][1];
   const { unitSystem } = React.useContext(ReactAppContext);
 
-  function formatter(value: string | number) {
+  function formatter(value: OptionDataValue | OptionDataValue[]) {
     switch (type) {
       case MotionOption.Acceleration:
         return `${(value as number).toFixed(3)} m/s²`;
@@ -84,16 +83,6 @@ function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataTyp
         return `${(value as number).toFixed(3)} m`;
     }
   }
-  yAxis ??= {
-    type: 'value',
-    min: (value: { min: number; max: number; }) => { return value.min; },
-    max: (value: { min: number; max: number; }) => { return value.max; },
-    axisLabel: {
-      formatter: (value) => {
-        return (value as number).toFixed(1);
-      },
-    },
-  };
   const ref = useEcharts<HTMLDivElement>({
     grid: {
       left: 32,
@@ -106,7 +95,16 @@ function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataTyp
       trigger: 'axis',
       valueFormatter: formatter
     },
-    yAxis,
+    yAxis: yAxis ?? {
+      type: 'value',
+      min: (value: { min: number; max: number; }) => { return value.min; },
+      max: (value: { min: number; max: number; }) => { return value.max; },
+      axisLabel: {
+        formatter: (value) => {
+          return (value as number).toFixed(1);
+        },
+      },
+    },
     series: [
       {
         data: data,
