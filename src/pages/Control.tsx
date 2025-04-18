@@ -7,7 +7,7 @@ import CircularBuffer from "../common/CircularBuffer";
 import { MessageData } from "../common/MessageData";
 import { getPowerUnit, UnitSystem, wTo } from "../common/UnitConvert";
 import { ReactWindowContext } from "./common/Context";
-import useEcharts from "./common/Echarts";
+import { useEcharts } from "./common/Echarts";
 
 export default function Control() {
   const { padding } = React.useContext(ReactWindowContext);
@@ -68,8 +68,8 @@ function SimpleCard({ title, data, onClick }: { title: string, data: DataType[];
     tooltip: {
       show: true,
       trigger: 'axis',
-      valueFormatter: (value: number) => {
-        return `${value.toFixed(1)}%`;
+      valueFormatter: (value) => {
+        return `${(value as number).toFixed(1)}%`;
       },
     },
     series: [
@@ -111,8 +111,8 @@ function EngineBraking({ data }: { data: DataType[]; }) {
     tooltip: {
       show: true,
       trigger: 'axis',
-      valueFormatter: (value: number) => {
-        return `${value.toFixed(3)} ${getPowerUnit(unitSystem)}`;
+      valueFormatter: (value) => {
+        return `${(value as number).toFixed(3)} ${getPowerUnit(unitSystem)}`;
       },
     },
     series: [

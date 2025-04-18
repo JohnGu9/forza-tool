@@ -6,7 +6,7 @@ import capitalizeFirstLetter from "../common/CapitalizeFirstLetter";
 import CircularBuffer from "../common/CircularBuffer";
 import { DataType, dummyMessageData, getValidKeys, MessageData, MessageDataKey } from "../common/MessageData";
 import { ReactWindowContext } from "./common/Context";
-import useEcharts from "./common/Echarts";
+import { useEcharts } from "./common/Echarts";
 
 export default function Detail() {
   const { messageData } = React.useContext(ReactStreamAppContext);

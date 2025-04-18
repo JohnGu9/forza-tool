@@ -7,7 +7,8 @@ import CircularBuffer from "../common/CircularBuffer";
 import { MessageData } from "../common/MessageData";
 import { getSpeedUnit, msTo } from "../common/UnitConvert";
 import { MotionOption, ReactWindowContext } from "./common/Context";
-import useEcharts from "./common/Echarts";
+import { useEcharts } from "./common/Echarts";
+import { Axis } from "./common/Echarts/Axis";
 
 export default function Motion() {
   const { padding, motionOption, setMotionOption } = React.useContext(ReactWindowContext);
@@ -27,8 +28,8 @@ export default function Motion() {
         min: 0,
         max: (value: { max: number; }) => { return value.max * 1.05; },
         axisLabel: {
-          formatter: (value: number) => {
-            return value.toFixed(0);
+          formatter: (value) => {
+            return (value as number).toFixed(0);
           },
         },
       }} />
@@ -66,21 +67,21 @@ function getTargetData(messageData: CircularBuffer<MessageData>, type: MotionOpt
   return { x, y, z, scalar };
 }
 
-function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataType[], type: MotionOption, yAxis?: unknown, }) {
+function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataType[], type: MotionOption, yAxis?: Partial<Axis>, }) {
   const value = data.length === 0 ? 0 : data[data.length - 1][1];
   const { unitSystem } = React.useContext(ReactAppContext);
 
-  function formatter(value: number) {
+  function formatter(value: string | number) {
     switch (type) {
       case MotionOption.Acceleration:
-        return `${value.toFixed(3)} m/s²`;
+        return `${(value as number).toFixed(3)} m/s²`;
       case MotionOption.Velocity:
-        return `${msTo(value, unitSystem).toFixed(3)} ${getSpeedUnit(unitSystem)}`;
+        return `${msTo(value as number, unitSystem).toFixed(3)} ${getSpeedUnit(unitSystem)}`;
       case MotionOption.AngularVelocity:
       case MotionOption.AngularVelocityGlobal:
-        return `${value.toFixed(3)} RPS`;
+        return `${(value as number).toFixed(3)} RPS`;
       case MotionOption.Position:
-        return `${value.toFixed(3)} m`;
+        return `${(value as number).toFixed(3)} m`;
     }
   }
   yAxis ??= {
@@ -88,8 +89,8 @@ function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataTyp
     min: (value: { min: number; max: number; }) => { return value.min; },
     max: (value: { min: number; max: number; }) => { return value.max; },
     axisLabel: {
-      formatter: (value: number) => {
-        return value.toFixed(1);
+      formatter: (value) => {
+        return (value as number).toFixed(1);
       },
     },
   };

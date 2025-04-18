@@ -7,7 +7,7 @@ import CircularBuffer from "../common/CircularBuffer";
 import { getValidKeys, MessageData } from "../common/MessageData";
 import { UnitSystem } from "../common/UnitConvert";
 import { ReactWindowContext, TireOption } from "./common/Context";
-import useEcharts from "./common/Echarts";
+import { useEcharts } from "./common/Echarts";
 
 export default function Tire() {
   const { padding, tireOption, setTireOption } = React.useContext(ReactWindowContext);
@@ -103,7 +103,7 @@ function SimpleCard({ title, data, option }: { title: string, data: DataType[]; 
 }
 
 function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
-  formatter: (value: number) => string;
+  formatter: (value: string | number) => string;
   min: ((value: { min: number, max: number; }) => number) | number;
   max: ((value: { min: number, max: number; }) => number) | number;
   progress: (value: number) => number;
@@ -116,7 +116,7 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
     case TireOption.SlipAngle:
     case TireOption.SlipRatio:
       return {
-        formatter: (value: number) => `${(value * 100).toFixed(1)}%`,
+        formatter: (value) => `${(value as number * 100).toFixed(1)}%`,
         min: (value: { min: number; max: number; }) => { return -absMax(value); },
         max: (value: { min: number; max: number; }) => { return absMax(value); },
         progress: (value: number) => Math.abs(value),
@@ -124,7 +124,7 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
       };
     case TireOption.CombinedSlip:
       return {
-        formatter: (value: number) => `${(value * 100).toFixed(1)}%`,
+        formatter: (value) => `${(value as number * 100).toFixed(1)}%`,
         min: 0,
         max: (value: { min: number; max: number; }) => { return value.max; },
         progress: (value: number) => value,
@@ -132,7 +132,7 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
       };
     case TireOption.TireWear:
       return {
-        formatter: (value: number) => `${(value * 100).toFixed(1)}%`,
+        formatter: (value) => `${(value as number * 100).toFixed(1)}%`,
         min: 0,
         max: 1,
         progress: (value: number) => value,
@@ -153,7 +153,7 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
       switch (unitSystem) {
         case UnitSystem.Imperial:
           return {
-            formatter: (value: number) => `${value.toFixed(1)}°F`,
+            formatter: (value) => `${(value as number).toFixed(1)}°F`,
             min: ({ min }) => { return Math.min(min, 140); },
             max: ({ max }) => { return Math.max(max, 248); },
             progress,
@@ -164,7 +164,7 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
             return (value - 32) * 5 / 9;
           }
           return {
-            formatter: (value: number) => `${toC(value).toFixed(1)}°C`,
+            formatter: (value) => `${toC(value as number).toFixed(1)}°C`,
             min: ({ min }) => { return Math.min(min, 140); },
             max: ({ max }) => { return Math.max(max, 248); },
             progress,
@@ -175,7 +175,7 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
     }
     case TireOption.WheelRotationSpeed:
       return {
-        formatter: (value: number) => `${value.toFixed(1)} Radians/Sec`,
+        formatter: (value) => `${(value as number).toFixed(1)} Radians/Sec`,
         min: (value: { min: number; max: number; }) => { return value.min; },
         max: (value: { min: number; max: number; }) => { return value.max; },
         progress: () => 0,
@@ -187,7 +187,7 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
     case TireOption.NormalizedSuspensionTravel:
     case TireOption.SuspensionTravelMeters:
       return {
-        formatter: (value: number) => `${(value * 100).toFixed(1)}%`,
+        formatter: (value) => `${(value as number * 100).toFixed(1)}%`,
         min: 0,
         max: 1,
         progress: (value: number) => value,

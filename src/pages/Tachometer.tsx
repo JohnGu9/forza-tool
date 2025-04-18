@@ -9,7 +9,7 @@ import CircularBuffer from "../common/CircularBuffer";
 import { dummyMessageData, isValidProp, MessageData } from "../common/MessageData";
 import { ConsumptionEstimation, MessageDataAnalysis, rpmToKey } from "../common/MessageDataAnalysis";
 import { ReactWindowContext } from "./common/Context";
-import useEcharts from "./common/Echarts";
+import { useEcharts } from "./common/Echarts";
 
 const columnHeight = 150;
 
@@ -59,10 +59,10 @@ export default function Tachometer() {
     return startAngle * (1 - r) + endAngle * r;
   }
 
-  const ref = useEcharts<HTMLDivElement>((_element, style) => {
+  const ref = useEcharts<HTMLDivElement>((style) => {
     return {
-      xAxis: null,
-      yAxis: null,
+      xAxis: undefined,
+      yAxis: undefined,
       tooltip: {},
       angleAxis: [
         {
@@ -71,8 +71,8 @@ export default function Tachometer() {
           endAngle: -45,
           max: lastData.engineMaxRpm,
           axisLabel: {
-            formatter: (value: number) => {
-              return value.toFixed(0);
+            formatter: (value) => {
+              return (value as number).toFixed(0);
             }
           },
         },
@@ -83,8 +83,8 @@ export default function Tachometer() {
           max: 1,
           axisLabel: {
             customValues: [0.2, 0.4, 0.6, 0.8],
-            formatter: (value: number) => {
-              return `${(value * 100).toFixed(0)}%`;
+            formatter: (value) => {
+              return `${(value as number * 100).toFixed(0)}%`;
             }
           },
         },
@@ -109,11 +109,9 @@ export default function Tachometer() {
       ],
       polar: [
         {
-          polarIndex: 0,
           radius: ['75%', '90%']
         },
         {
-          polarIndex: 1,
           radius: ['75%', '90%']
         },
       ],
@@ -150,8 +148,8 @@ export default function Tachometer() {
             show: true,
             position: 'middle',
             rotate: 0,
-            formatter: (params: { value: number; }) => {
-              return `${(params.value * 100).toFixed(1)}%`;
+            formatter: (params) => {
+              return `${((params as { value: number; }).value * 100).toFixed(1)}%`;
             },
           },
           coordinateSystem: 'polar'
@@ -323,7 +321,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
     };
     return "--md-sys-color-error";
   }
-  const ref = useEcharts<HTMLDivElement>((_element, style) => {
+  const ref = useEcharts<HTMLDivElement>((style) => {
     return {
       grid: {
         left: 32,
@@ -334,11 +332,11 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
       tooltip: {
         show: true,
         trigger: 'axis',
-        formatter: (params: { value: [number, number]; } | { value: [number, number]; }[]) => {
+        formatter: (params) => {
           if (Array.isArray(params)) {
             params = params[0];
           }
-          return `${params.value[1].toFixed(1)}%`;
+          return `${(params as { value: number[]; }).value[1].toFixed(1)}%`;
         },
       },
       yAxis: {

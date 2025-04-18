@@ -7,7 +7,7 @@ import { MessageData } from "../common/MessageData";
 import { MessageDataAnalysis } from "../common/MessageDataAnalysis";
 import { getPowerUnit, UnitSystem, wTo } from "../common/UnitConvert";
 import { ReactWindowContext } from "./common/Context";
-import useEcharts from "./common/Echarts";
+import { useEcharts } from "./common/Echarts";
 
 export default function PowerVerification() {
   const { padding } = React.useContext(ReactWindowContext);
@@ -15,7 +15,7 @@ export default function PowerVerification() {
   const { unitSystem } = React.useContext(ReactAppContext);
   const data = getTargetData(messageData, messageDataAnalysis, unitSystem);
 
-  const ref = useEcharts<HTMLDivElement>((_element, style) => {
+  const ref = useEcharts<HTMLDivElement>((style) => {
     return {
       grid: {
         left: 64,
@@ -69,7 +69,7 @@ export default function PowerVerification() {
     };
   });
 
-  const ref0 = useEcharts<HTMLDivElement>((_element, style) => {
+  const ref0 = useEcharts<HTMLDivElement>((style) => {
     return {
       grid: {
         left: 64,
@@ -80,17 +80,17 @@ export default function PowerVerification() {
       tooltip: {
         show: true,
         trigger: 'axis',
-        valueFormatter: (value: number) => {
-          return `${(value * 100).toFixed(3)}%`;
+        valueFormatter: (value) => {
+          return `${(value as number * 100).toFixed(3)}%`;
         },
       },
       yAxis: {
         type: 'value',
-        min: (value: { min: number; }) => { return value.min - 0.001; },
-        max: (value: { max: number; }) => { return value.max + 0.001; },
+        min: (value) => { return value.min - 0.001; },
+        max: (value) => { return value.max + 0.001; },
         axisLabel: {
-          formatter: (value: number) => {
-            return `${(value * 100).toFixed(1)}%`;
+          formatter: (value) => {
+            return `${(value as number * 100).toFixed(1)}%`;
           },
         },
         splitLine: {

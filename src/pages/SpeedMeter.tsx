@@ -7,7 +7,7 @@ import { MessageData } from "../common/MessageData";
 import { MessageDataAnalysis } from "../common/MessageDataAnalysis";
 import { getSpeedUnit, msTo, UnitSystem } from "../common/UnitConvert";
 import { ReactWindowContext, SpeedMeterOption } from "./common/Context";
-import useEcharts from "./common/Echarts";
+import { useEcharts } from "./common/Echarts";
 
 const columnHeight = 150;
 
@@ -86,17 +86,17 @@ export default function SpeedMeter() {
     tooltip: {
       show: true,
       trigger: 'axis',
-      valueFormatter: (value: number) => {
-        return `${value.toFixed(6)} ${getSpeedUnit(unitSystem)}`;
+      valueFormatter: (value) => {
+        return `${(value as number).toFixed(6)} ${getSpeedUnit(unitSystem)}`;
       }
     },
     yAxis: {
       type: 'value',
       min: 0,
-      max: (value: { max: number; }) => { return value.max * 1.05; },
+      max: (value) => { return value.max * 1.05; },
       axisLabel: {
-        formatter: (value: number) => {
-          return value.toFixed(0);
+        formatter: (value) => {
+          return (value as number).toFixed(0);
         },
       },
     },

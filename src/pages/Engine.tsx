@@ -8,7 +8,7 @@ import { dummyMessageData, MessageData } from "../common/MessageData";
 import { MessageDataAnalysis } from "../common/MessageDataAnalysis";
 import { getPowerUnit, getTorqueUnit, nmTo, UnitSystem, wTo } from "../common/UnitConvert";
 import { ReactWindowContext } from "./common/Context";
-import useEcharts from "./common/Echarts";
+import { useEcharts } from "./common/Echarts";
 
 const columnHeight = 150;
 
@@ -81,7 +81,7 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
   const lastData = messageData.slice(sliceLength);
   const powerDiff = messageDataAnalysis.powerDiff.slice(sliceLength);
 
-  const ref = useEcharts<HTMLDivElement>((_element, style) => {
+  const ref = useEcharts<HTMLDivElement>((style) => {
     return {
       grid: {
         left: 60,
@@ -92,8 +92,8 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
       tooltip: {
         show: true,
         trigger: 'axis',
-        valueFormatter: (value: number) => {
-          return value.toFixed(3);
+        valueFormatter: (value) => {
+          return (value as number).toFixed(3);
         }
       },
       xAxis: [
@@ -103,8 +103,8 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
           min: lastMessageData.engineIdleRpm,
           max: lastMessageData.engineMaxRpm,
           axisLabel: {
-            formatter: (value: number) => {
-              return value.toFixed(0);
+            formatter: (value) => {
+              return (value as number).toFixed(0);
             },
           },
         },
@@ -114,10 +114,10 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
           show: true,
           type: "value",
           min: 0,
-          max: (value: { max: number; }) => { return value.max * 1.05; },
+          max: (value) => { return value.max * 1.05; },
           axisLabel: {
-            formatter: (value: number) => {
-              const result = `${value.toFixed(0)} ${getTorqueUnit(unitSystem)}`;
+            formatter: (value) => {
+              const result = `${(value as number).toFixed(0)} ${getTorqueUnit(unitSystem)}`;
               if (result.length > 8) {
                 return `${result.slice(0, 6)} ...`;
               }
@@ -132,10 +132,10 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
           show: true,
           type: "value",
           min: 0,
-          max: (value: { max: number; }) => { return value.max * 1.05; },
+          max: (value) => { return value.max * 1.05; },
           axisLabel: {
-            formatter: (value: number) => {
-              return `${value.toFixed(0)} ${getPowerUnit(unitSystem)}`;
+            formatter: (value) => {
+              return `${(value as number).toFixed(0)} ${getPowerUnit(unitSystem)}`;
             },
           },
         }
@@ -236,7 +236,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
     }
     return "--md-sys-color-error";
   }
-  const ref = useEcharts<HTMLDivElement>((_element, style) => {
+  const ref = useEcharts<HTMLDivElement>((style) => {
     return {
       grid: {
         left: 42,
@@ -247,8 +247,8 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
       tooltip: {
         show: true,
         trigger: 'axis',
-        valueFormatter: (value: number) => {
-          return `${value.toFixed(3)}%`;
+        valueFormatter: (value) => {
+          return `${(value as number).toFixed(3)}%`;
         },
       },
       yAxis: {
@@ -256,8 +256,8 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
         min: 0,
         max: 100,
         axisLabel: {
-          formatter: (value: number) => {
-            return `${value.toFixed(0)}%`;
+          formatter: (value) => {
+            return `${(value as number).toFixed(0)}%`;
           },
         },
         splitLine: {
