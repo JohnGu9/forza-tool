@@ -117,8 +117,8 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
     case TireOption.SlipRatio:
       return {
         formatter: (value) => `${(value as number * 100).toFixed(1)}%`,
-        min: (value: { min: number; max: number; }) => { return -absMax(value); },
-        max: (value: { min: number; max: number; }) => { return absMax(value); },
+        min: (value) => { return -absMax(value); },
+        max: (value) => { return absMax(value); },
         progress: (value: number) => Math.abs(value),
         getColor,
       };
@@ -176,8 +176,8 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
     case TireOption.WheelRotationSpeed:
       return {
         formatter: (value) => `${(value as number).toFixed(1)} Radians/Sec`,
-        min: (value: { min: number; max: number; }) => { return value.min; },
-        max: (value: { min: number; max: number; }) => { return value.max; },
+        min: ({ min }) => { return min; },
+        max: ({ max }) => { return max; },
         progress: () => 0,
         getColor,
       };

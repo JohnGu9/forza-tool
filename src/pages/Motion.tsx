@@ -97,8 +97,8 @@ function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataTyp
     },
     yAxis: yAxis ?? {
       type: 'value',
-      min: (value: { min: number; max: number; }) => { return value.min; },
-      max: (value: { min: number; max: number; }) => { return value.max; },
+      min: ({ min }) => { return min; },
+      max: ({ max }) => { return max; },
       axisLabel: {
         formatter: (value) => {
           return (value as number).toFixed(1);

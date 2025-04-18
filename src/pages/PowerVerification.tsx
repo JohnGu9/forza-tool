@@ -23,6 +23,16 @@ export default function PowerVerification() {
         right: 24,
         bottom: 24
       },
+      yAxis: {
+        type: 'value',
+        min: ({ min }) => { return min; },
+        max: ({ max }) => { return max; },
+        axisLabel: {
+          formatter: (value) => {
+            return `${Math.abs(value).toFixed(0)}${getPowerUnit(unitSystem)}`;
+          },
+        },
+      },
       tooltip: {
         show: true,
         trigger: 'axis',
@@ -86,8 +96,8 @@ export default function PowerVerification() {
       },
       yAxis: {
         type: 'value',
-        min: (value) => { return value.min - 0.001; },
-        max: (value) => { return value.max + 0.001; },
+        min: ({ min }) => { return min - 0.001; },
+        max: ({ max }) => { return max + 0.001; },
         axisLabel: {
           formatter: (value) => {
             return `${(value as number * 100).toFixed(1)}%`;

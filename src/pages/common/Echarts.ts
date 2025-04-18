@@ -1,31 +1,11 @@
-import type {
-    // The series option types are defined with the SeriesOption suffix
-    BarSeriesOption,
-    LineSeriesOption,
-    PieSeriesOption,
-} from 'echarts/charts';
-import {
-    BarChart,
-    LineChart,
-    PieChart,
-} from 'echarts/charts';
-import type {
-    GridComponentOption,
-    PolarComponentOption,
-    TooltipComponentOption
-} from 'echarts/components';
-import {
-    GridComponent,
-    PolarComponent,
-    TooltipComponent,
-} from 'echarts/components';
-import type {
-    ComposeOption,
-} from 'echarts/core';
+import type { BarSeriesOption, LineSeriesOption, PieSeriesOption } from 'echarts/charts';
+import { BarChart, LineChart, PieChart } from 'echarts/charts';
+import type { GridComponentOption, MarkLineComponentOption, MarkPointComponentOption, PolarComponentOption, TooltipComponentOption } from 'echarts/components';
+import { GridComponent, MarkLineComponent, MarkPointComponent, PolarComponent, TooltipComponent } from 'echarts/components';
+import type { ComposeOption } from 'echarts/core';
 import * as echarts from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import React from "react";
-
 
 // Create an Option type with only the required components and charts via ComposeOption
 type ECOption = ComposeOption<
@@ -35,6 +15,8 @@ type ECOption = ComposeOption<
     | TooltipComponentOption
     | GridComponentOption
     | PolarComponentOption
+    | MarkPointComponentOption
+    | MarkLineComponentOption
 >;
 
 // Register the required components
@@ -42,6 +24,8 @@ echarts.use([
     TooltipComponent,
     GridComponent,
     PolarComponent,
+    MarkPointComponent,
+    MarkLineComponent,
     BarChart,
     LineChart,
     PieChart,
@@ -67,39 +51,40 @@ export function useEcharts<T extends HTMLElement>(
     React.useEffect(() => {
         if (chart !== null) {
             const style = getComputedStyle(ref.current!);
-            chart.setOption({
-                animation: false,
-                textStyle: {
-                    fontFamily: 'Roboto'
-                },
-                color: [
-                    style.getPropertyValue('--md-sys-color-primary'),
-                    style.getPropertyValue('--md-sys-color-tertiary'),
-                    style.getPropertyValue('--md-sys-color-error'),
-                ],
+            const mergeOption: ECOption = {
                 tooltip: {
                     show: true // include tooltip component for the feature
                 },
                 xAxis: {
                     show: false,
                     type: "value",
-                    min: (value: { min: number; }) => { return value.min; },
-                    max: (value: { max: number; }) => { return value.max; },
+                    min: ({ min }) => { return min; },
+                    max: ({ max }) => { return max; },
                 },
                 yAxis: {
                     type: 'value',
-                    min: (value: { min: number; }) => { return value.min; },
-                    max: (value: { max: number; }) => { return value.max; },
+                    min: ({ min }) => { return min; },
+                    max: ({ max }) => { return max; },
                     axisLabel: {
-                        formatter: (value: number) => {
+                        formatter: (value) => {
                             return value.toFixed(0);
                         },
                     },
                 },
+                color: [
+                    style.getPropertyValue('--md-sys-color-primary'),
+                    style.getPropertyValue('--md-sys-color-tertiary'),
+                    style.getPropertyValue('--md-sys-color-error'),
+                ],
+                textStyle: {
+                    fontFamily: 'Roboto'
+                },
+                animation: false,
                 ...(typeof option === 'function' ?
                     option(style, ref.current!, chart) :
                     option)
-            }, notMerge, lazyUpdate);
+            };
+            chart.setOption(mergeOption, notMerge, lazyUpdate);
         }
     }, [chart, lazyUpdate, notMerge, option]);
     return ref;
