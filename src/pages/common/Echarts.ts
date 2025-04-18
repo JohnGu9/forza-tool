@@ -1,10 +1,10 @@
-import type { BarSeriesOption, LineSeriesOption, PieSeriesOption } from 'echarts/charts';
-import { BarChart, LineChart, PieChart } from 'echarts/charts';
-import type { GridComponentOption, MarkLineComponentOption, MarkPointComponentOption, PolarComponentOption, TooltipComponentOption } from 'echarts/components';
-import { GridComponent, MarkLineComponent, MarkPointComponent, PolarComponent, TooltipComponent } from 'echarts/components';
-import type { ComposeOption } from 'echarts/core';
-import * as echarts from 'echarts/core';
-import { CanvasRenderer } from 'echarts/renderers';
+import type { BarSeriesOption, LineSeriesOption, PieSeriesOption } from "echarts/charts";
+import { BarChart, LineChart, PieChart } from "echarts/charts";
+import type { GridComponentOption, MarkLineComponentOption, MarkPointComponentOption, PolarComponentOption, TooltipComponentOption } from "echarts/components";
+import { GridComponent, MarkLineComponent, MarkPointComponent, PolarComponent, TooltipComponent } from "echarts/components";
+import type { ComposeOption } from "echarts/core";
+import * as echarts from "echarts/core";
+import { CanvasRenderer } from "echarts/renderers";
 import React from "react";
 
 // Create an Option type with only the required components and charts via ComposeOption
@@ -58,13 +58,13 @@ export function useEcharts<T extends HTMLElement>(
                 xAxis: {
                     show: false,
                     type: "value",
-                    min: ({ min }) => { return min; },
-                    max: ({ max }) => { return max; },
+                    min: "dataMin",
+                    max: "dataMax",
                 },
                 yAxis: {
-                    type: 'value',
-                    min: ({ min }) => { return min; },
-                    max: ({ max }) => { return max; },
+                    type: "value",
+                    min: "dataMin",
+                    max: "dataMax",
                     axisLabel: {
                         formatter: (value) => {
                             return value.toFixed(0);
@@ -72,15 +72,15 @@ export function useEcharts<T extends HTMLElement>(
                     },
                 },
                 color: [
-                    style.getPropertyValue('--md-sys-color-primary'),
-                    style.getPropertyValue('--md-sys-color-tertiary'),
-                    style.getPropertyValue('--md-sys-color-error'),
+                    style.getPropertyValue("--md-sys-color-primary"),
+                    style.getPropertyValue("--md-sys-color-tertiary"),
+                    style.getPropertyValue("--md-sys-color-error"),
                 ],
                 textStyle: {
-                    fontFamily: 'Roboto'
+                    fontFamily: "Roboto"
                 },
                 animation: false,
-                ...(typeof option === 'function' ?
+                ...(typeof option === "function" ?
                     option(style, ref.current!, chart) :
                     option)
             };

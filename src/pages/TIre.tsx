@@ -68,11 +68,11 @@ function SimpleCard({ title, data, option }: { title: string, data: DataType[]; 
     },
     tooltip: {
       show: true,
-      trigger: 'axis',
+      trigger: "axis",
       valueFormatter: formatter
     },
     yAxis: {
-      type: 'value',
+      type: "value",
       min,
       max,
       axisLabel: {
@@ -81,8 +81,8 @@ function SimpleCard({ title, data, option }: { title: string, data: DataType[]; 
     },
     series: [
       {
+        type: "line",
         data: data,
-        type: 'line',
         areaStyle: {
           opacity: 0.6,
         },

@@ -40,16 +40,13 @@ export default function Engine() {
     <div className="flex-row flex-space-between" style={{ height: columnHeight, gap: 8, padding: "0 0 16px" }}>
       <SimpleCard title="RPM"
         content={lastMessageData.currentEngineRpm.toFixed(0)}
-        tooltip="unit: Rev/Min"
         onClick={changeUnitSystem} />
       *
       <SimpleCard title={`Torque (${getTorqueUnit(unitSystem)})`}
         content={nmTo(Math.max(lastMessageData.torque, 0), unitSystem).toFixed(1)}
-        tooltip={`unit: ${getTorqueUnit(unitSystem)}`}
         onClick={changeUnitSystem} />
       =
       <SimpleCard title={`Power (${powerUnitName})`} content={wTo(Math.max(lastMessageData.power, 0), unitSystem).toFixed(1)}
-        tooltip={`unit: ${powerUnitName}`}
         onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)} />
     </div>
     <SharedAxis className="flex-child" keyId={showEnginePowerCurve ? 1 : 0}>
@@ -91,7 +88,7 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
       },
       tooltip: {
         show: true,
-        trigger: 'axis',
+        trigger: "axis",
         valueFormatter: (value) => {
           return (value as number).toFixed(3);
         }
@@ -142,11 +139,11 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
       ],
       series: [
         {
+          type: "line",
           xAxisIndex: 0,
           yAxisIndex: 0,
           name: "Torque",
           data: messageDataAnalysis.powerCurve.map(v => [v.rpm, nmTo(v.torque, unitSystem)]),
-          type: 'line',
           areaStyle: {
             opacity: 0.6,
           },
@@ -155,11 +152,11 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
           large: true,
         },
         {
+          type: "line",
           xAxisIndex: 0,
           yAxisIndex: 1,
           name: "Power",
           data: messageDataAnalysis.powerCurve.map(v => [v.rpm, wTo(v.power, unitSystem)]),
-          type: 'line',
           areaStyle: {
             opacity: 0.6,
           },
@@ -167,7 +164,7 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
           smooth: true,
           large: true,
           markPoint: {
-            symbol: 'circle',
+            symbol: "circle",
             data: lastData.map((v, index) => {
               const diff = powerDiff[index];
               const power = wTo(Math.max(v.power, 0), unitSystem);
@@ -177,8 +174,8 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
                 symbolSize: Math.pow((index + 1) / lastData.length, 3) * 8,
                 itemStyle: {
                   color: diff > 0.998 && diff < 1.002 ?
-                    mergeColor(style.getPropertyValue('--md-sys-color-tertiary'), "#ffffff", getPowerLevel(power)) :
-                    style.getPropertyValue('--md-sys-color-error')
+                    mergeColor(style.getPropertyValue("--md-sys-color-tertiary"), "#ffffff", getPowerLevel(power)) :
+                    style.getPropertyValue("--md-sys-color-error")
                 },
               };
             })
@@ -189,14 +186,14 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
                 name: ` ${currentPower.toFixed(0)} ${getPowerUnit(unitSystem)}`,
                 yAxis: currentPower,
                 label: {
-                  formatter: '{b}',
+                  formatter: "{b}",
                 }
               },
               {
                 name: "Max Power RPM",
                 xAxis: messageDataAnalysis.maxPower.rpm,
                 label: {
-                  formatter: '{b}',
+                  formatter: "{b}",
                 }
               }
             ]
@@ -247,13 +244,13 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
       },
       tooltip: {
         show: true,
-        trigger: 'axis',
+        trigger: "axis",
         valueFormatter: (value) => {
           return `${(value as number).toFixed(3)}%`;
         },
       },
       yAxis: {
-        type: 'value',
+        type: "value",
         min: 0,
         max: 100,
         axisLabel: {
@@ -276,7 +273,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
               },
             };
           }),
-          type: 'bar',
+          type: "bar",
           large: true,
           markLine: {
             data: [
@@ -284,7 +281,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
                 name: "97%",
                 yAxis: 97,
                 label: {
-                  formatter: '{b}',
+                  formatter: "{b}",
                 },
                 lineStyle: {
                   color: style.getPropertyValue("--md-sys-color-tertiary")
@@ -294,7 +291,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
                 name: "90%",
                 yAxis: 90,
                 label: {
-                  formatter: '{b}',
+                  formatter: "{b}",
                 }
               }
             ]
@@ -306,12 +303,12 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
   return <div ref={ref} className="fill-parent" />;
 }
 
-function SimpleCard({ title, content, tooltip, onClick }: { title: string, content: string; tooltip: string; onClick: () => unknown; }) {
+function SimpleCard({ title, content, onClick }: { title: string, content: string; onClick: () => unknown; }) {
   return <Card className="flex-child" style={{ maxWidth: 240, height: "100%", textWrap: "nowrap" }}>
     <Ripple className="fill-parent flex-column flex-space-evenly fit-elevated-card-container-shape"
       onClick={onClick}>
-      <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
-      <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
+      <Typography.Title.Medium tag="span">{title}</Typography.Title.Medium>
+      <Typography.Headline.Large tag="span">{content}</Typography.Headline.Large>
     </Ripple>
   </Card>;
 }

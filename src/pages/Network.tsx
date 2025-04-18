@@ -29,8 +29,8 @@ export default function Network({ opened, close }: {
     onEscapeKey={close}
     headline="Network"
     actions={<>
-      <Button buttonStyle='text' onClick={close}>Cancel</Button>
-      <Button buttonStyle='text' onClick={() => {
+      <Button buttonStyle="text" onClick={close}>Cancel</Button>
+      <Button buttonStyle="text" onClick={() => {
         close();
         setListenAddress([newAddress, newPort, forward, newForwardAddress, newForwardPort, stamp]);
         setDataBufferLength(parseInt(newDataBufferLength));

@@ -85,13 +85,13 @@ export default function SpeedMeter() {
     legend: {},
     tooltip: {
       show: true,
-      trigger: 'axis',
+      trigger: "axis",
       valueFormatter: (value) => {
         return `${(value as number).toFixed(6)} ${getSpeedUnit(unitSystem)}`;
       }
     },
     yAxis: {
-      type: 'value',
+      type: "value",
       min: 0,
       max: (value) => { return value.max * 1.05; },
       axisLabel: {
@@ -102,18 +102,18 @@ export default function SpeedMeter() {
     },
     series: [
       {
+        type: "line",
         name: compareTarget.first.title,
         data: data.map(v => [v.index, v[compareTarget.first.dataKey as "speed"]]),
-        type: 'line',
         areaStyle: {
           opacity: 0.6,
         },
         symbolSize: 0,
       },
       {
+        type: "line",
         name: compareTarget.second.title,
         data: data.map(v => [v.index, v[compareTarget.second.dataKey as "speed"]]),
-        type: 'line',
         areaStyle: {
           opacity: 0.6,
         },
@@ -135,8 +135,8 @@ export default function SpeedMeter() {
 function SimpleCard({ title, tooltip, content, onClick }: { title: string, tooltip: string, content: string; onClick: () => unknown; }) {
   return <Card className="flex-child" style={{ maxWidth: 240, textWrap: "nowrap" }}>
     <Ripple onClick={onClick} className="fill-parent flex-column flex-space-evenly fit-elevated-card-container-shape">
-      <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
-      <Typography.Headline.Large tag='span' title={tooltip}>{content}</Typography.Headline.Large>
+      <Typography.Title.Medium tag="span" title={tooltip}>{title}</Typography.Title.Medium>
+      <Typography.Headline.Large tag="span" title={tooltip}>{content}</Typography.Headline.Large>
     </Ripple>
   </Card>;
 }

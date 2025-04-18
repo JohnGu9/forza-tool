@@ -27,10 +27,10 @@ export default function SingleWindowApp({ streamAppContext }: { streamAppContext
       "--md-navigation-drawer-container-shape": "0 8px 8px 0",
     } as React.CSSProperties}>
       <List className="flex-child" style={{ padding: 0 }}>
-        <Typography.Headline.Large tag='div' style={{ padding: 16 }}>Forza</Typography.Headline.Large>
+        <Typography.Headline.Large tag="div" style={{ padding: 16 }}>Forza</Typography.Headline.Large>
         <Divider />
         {Object.values(Page).map(value =>
-          <ListItem key={value} type='button' onClick={() => setPage(value)}
+          <ListItem key={value} type="button" onClick={() => setPage(value)}
             style={page === value ? {
               backgroundColor: "rgb(from var(--md-sys-color-primary-fixed-dim) r g b / 0.2)",
               "--md-list-item-label-text-color": "var(--md-sys-color-primary)"
@@ -40,14 +40,14 @@ export default function SingleWindowApp({ streamAppContext }: { streamAppContext
       </List>
       <List style={{ padding: 0 }}>
         <LapTime messageData={messageData} />
-        <ListItem type='button' trailingSupportingText={
+        <ListItem type="button" trailingSupportingText={
           <FadeThrough keyId={socketStats} transitionStyle="M3">
             <span title={`Socket: ${socketStats}`}>
               <Icon style={{ color: isSocketError(socketStats) ? "var(--md-sys-color-error)" : undefined, transition: "color 200ms" }}>{socketStateToIcon(socketStats)}</Icon>
             </span>
           </FadeThrough>}
           onClick={openNetwork}>Network</ListItem>
-        <ListItem type='button' trailingSupportingText={(slotName) => <Icon slot={slotName}>settings</Icon>}
+        <ListItem type="button" trailingSupportingText={(slotName) => <Icon slot={slotName}>settings</Icon>}
           onClick={openSettings}>Settings</ListItem>
       </List>
     </NavigationDrawer>
@@ -66,7 +66,7 @@ export default function SingleWindowApp({ streamAppContext }: { streamAppContext
 function LapTime({ messageData }: { messageData: CircularBuffer<MessageData>; }) {
   const lastData = messageData.isEmpty() ? dummyMessageData : messageData.getLastUnsafe();
   return <ListItem supportingText={toTimeString(lastData.currentLapTime)} trailingSupportingText={
-    (slotName) => <div slot={slotName} className='flex-column' style={{ justifyContent: "center", alignItems: "end" }}>
+    (slotName) => <div slot={slotName} className="flex-column" style={{ justifyContent: "center", alignItems: "end" }}>
       <div>Best: {toTimeString(lastData.bestLapTime)}</div>
       <div>Last: {toTimeString(lastData.lastLapTime)}</div>
     </div>

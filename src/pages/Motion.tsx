@@ -23,7 +23,7 @@ export default function Motion() {
       <SimpleCard title="Axis Y" data={y} type={motionOption} />
       <SimpleCard title="Axis Z" data={z} type={motionOption} />
       <SimpleCard title="Scalar" data={scalar} type={motionOption} yAxis={{
-        type: 'value',
+        type: "value",
         min: 0,
         max: (value: { max: number; }) => { return value.max * 1.05; },
         axisLabel: {
@@ -92,13 +92,13 @@ function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataTyp
     },
     tooltip: {
       show: true,
-      trigger: 'axis',
+      trigger: "axis",
       valueFormatter: formatter
     },
     yAxis: yAxis ?? {
-      type: 'value',
-      min: ({ min }) => { return min; },
-      max: ({ max }) => { return max; },
+      type: "value",
+      min: "dataMin",
+      max: "dataMax",
       axisLabel: {
         formatter: (value) => {
           return (value as number).toFixed(1);
@@ -107,8 +107,8 @@ function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataTyp
     },
     series: [
       {
+        type: "line",
         data: data,
-        type: 'line',
         areaStyle: {
           opacity: 0.6,
         },

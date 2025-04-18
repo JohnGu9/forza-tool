@@ -1,5 +1,5 @@
 // When using the Tauri API npm package:
-import { Channel, invoke } from '@tauri-apps/api/core';
+import { Channel, invoke } from "@tauri-apps/api/core";
 
 export type CallableCmd = "my_custom_command";
 
@@ -18,23 +18,23 @@ async function listen<T>(cmd: ListenableEvent, args: Omit<Record<string, unknown
 
 export type ListenDataEvent =
     | {
-        event: 'error';
+        event: "error";
         data: { reason: string; };
     }
     | {
-        event: 'messageError';
+        event: "messageError";
         data: { reason: string; };
     }
     | {
-        event: 'opened';
+        event: "opened";
         data: unknown;
     }
     | {
-        event: 'closed';
+        event: "closed";
         data: unknown;
     }
     | {
-        event: 'rawData';
+        event: "rawData";
         data: number[];
     };
 

@@ -24,7 +24,7 @@ export default function PowerVerification() {
         bottom: 24
       },
       yAxis: {
-        type: 'value',
+        type: "value",
         min: ({ min }) => { return min; },
         max: ({ max }) => { return max; },
         axisLabel: {
@@ -35,7 +35,7 @@ export default function PowerVerification() {
       },
       tooltip: {
         show: true,
-        trigger: 'axis',
+        trigger: "axis",
         formatter: (params) => {
           if (Array.isArray(params)) {
             return params.map(v => {
@@ -49,11 +49,12 @@ export default function PowerVerification() {
               }
             }).join("<br/>");
           }
-          return 'Unknown';
+          return "Unknown";
         }
       },
       series: [
         {
+          type: "bar",
           name: "Power",
           data: data.map(v => {
             return {
@@ -61,10 +62,10 @@ export default function PowerVerification() {
               itemStyle: { color: style.getPropertyValue((v.diff > 0.998 && v.diff < 1.002) ? "--md-sys-color-tertiary" : "--md-sys-color-error") },
             };
           }),
-          type: 'bar',
           large: true,
         },
         {
+          type: "bar",
           name: "Torque * RPM",
           data: data.map(v => {
             return {
@@ -72,7 +73,6 @@ export default function PowerVerification() {
               itemStyle: { color: style.getPropertyValue((v.diff > 0.998 && v.diff < 1.002) ? "--md-sys-color-primary" : "--md-sys-color-error") },
             };
           }),
-          type: 'bar',
           large: true,
         },
       ],
@@ -89,13 +89,13 @@ export default function PowerVerification() {
       },
       tooltip: {
         show: true,
-        trigger: 'axis',
+        trigger: "axis",
         valueFormatter: (value) => {
           return `${(value as number * 100).toFixed(3)}%`;
         },
       },
       yAxis: {
-        type: 'value',
+        type: "value",
         min: ({ min }) => { return min - 0.001; },
         max: ({ max }) => { return max + 0.001; },
         axisLabel: {
@@ -109,6 +109,7 @@ export default function PowerVerification() {
       },
       series: [
         {
+          type: "bar",
           name: "Power Diff",
           data: data.map(v => {
             return {
@@ -116,7 +117,6 @@ export default function PowerVerification() {
               itemStyle: { color: style.getPropertyValue((v.diff > 0.998 && v.diff < 1.002) ? "--md-sys-color-tertiary" : "--md-sys-color-error") },
             };
           }),
-          type: 'bar',
           large: true,
         },
       ],

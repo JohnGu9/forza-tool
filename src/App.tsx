@@ -1,22 +1,22 @@
-import './App.scss';
+import "./App.scss";
 
-import { listen } from '@tauri-apps/api/event';
-import { MaterialDesignTransformContext, MaterialDesignTransformContextType, SharedAxisTransform } from 'material-design-transform';
-import React from 'react';
-import { Theme } from 'rmcw/dist/components3';
+import { listen } from "@tauri-apps/api/event";
+import { MaterialDesignTransformContext, MaterialDesignTransformContextType, SharedAxisTransform } from "material-design-transform";
+import React from "react";
+import { Theme } from "rmcw/dist/components3";
 
-import { AppContext, AppWindowMode, ListenAddress, ReactAppContext, StreamAppContext } from './common/AppContext';
-import CircularBuffer from './common/CircularBuffer';
-import { listenData } from './common/Ipc';
-import { MessageData, parseMessageData } from './common/MessageData';
-import { MessageDataAnalysis } from './common/MessageDataAnalysis';
-import { Page } from './common/Page';
-import { SocketState } from './common/SocketState';
-import { UnitSystem } from './common/UnitConvert';
-import MultiWindowApp from './MultiWindowApp';
-import Network from './pages/Network';
-import Settings from './pages/Settings';
-import SingleWindowApp from './SingleWindowApp';
+import { AppContext, AppWindowMode, ListenAddress, ReactAppContext, StreamAppContext } from "./common/AppContext";
+import CircularBuffer from "./common/CircularBuffer";
+import { listenData } from "./common/Ipc";
+import { MessageData, parseMessageData } from "./common/MessageData";
+import { MessageDataAnalysis } from "./common/MessageDataAnalysis";
+import { Page } from "./common/Page";
+import { SocketState } from "./common/SocketState";
+import { UnitSystem } from "./common/UnitConvert";
+import MultiWindowApp from "./MultiWindowApp";
+import Network from "./pages/Network";
+import Settings from "./pages/Settings";
+import SingleWindowApp from "./SingleWindowApp";
 
 export default function App() {
   const [isOpenSettings, setOpenSettings] = React.useState(false);
@@ -149,7 +149,7 @@ export default function App() {
   }), []);
 
   React.useEffect(() => {
-    const onData = (event: { event: 'rawData'; data: { data: number[]; }; }) => {
+    const onData = (event: { event: "rawData"; data: { data: number[]; }; }) => {
       try {
         const data = parseMessageData(event.data.data);
         if (data.isRaceOn === 0) {
@@ -167,7 +167,7 @@ export default function App() {
       }
       updateTick();
     };
-    const unlisten = listen<{ event: 'rawData'; data: { data: number[]; }; }>("on-data", event => onData(event.payload));
+    const unlisten = listen<{ event: "rawData"; data: { data: number[]; }; }>("on-data", event => onData(event.payload));
     return () => { unlisten.then(unlisten => unlisten()); };
   });
 
@@ -201,7 +201,7 @@ export default function App() {
   return (
     <MaterialDesignTransformContext.Provider value={materialDesignTransformContext}>
       <ReactAppContext.Provider value={appContext}>
-        <Theme className='fill-parent app-theme' withBackgroundColor enableDarkTheme={enableDarkTheme}>
+        <Theme className="fill-parent app-theme" withBackgroundColor enableDarkTheme={enableDarkTheme}>
           {getWindow(appWindowMode, streamAppContext)}
           <Network opened={isOpenNetwork} close={closeNetwork} />
           <Settings opened={isOpenSettings} close={closeSettings} />

@@ -63,7 +63,6 @@ export default function Tachometer() {
     return {
       xAxis: undefined,
       yAxis: undefined,
-      tooltip: {},
       angleAxis: [
         {
           polarIndex: 0,
@@ -91,17 +90,17 @@ export default function Tachometer() {
       ],
       radiusAxis: [
         {
+          type: "category",
           polarIndex: 0,
-          type: 'category',
-          data: ['RPM',],
+          data: ["RPM"],
           axisLabel: {
             show: false,
           },
         },
         {
+          type: "category",
           polarIndex: 1,
-          type: 'category',
-          data: ['Power Level',],
+          data: ["Power Level"],
           axisLabel: {
             show: false,
           },
@@ -109,36 +108,36 @@ export default function Tachometer() {
       ],
       polar: [
         {
-          radius: ['75%', '90%']
+          radius: ["75%", "90%"]
         },
         {
-          radius: ['75%', '90%']
+          radius: ["75%", "90%"]
         },
       ],
       series: [
         {
-          type: 'bar',
+          type: "bar",
+          coordinateSystem: "polar",
           polarIndex: 0,
           data: [{
             value: lastData.currentEngineRpm,
             itemStyle: {
-              color: style.getPropertyValue('--md-sys-color-primary'),
-              borderColor: style.getPropertyValue('--md-sys-color-tertiary'),
+              color: style.getPropertyValue("--md-sys-color-primary"),
+              borderColor: style.getPropertyValue("--md-sys-color-tertiary"),
               borderWidth: isInRange ? 8 : 0,
               borderRadius: "2%",
             },
           }],
-          coordinateSystem: 'polar'
         },
         {
-          type: 'bar',
+          type: "bar",
           polarIndex: 1,
           data: [
             {
               value: powerLevel,
               itemStyle: {
-                color: style.getPropertyValue('--md-sys-color-tertiary'),
-                borderColor: style.getPropertyValue('--md-sys-color-primary'),
+                color: style.getPropertyValue("--md-sys-color-tertiary"),
+                borderColor: style.getPropertyValue("--md-sys-color-primary"),
                 borderWidth: isInRange ? 8 : 0,
                 borderRadius: "2%",
               },
@@ -146,29 +145,29 @@ export default function Tachometer() {
           ],
           label: {
             show: true,
-            position: 'middle',
+            position: "middle",
             rotate: 0,
             formatter: (params) => {
               return `${((params as { value: number; }).value * 100).toFixed(1)}%`;
             },
           },
-          coordinateSystem: 'polar'
+          coordinateSystem: "polar",
         },
         {
-          type: 'pie',
+          type: "pie",
           z: 3,
-          radius: ['75%', '90%'],
-          center: ['50%', '50%'],
+          radius: ["75%", "90%"],
+          center: ["50%", "50%"],
           // adjust the start and end angle
           startAngle: getAngle(225, -45, lower / lastData.engineMaxRpm),
           endAngle: getAngle(225, -45, upper / lastData.engineMaxRpm),
           data: [
             {
-              name: 'High Power RPM Range',
+              name: "High Power RPM Range",
               value: 1,
               itemStyle: {
-                color: 'rgba(0, 0, 0, 0)',
-                borderColor: style.getPropertyValue('--md-sys-color-tertiary'),
+                color: "rgba(0, 0, 0, 0)",
+                borderColor: style.getPropertyValue("--md-sys-color-tertiary"),
                 borderWidth: 8,
                 borderRadius: "2%",
               }
@@ -331,7 +330,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
       },
       tooltip: {
         show: true,
-        trigger: 'axis',
+        trigger: "axis",
         formatter: (params) => {
           if (Array.isArray(params)) {
             params = params[0];
@@ -347,7 +346,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
       },
       series: [
         {
-          type: 'bar',
+          type: "bar",
           data: messageData.map((data, index) => {
             const powerLevel = Math.max(data.power / messageDataAnalysis.maxPower.value, 0) * 100;
             return {
@@ -371,8 +370,8 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
 function SimpleCard({ title, tooltip, content, onClick }: { title: string, tooltip: string, content: React.ReactNode; onClick: () => unknown; }) {
   return <Card className="flex-child" style={{ maxWidth: 280, textWrap: "nowrap" }}>
     <Ripple onClick={onClick} className="fill-parent flex-column flex-space-between fit-elevated-card-container-shape" style={{ padding: 24 }}>
-      <Typography.Title.Medium tag='span' title={tooltip}>{title}</Typography.Title.Medium>
-      <Typography.Headline.Medium tag='span' title={tooltip}>{content}</Typography.Headline.Medium>
+      <Typography.Title.Medium tag="span" title={tooltip}>{title}</Typography.Title.Medium>
+      <Typography.Headline.Medium tag="span" title={tooltip}>{content}</Typography.Headline.Medium>
     </Ripple>
   </Card>;
 }
@@ -384,14 +383,14 @@ function ConsumptionEstimationCard({ messageData, messageDataAnalysis, onClick }
 
   return <Card className="flex-child" style={{ maxWidth: 280, textWrap: "nowrap" }}>
     <Ripple onClick={onClick} className="fill-parent flex-column flex-space-between fit-elevated-card-container-shape" style={{ padding: 24, alignItems: "start" }}>
-      <Typography.Title.Medium tag='span'>Estimation</Typography.Title.Medium>
-      <Typography.Title.Medium tag='span' className="flex-row flex-space-between" style={{ width: "100%", opacity: isValidProp(lastData.dataType, "fuel") ? 1 : 0.3 }}>
+      <Typography.Title.Medium tag="span">Estimation</Typography.Title.Medium>
+      <Typography.Title.Medium tag="span" className="flex-row flex-space-between" style={{ width: "100%", opacity: isValidProp(lastData.dataType, "fuel") ? 1 : 0.3 }}>
         Fuel:
         <span>
           <span title="Laps of Remain Fuel">{remainEstimation.fuel.toFixed(1)}</span><span style={{ paddingLeft: 8 }}>Laps</span>
         </span>
       </Typography.Title.Medium>
-      <Typography.Title.Medium tag='span' className="flex-row flex-space-between" style={{ width: "100%", opacity: isValidProp(lastData.dataType, "tireWearFrontLeft") ? 1 : 0.3 }}>
+      <Typography.Title.Medium tag="span" className="flex-row flex-space-between" style={{ width: "100%", opacity: isValidProp(lastData.dataType, "tireWearFrontLeft") ? 1 : 0.3 }}>
         TireWear:
         <span>
           <span title="Laps of Until 50% Tire Wear">{remainEstimation.tireWear50.toFixed(1)}</span> / <span title="Laps of Until 65% Tire Wear">{remainEstimation.tireWear65.toFixed(1)}</span>

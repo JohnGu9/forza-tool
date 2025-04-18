@@ -26,12 +26,12 @@ export default function Detail() {
       bottom: 32
     },
     tooltip: {
-      trigger: 'axis',
+      trigger: "axis",
     },
     series: [
       {
         data: data.map(v => [v.index, v.value]),
-        type: 'line',
+        type: "line",
         symbolSize: 0,
       }
     ]

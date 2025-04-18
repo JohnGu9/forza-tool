@@ -61,13 +61,13 @@ function SimpleCard({ title, data, onClick }: { title: string, data: DataType[];
       bottom: 8
     },
     yAxis: {
-      type: 'value',
+      type: "value",
       min: 0,
       max: 100,
     },
     tooltip: {
       show: true,
-      trigger: 'axis',
+      trigger: "axis",
       valueFormatter: (value) => {
         return `${(value as number).toFixed(1)}%`;
       },
@@ -75,7 +75,7 @@ function SimpleCard({ title, data, onClick }: { title: string, data: DataType[];
     series: [
       {
         data: data,
-        type: 'line',
+        type: "line",
         areaStyle: {
           opacity: 0.6,
         },
@@ -106,11 +106,11 @@ function EngineBraking({ data }: { data: DataType[]; }) {
       bottom: 8
     },
     yAxis: {
-      type: 'value',
+      type: "value",
     },
     tooltip: {
       show: true,
-      trigger: 'axis',
+      trigger: "axis",
       valueFormatter: (value) => {
         return `${(value as number).toFixed(3)} ${getPowerUnit(unitSystem)}`;
       },
@@ -118,7 +118,7 @@ function EngineBraking({ data }: { data: DataType[]; }) {
     series: [
       {
         data: data,
-        type: 'line',
+        type: "line",
         areaStyle: {
           opacity: 0.6,
         },

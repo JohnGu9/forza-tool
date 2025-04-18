@@ -1,4 +1,4 @@
-// Circular buffer storage. Externally-apparent 'length' increases indefinitely
+// Circular buffer storage. Externally-apparent "length" increases indefinitely
 // while any items with indexes below length-n will be forgotten (undefined
 // will be returned if you try to get them, trying to set is an exception).
 // n represents the initial length of the array, not a maximum
@@ -132,6 +132,6 @@ export default class CircularBuffer<T> {
     }
 
     toString() {
-        return '[object CircularBuffer(' + this._array.length + ') length ' + this._length + ']';
+        return "[object CircularBuffer(" + this._array.length + ") length " + this._length + "]";
     }
 };

@@ -13,8 +13,8 @@ export default function ErrorMessage({ opened, close }: {
     onEscapeKey={close}
     headline="Error"
     actions={<>
-      <Button buttonStyle='text' onClick={() => setErrorMessage([])} disabled={errorMessage.length === 0}>Clear</Button>
-      <Button buttonStyle='text' onClick={close}>Close</Button>
+      <Button buttonStyle="text" onClick={() => setErrorMessage([])} disabled={errorMessage.length === 0}>Clear</Button>
+      <Button buttonStyle="text" onClick={close}>Close</Button>
     </>}>
     {errorMessage.length === 0 ?
       <div>No Error Message Yet. </div> :
