@@ -4,7 +4,7 @@ import { Card } from "rmcw/dist/components3";
 import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
 import { MessageData } from "../common/MessageData";
-import { MessageDataAnalysis } from "../common/MessageDataAnalysis";
+import { isValidPowerDiff, MessageDataAnalysis } from "../common/MessageDataAnalysis";
 import { getPowerUnit, UnitSystem, wTo } from "../common/UnitConvert";
 import { ReactWindowContext } from "./common/Context";
 import { useEcharts } from "./common/Echarts";
@@ -19,14 +19,15 @@ export default function PowerVerification() {
     return {
       grid: {
         left: 64,
-        top: 24,
+        top: 32,
         right: 24,
         bottom: 24
       },
+      legend: {},
       yAxis: {
         type: "value",
-        min: ({ min }) => { return min; },
-        max: ({ max }) => { return max; },
+        min: "dataMin",
+        max: "dataMax",
         axisLabel: {
           formatter: (value) => {
             return `${Math.abs(value).toFixed(0)}${getPowerUnit(unitSystem)}`;
@@ -59,7 +60,7 @@ export default function PowerVerification() {
           data: data.map(v => {
             return {
               value: [v.index, v.Power],
-              itemStyle: { color: style.getPropertyValue((v.diff > 0.998 && v.diff < 1.002) ? "--md-sys-color-tertiary" : "--md-sys-color-error") },
+              itemStyle: { color: style.getPropertyValue(isValidPowerDiff(v.diff) ? "--md-sys-color-tertiary" : "--md-sys-color-error") },
             };
           }),
           large: true,
@@ -70,7 +71,7 @@ export default function PowerVerification() {
           data: data.map(v => {
             return {
               value: [v.index, v["Torque * RPM"]],
-              itemStyle: { color: style.getPropertyValue((v.diff > 0.998 && v.diff < 1.002) ? "--md-sys-color-primary" : "--md-sys-color-error") },
+              itemStyle: { color: style.getPropertyValue(isValidPowerDiff(v.diff) ? "--md-sys-color-primary" : "--md-sys-color-error") },
             };
           }),
           large: true,
@@ -114,7 +115,7 @@ export default function PowerVerification() {
           data: data.map(v => {
             return {
               value: [v.index, v.diff],
-              itemStyle: { color: style.getPropertyValue((v.diff > 0.998 && v.diff < 1.002) ? "--md-sys-color-tertiary" : "--md-sys-color-error") },
+              itemStyle: { color: style.getPropertyValue(isValidPowerDiff(v.diff) ? "--md-sys-color-tertiary" : "--md-sys-color-error") },
             };
           }),
           large: true,
@@ -124,7 +125,7 @@ export default function PowerVerification() {
   });
 
   return <div className="fill-parent flex-column" style={{ padding, gap: 16 }}>
-    <Card className="flex-child" style={{ flex: "3 3" }}>
+    <Card className="flex-child" style={{ flex: "3 3", paddingTop: 8 }}>
       <div ref={ref} className="fill-parent" />
     </Card>
     <Card className="flex-child">

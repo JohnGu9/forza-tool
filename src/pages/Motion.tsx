@@ -19,9 +19,9 @@ export default function Motion() {
       {Object.values(MotionOption).map(key => <SelectOption key={key} headline={key} selected={motionOption === key} onClick={() => setMotionOption(key as MotionOption)} style={{ textTransform: "capitalize" }} />)}
     </Select>
     <div className="flex-child flex-column" style={{ gap: 16 }}>
-      <SimpleCard title="Axis X" data={x} type={motionOption} />
-      <SimpleCard title="Axis Y" data={y} type={motionOption} />
-      <SimpleCard title="Axis Z" data={z} type={motionOption} />
+      <SimpleCard title={motionOption === MotionOption.Rotation ? "Yaw" : "Axis X"} data={x} type={motionOption} />
+      <SimpleCard title={motionOption === MotionOption.Rotation ? "Pitch" : "Axis Y"} data={y} type={motionOption} />
+      <SimpleCard title={motionOption === MotionOption.Rotation ? "Roll" : "Axis Z"} data={z} type={motionOption} />
       <SimpleCard title="Scalar" data={scalar} type={motionOption} yAxis={{
         type: "value",
         min: 0,
@@ -48,8 +48,8 @@ function getTargetData(messageData: CircularBuffer<MessageData>, type: MotionOpt
 
   function getKeys() {
     switch (type) {
-      case MotionOption.AngularVelocityGlobal:
-        return { x: "pitch", y: "yaw", z: "roll" };
+      case MotionOption.Rotation:
+        return { x: "yaw", y: "pitch", z: "roll" };
       default:
         return { x: `${type}X`, y: `${type}Y`, z: `${type}Z` };
     }
@@ -77,15 +77,16 @@ function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataTyp
       case MotionOption.Velocity:
         return `${msTo(value as number, unitSystem).toFixed(3)} ${getSpeedUnit(unitSystem)}`;
       case MotionOption.AngularVelocity:
-      case MotionOption.AngularVelocityGlobal:
         return `${(value as number).toFixed(3)} RPS`;
+      case MotionOption.Rotation:
+        return `${(value as number).toFixed(3)}`;
       case MotionOption.Position:
         return `${(value as number).toFixed(3)} m`;
     }
   }
   const ref = useEcharts<HTMLDivElement>({
     grid: {
-      left: 32,
+      left: 30,
       top: 8,
       right: 0,
       bottom: 8

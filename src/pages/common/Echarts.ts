@@ -1,7 +1,7 @@
 import type { BarSeriesOption, LineSeriesOption, PieSeriesOption } from "echarts/charts";
 import { BarChart, LineChart, PieChart } from "echarts/charts";
-import type { GridComponentOption, MarkLineComponentOption, MarkPointComponentOption, PolarComponentOption, TooltipComponentOption } from "echarts/components";
-import { GridComponent, MarkLineComponent, MarkPointComponent, PolarComponent, TooltipComponent } from "echarts/components";
+import type { GridComponentOption, LegendComponentOption, MarkLineComponentOption, MarkPointComponentOption, PolarComponentOption, TooltipComponentOption } from "echarts/components";
+import { GridComponent, LegendComponent, MarkLineComponent, MarkPointComponent, PolarComponent, TooltipComponent } from "echarts/components";
 import type { ComposeOption } from "echarts/core";
 import * as echarts from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
@@ -17,6 +17,7 @@ type ECOption = ComposeOption<
     | PolarComponentOption
     | MarkPointComponentOption
     | MarkLineComponentOption
+    | LegendComponentOption
 >;
 
 // Register the required components
@@ -26,6 +27,7 @@ echarts.use([
     PolarComponent,
     MarkPointComponent,
     MarkLineComponent,
+    LegendComponent,
     BarChart,
     LineChart,
     PieChart,

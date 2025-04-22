@@ -5,7 +5,7 @@ import { Card, LinearProgress, Ripple, Typography } from "rmcw/dist/components3"
 import { ReactAppContext, ReactStreamAppContext } from "../common/AppContext";
 import CircularBuffer from "../common/CircularBuffer";
 import { dummyMessageData, MessageData } from "../common/MessageData";
-import { MessageDataAnalysis } from "../common/MessageDataAnalysis";
+import { isValidPowerDiff, MessageDataAnalysis } from "../common/MessageDataAnalysis";
 import { getPowerUnit, getTorqueUnit, nmTo, UnitSystem, wTo } from "../common/UnitConvert";
 import { ReactWindowContext } from "./common/Context";
 import { useEcharts } from "./common/Echarts";
@@ -40,14 +40,14 @@ export default function Engine() {
     <div className="flex-row flex-space-between" style={{ height: columnHeight, gap: 8, padding: "0 0 16px" }}>
       <SimpleCard title="RPM"
         content={lastMessageData.currentEngineRpm.toFixed(0)}
-        onClick={changeUnitSystem} />
+        onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)} />
       *
       <SimpleCard title={`Torque (${getTorqueUnit(unitSystem)})`}
         content={nmTo(Math.max(lastMessageData.torque, 0), unitSystem).toFixed(1)}
         onClick={changeUnitSystem} />
       =
       <SimpleCard title={`Power (${powerUnitName})`} content={wTo(Math.max(lastMessageData.power, 0), unitSystem).toFixed(1)}
-        onClick={() => setShowEnginePowerCurve(!showEnginePowerCurve)} />
+        onClick={changeUnitSystem} />
     </div>
     <SharedAxis className="flex-child" keyId={showEnginePowerCurve ? 1 : 0}>
       {showEnginePowerCurve ?
@@ -86,6 +86,7 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
         right: 52,
         bottom: 24
       },
+      legend: {},
       tooltip: {
         show: true,
         trigger: "axis",
@@ -149,7 +150,6 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
           },
           symbolSize: 0,
           smooth: true,
-          large: true,
         },
         {
           type: "line",
@@ -162,9 +162,9 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
           },
           symbolSize: 0,
           smooth: true,
-          large: true,
           markPoint: {
             symbol: "circle",
+            silent: true,
             data: lastData.map((v, index) => {
               const diff = powerDiff[index];
               const power = wTo(Math.max(v.power, 0), unitSystem);
@@ -173,7 +173,7 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
                 coord: [v.currentEngineRpm, power],
                 symbolSize: Math.pow((index + 1) / lastData.length, 3) * 8,
                 itemStyle: {
-                  color: diff > 0.998 && diff < 1.002 ?
+                  color: isValidPowerDiff(diff) ?
                     mergeColor(style.getPropertyValue("--md-sys-color-tertiary"), "#ffffff", getPowerLevel(power)) :
                     style.getPropertyValue("--md-sys-color-error")
                 },
@@ -259,7 +259,8 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
           },
         },
         splitLine: {
-          show: false,
+          showMaxLine: false,
+          showMinLine: true,
         },
       },
       series: [

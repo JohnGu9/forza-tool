@@ -69,14 +69,14 @@ function SimpleCard({ title, data, option }: { title: string, data: DataType[]; 
     tooltip: {
       show: true,
       trigger: "axis",
-      valueFormatter: formatter
+      valueFormatter: formatter as (value: OptionDataValue | OptionDataValue[]) => string,
     },
     yAxis: {
       type: "value",
       min,
       max,
       axisLabel: {
-        formatter,
+        formatter: formatter as (value: OptionDataValue | OptionDataValue[]) => string,
       },
     },
     series: [
@@ -103,9 +103,9 @@ function SimpleCard({ title, data, option }: { title: string, data: DataType[]; 
 }
 
 function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
-  formatter: (value: OptionDataValue | OptionDataValue[]) => string;
-  min: ((value: { min: number, max: number; }) => number) | number;
-  max: ((value: { min: number, max: number; }) => number) | number;
+  formatter: (value: number) => string;
+  min: ((value: { min: number; max: number; }) => number) | number;
+  max: ((value: { min: number; max: number; }) => number) | number;
   progress: (value: number) => number;
   getColor: (value: number) => string | undefined,
 } {
@@ -116,27 +116,34 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
     case TireOption.SlipAngle:
     case TireOption.SlipRatio:
       return {
-        formatter: (value) => `${(value as number * 100).toFixed(1)}%`,
+        formatter: (value) => `${(value * 100).toFixed(1)}%`,
         min: (value) => { return -absMax(value); },
         max: (value) => { return absMax(value); },
-        progress: (value: number) => Math.abs(value),
-        getColor,
+        progress: (value) => Math.abs(value),
+        getColor: getSlipColor,
       };
     case TireOption.CombinedSlip:
       return {
-        formatter: (value) => `${(value as number * 100).toFixed(1)}%`,
+        formatter: (value) => `${(value * 100).toFixed(1)}%`,
         min: 0,
-        max: (value: { min: number; max: number; }) => { return value.max; },
-        progress: (value: number) => value,
-        getColor,
+        max: ({ max }) => { return max; },
+        progress: (value) => value,
+        getColor: getSlipColor,
       };
     case TireOption.TireWear:
       return {
-        formatter: (value) => `${(value as number * 100).toFixed(1)}%`,
+        formatter: (value) => `${(value * 100).toFixed(1)}%`,
         min: 0,
         max: 1,
-        progress: (value: number) => value,
-        getColor,
+        progress: (value) => value,
+        getColor: (value) => {
+          if (value < 0.5) {
+            return "var(--md-sys-color-tertiary)";
+          }
+          if (value > 0.6) {
+            return "var(--md-sys-color-error)";
+          }
+        },
       };
     case TireOption.Temp: {
       function getColor(value: number) {
@@ -148,12 +155,13 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
         }
         return "var(--md-sys-color-error)";
       }
-      function progress(value: number) { return value / 239; }
-
+      function progress(value: number) {
+        return value / 239;
+      }
       switch (unitSystem) {
         case UnitSystem.Imperial:
           return {
-            formatter: (value) => `${(value as number).toFixed(1)}°F`,
+            formatter: (value) => `${value.toFixed(1)}°F`,
             min: ({ min }) => { return Math.min(min, 140); },
             max: ({ max }) => { return Math.max(max, 248); },
             progress,
@@ -164,7 +172,7 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
             return (value - 32) * 5 / 9;
           }
           return {
-            formatter: (value) => `${toC(value as number).toFixed(1)}°C`,
+            formatter: (value) => `${toC(value).toFixed(1)}°C`,
             min: ({ min }) => { return Math.min(min, 140); },
             max: ({ max }) => { return Math.max(max, 248); },
             progress,
@@ -175,28 +183,54 @@ function getConfiguration(type: TireOption, unitSystem: UnitSystem): {
     }
     case TireOption.WheelRotationSpeed:
       return {
-        formatter: (value) => `${(value as number).toFixed(1)} Radians/Sec`,
+        formatter: (value) => `${value.toFixed(1)} Radians/Sec`,
         min: ({ min }) => { return min; },
         max: ({ max }) => { return max; },
         progress: () => 0,
-        getColor,
+        getColor: () => undefined,
       };
-    case TireOption.SurfaceRumble:
     case TireOption.WheelOnRumbleStrip:
     case TireOption.WheelInPuddleDepth:
     case TireOption.NormalizedSuspensionTravel:
-    case TireOption.SuspensionTravelMeters:
       return {
-        formatter: (value) => `${(value as number * 100).toFixed(1)}%`,
+        formatter: (value) => `${(value * 100).toFixed(1)}%`,
         min: 0,
         max: 1,
         progress: (value: number) => value,
-        getColor,
+        getColor: getRangeColor,
       };
+    case TireOption.SurfaceRumble:
+      return {
+        formatter: (value) => `${value.toFixed(4)}`,
+        min: ({ min }) => { return min; },
+        max: ({ max }) => { return max; },
+        progress: () => 0,
+        getColor: () => undefined,
+      };
+    case TireOption.SuspensionTravelMeters: {
+      switch (unitSystem) {
+        case UnitSystem.Metric:
+          return {
+            formatter: (value) => `${(value * 100).toFixed(1)} cm`,
+            min: ({ min }) => { return min; },
+            max: ({ max }) => { return max; },
+            progress: () => 0,
+            getColor: () => undefined,
+          };
+        case UnitSystem.Imperial:
+          return {
+            formatter: (value) => `${(value * 39.37).toFixed(1)} Inch`,
+            min: ({ min }) => { return min; },
+            max: ({ max }) => { return max; },
+            progress: () => 0,
+            getColor: () => undefined,
+          };
+      }
+    }
   }
 }
 
-function getColor(value: number) {
+function getSlipColor(value: number) {
   if (value < 1) {
     return undefined;
   }
@@ -204,4 +238,10 @@ function getColor(value: number) {
     return "var(--md-sys-color-tertiary)";
   }
   return "var(--md-sys-color-error)";
+}
+
+function getRangeColor(value: number) {
+  if (value >= 1 || value <= 0) {
+    return "var(--md-sys-color-error)";
+  }
 }

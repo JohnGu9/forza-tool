@@ -127,6 +127,11 @@ export default function Tachometer() {
               borderWidth: isInRange ? 8 : 0,
               borderRadius: "2%",
             },
+            tooltip: {
+              valueFormatter: (currentEngineRpm: number) => {
+                return currentEngineRpm.toFixed(1);
+              },
+            },
           }],
         },
         {
@@ -137,9 +142,14 @@ export default function Tachometer() {
               value: powerLevel,
               itemStyle: {
                 color: style.getPropertyValue("--md-sys-color-tertiary"),
-                borderColor: style.getPropertyValue("--md-sys-color-primary"),
+                borderColor: style.getPropertyValue("--md-sys-color-tertiary"),
                 borderWidth: isInRange ? 8 : 0,
                 borderRadius: "2%",
+              },
+              tooltip: {
+                valueFormatter: (powerLevel: number) => {
+                  return `${(powerLevel * 100).toFixed(1)}%`;
+                },
               },
             },
           ],
@@ -170,7 +180,12 @@ export default function Tachometer() {
                 borderColor: style.getPropertyValue("--md-sys-color-tertiary"),
                 borderWidth: 8,
                 borderRadius: "2%",
-              }
+              },
+              tooltip: {
+                valueFormatter: () => {
+                  return `${lower.toFixed(0)} - ${upper.toFixed(0)}`;
+                },
+              },
             },
           ]
         },

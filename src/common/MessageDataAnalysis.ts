@@ -107,11 +107,14 @@ export class ConsumptionEstimation {
     }
 };
 
+export function isValidPowerDiff(powerDiff: number) {
+    return powerDiff > 0.999 && powerDiff < 1.001;
+}
+
 export class MessageDataAnalysis {
     id = 0;
-    stamp = 0;
 
-    maxPower: { value: number, rpm: number, torque: number; } = { value: 0, rpm: 0, torque: 0 };
+    maxPower = { value: 0, rpm: 0, torque: 0 };
     powerCurve: { rpm: number, power: number, torque: number; }[] = [];
     powerDiff: CircularBuffer<number>;
     distance: CircularBuffer<number>;
@@ -129,7 +132,6 @@ export class MessageDataAnalysis {
 
     reset() {
         this.id += 1;
-        this.stamp = 0;
 
         this.maxPower = { value: 0, rpm: 0, torque: 0 };
         this.powerCurve = [];
@@ -142,7 +144,6 @@ export class MessageDataAnalysis {
     }
 
     analyze(messageData: CircularBuffer<MessageData>/* not empty ensure */) {
-        let changed = false;
         const lastData = messageData.slice(-6);
         const lastMessageData = lastData[lastData.length - 1];
         const isFullAcceleratorForAWhile = lastData.every(v => v.accelerator > 248 && v.gear === lastData[0].gear);
@@ -151,10 +152,8 @@ export class MessageDataAnalysis {
         const powerDiff = lastMessageData.power / powerPrediction;// There is diff, I don't know why? Power delay?
         this.powerDiff.push(powerDiff);
 
-        if ((powerDiff > 0.998 && powerDiff < 1.002)) {
-            if (validData(this, lastMessageData)) {
-                changed = true;
-            }
+        if (isValidPowerDiff(powerDiff)) {
+            validData(this, lastMessageData);
         }
 
         if (lastData.length > 1) {
@@ -179,7 +178,6 @@ export class MessageDataAnalysis {
                 this.consumptionEstimation.setStart(lastMessageData);
             }
 
-            changed = true;
         } else { // lastData.length === 1
             this.distance.push(0);
             this.velocity.push(0);
@@ -192,14 +190,7 @@ export class MessageDataAnalysis {
             }
         }
 
-        if (this.isFullAcceleratorForAWhile !== isFullAcceleratorForAWhile) {
-            this.isFullAcceleratorForAWhile = isFullAcceleratorForAWhile;
-            changed = true;
-        }
-
-        if (changed) {
-            this.stamp += 1;
-        }
+        this.isFullAcceleratorForAWhile = isFullAcceleratorForAWhile;
     }
 };
 

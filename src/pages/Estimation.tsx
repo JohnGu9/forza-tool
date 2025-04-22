@@ -47,7 +47,7 @@ export default function Estimation() {
       <Item trailingSupportingText={(lapsEstimation.tireWear * 0.65).toFixed(1)}>Laps of 65% Tire Wear</Item>
       <Item trailingSupportingText={(remainEstimation.tireWear50).toFixed(1)} emphasize>Laps of Until 50% Tire Wear</Item>
       <Item trailingSupportingText={(remainEstimation.tireWear65).toFixed(1)} emphasize>Laps of Until 65% Tire Wear</Item>
-      <Typography.Label.Small tag="div" style={{ padding: "8px 16px 16px", opacity: 0.5 }}>* Only work for Forza Motorsport</Typography.Label.Small>
+      <Typography.Label.Small tag="div" style={{ padding: "8px 16px", opacity: 0.5 }}>* Only work for Forza Motorsport</Typography.Label.Small>
     </Card>
     <div style={{ height: 16 }} aria-hidden />
     <Card className="flex-column" style={{ width: "100%" }}>
@@ -59,7 +59,7 @@ export default function Estimation() {
       <Item trailingSupportingText={`${toPercentage(unitTimeConsumption.fuel * 600)} / ${toPercentage(unitTimeConsumption.fuel * 1200)}`} emphasize>Per 10/20 Minute</Item>
       <Item trailingSupportingText={(lapsEstimation.fuel).toFixed(1)}>Laps of Full Fuel</Item>
       <Item trailingSupportingText={(remainEstimation.fuel).toFixed(1)} emphasize>Laps of Remain Fuel</Item>
-      <Typography.Label.Small tag="div" style={{ padding: "8px 16px 16px", opacity: 0.5 }}>* Only work for Dash</Typography.Label.Small>
+      <Typography.Label.Small tag="div" style={{ padding: "8px 16px", opacity: 0.5 }}>* Only work for Dash</Typography.Label.Small>
     </Card>
   </div>;
 }

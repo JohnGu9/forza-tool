@@ -20,7 +20,7 @@ export enum MotionOption {
     Acceleration = "acceleration",
     Velocity = "velocity",
     AngularVelocity = "angularVelocity",
-    AngularVelocityGlobal = "angularVelocityGlobal",
+    Rotation = "rotation",
     Position = "position",
 }
 
