@@ -22,7 +22,7 @@ export default function Control() {
     <SharedAxis keyId={showEngineBraking ? 1 : 0}
       className="flex-child flex-row" style={{ flex: "3 3", gap: 16 }} onClick={() => setShowEngineBraking(!showEngineBraking)}>
       {showEngineBraking ?
-        <EngineBraking data={engineBraking} /> : <>
+        <EngineBraking data={engineBraking} onClick={switchCard} /> : <>
           <SimpleCard title="Clutch" data={clutch} onClick={switchCard} />
           <SimpleCard title="Handbrake" data={handbrake} onClick={switchCard} />
         </>}
@@ -95,7 +95,7 @@ function SimpleCard({ title, data, onClick }: { title: string, data: DataType[];
   </Card>;
 }
 
-function EngineBraking({ data }: { data: DataType[]; }) {
+function EngineBraking({ data, onClick }: { data: DataType[]; onClick: () => unknown; }) {
   const { unitSystem } = React.useContext(ReactAppContext);
   const value = data.length === 0 ? 0 : data[data.length - 1][1];
   const ref = useEcharts<HTMLDivElement>({
@@ -126,11 +126,13 @@ function EngineBraking({ data }: { data: DataType[]; }) {
       }
     ]
   });
-  return <Card className="flex-child flex-column flex-space-evenly" style={{ flex: "3 3", alignItems: "stretch", padding: 16 }}>
-    <div ref={ref} className="flex-child" />
-    <div className="flex-row flex-space-between" style={{ padding: "4px 0" }}>
-      <span>Engine Braking</span>
-      <span>{(value).toFixed(1)} {getPowerUnit(unitSystem)}</span>
-    </div>
+  return <Card className="flex-child" style={{ flex: "3 3" }}>
+    <Ripple className="fill-parent flex-column flex-space-evenly fit-elevated-card-container-shape" style={{ alignItems: "stretch", padding: 16 }} onClick={onClick}>
+      <div ref={ref} className="flex-child" />
+      <div className="flex-row flex-space-between" style={{ padding: "4px 0" }}>
+        <span>Engine Braking</span>
+        <span>{(value).toFixed(1)} {getPowerUnit(unitSystem)}</span>
+      </div>
+    </Ripple>
   </Card>;
 }

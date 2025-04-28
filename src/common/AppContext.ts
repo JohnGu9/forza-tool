@@ -22,9 +22,9 @@ export enum AppWindowMode {
 };
 
 export enum WindowZIndex {
-    None = "none",
-    Top = "top",
-    Bottom = "bottom",
+    None = "None",
+    Top = "Top",
+    Bottom = "Bottom",
 };
 
 export type AppContext = {

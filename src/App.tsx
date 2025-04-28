@@ -1,7 +1,7 @@
 import "./App.scss";
 
 import { listen } from "@tauri-apps/api/event";
-import { getCurrentWindow } from '@tauri-apps/api/window';
+import { getCurrentWindow, UserAttentionType } from '@tauri-apps/api/window';
 import { MaterialDesignTransformContext, MaterialDesignTransformContextType, SharedAxisTransform } from "material-design-transform";
 import React from "react";
 import { Theme } from "rmcw/dist/components3";
@@ -138,19 +138,22 @@ export default function App() {
     }
     return WindowZIndex.None;
   });
-  const setWindowZIndex = React.useCallback((v: WindowZIndex) => {
-    getCurrentWindow().setAlwaysOnTop(false);
-    getCurrentWindow().setAlwaysOnBottom(false);
-    switch (v) {
-      case WindowZIndex.Top:
-        getCurrentWindow().setAlwaysOnTop(true);
-        break;
-      case WindowZIndex.Bottom:
-        getCurrentWindow().setAlwaysOnBottom(true);
-        break;
-    }
+  const setWindowZIndex = React.useCallback(async (v: WindowZIndex) => {
     localStorage.setItem("always-on-top", v);
     _setWindowZIndex(v);
+    const window = getCurrentWindow();
+    await Promise.all([
+      window.setAlwaysOnTop(false),
+      window.setAlwaysOnBottom(false),
+    ]);
+    switch (v) {
+      case WindowZIndex.Top:
+        await window.setAlwaysOnTop(true);
+        break;
+      case WindowZIndex.Bottom:
+        await window.setAlwaysOnBottom(true);
+        break;
+    }
   }, []);
 
   const appContext = React.useMemo<AppContext>(() => {
@@ -209,6 +212,7 @@ export default function App() {
         case "error":
           setSocketStats(SocketState.error);
           addErrorMessage(`[${new Date().toTimeString()}] ${event.data.reason}`);
+          getCurrentWindow().requestUserAttention(UserAttentionType.Informational);
           break;
         case "messageError":
           addErrorMessage(`[${new Date().toTimeString()}] ${event.data.reason}`);
@@ -229,6 +233,7 @@ export default function App() {
     }).catch((e) => {
       setSocketStats(SocketState.error);
       addErrorMessage(`[${new Date().toTimeString()}] ${e}`);
+      getCurrentWindow().requestUserAttention(UserAttentionType.Informational);
     });
   }, [addErrorMessage, listenAddress, resetData, updateTick]);
 

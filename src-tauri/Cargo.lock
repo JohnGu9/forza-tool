@@ -756,7 +756,7 @@ dependencies = [
 
 [[package]]
 name = "forza-tool"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "futures",
  "serde",

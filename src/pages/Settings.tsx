@@ -38,7 +38,7 @@ export default function Settings({ opened, close }: {
         <div style={{ height: 16 }} aria-hidden />
         <Button icon={<Icon>straighten</Icon>} onClick={() => setUnitSystem(getNextUnitSystem(unitSystem))}>UnitSystem: {getUnitSystemName(unitSystem)}</Button>
         <div style={{ height: 16 }} aria-hidden />
-        <Button icon={<Icon>vertical_align_top</Icon>} onClick={() => setWindowZIndex(getNextWindowZIndex(windowZIndex))}>Window Z Index: {windowZIndex}</Button>
+        <Button icon={<Icon>layers</Icon>} onClick={() => setWindowZIndex(getNextWindowZIndex(windowZIndex))}>Window Z Index: {windowZIndex}</Button>
         <div style={{ height: 32 }} aria-hidden />
 
         <Button icon={<Icon>error</Icon>} onClick={() => setOpenErrorMessage(true)}>Error ({errorMessage.length})</Button>

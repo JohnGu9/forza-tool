@@ -18,13 +18,13 @@ export default function SingleWindowApp({ streamAppContext }: { streamAppContext
     _setPage(value);
     setLastOpenedPage(value);
   }, [setLastOpenedPage]);
-
   const windowContext = useWindowContext("16px");
 
   return <div className="rmcw-drawer fill-parent">
     <NavigationDrawer opened className="flex-column" style={{
       position: "absolute",
-      "--md-navigation-drawer-container-shape": "0 8px 8px 0",
+      borderRight: "var(--md-divider-thickness, 1px) solid var(--md-divider-color, var(--md-sys-color-outline-variant, #cac4d0))",
+      "--md-navigation-drawer-container-shape": "0 0 0 0",
     } as React.CSSProperties}>
       <List className="flex-child" style={{ padding: 0 }}>
         <Typography.Headline.Large tag="div" style={{ padding: 16 }}>Forza</Typography.Headline.Large>
