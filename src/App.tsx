@@ -1,6 +1,7 @@
 import "./App.scss";
 
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { MaterialDesignTransformContext, MaterialDesignTransformContextType, SharedAxisTransform } from "material-design-transform";
 import React from "react";
 import { Theme } from "rmcw/dist/components3";
@@ -125,6 +126,20 @@ export default function App() {
     localStorage.setItem("last-opened-page", value);
   }, []);
 
+  const [alwaysOnTop, _setAlwaysOnTop] = React.useState(() => {
+    const alwaysOnTop = localStorage.getItem("always-on-top");
+    if (alwaysOnTop === "true") {
+      getCurrentWindow().setAlwaysOnTop(true);
+      return true;
+    }
+    return false;
+  });
+  const setAlwaysOnTop = React.useCallback((v: boolean) => {
+    getCurrentWindow().setAlwaysOnTop(v);
+    localStorage.setItem("always-on-top", v ? "true" : "false");
+    _setAlwaysOnTop(v);
+  }, []);
+
   const appContext = React.useMemo<AppContext>(() => {
     return {
       openNetwork, openSettings,
@@ -136,8 +151,9 @@ export default function App() {
       errorMessage, setErrorMessage,
       lastOpenedPage, setLastOpenedPage,
       appWindowMode, setAppWindowMode,
+      alwaysOnTop, setAlwaysOnTop,
     };
-  }, [openNetwork, openSettings, resetData, socketStats, listenAddress, setListenAddress, enableDarkTheme, unitSystem, dataBufferLength, setDataBufferLength, errorMessage, lastOpenedPage, setLastOpenedPage, appWindowMode, setAppWindowMode]);
+  }, [openNetwork, openSettings, resetData, socketStats, listenAddress, setListenAddress, enableDarkTheme, unitSystem, dataBufferLength, setDataBufferLength, errorMessage, lastOpenedPage, setLastOpenedPage, appWindowMode, setAppWindowMode, alwaysOnTop, setAlwaysOnTop]);
 
   const streamAppContext = React.useMemo<StreamAppContext>(() => {
     return { messageData, messageDataAnalysis, isPaused, tick };
@@ -195,6 +211,11 @@ export default function App() {
           break;
       }
       updateTick();
+    }).then(() => {
+      setSocketStats(SocketState.opened);
+    }).catch((e) => {
+      setSocketStats(SocketState.error);
+      addErrorMessage(`[${new Date().toTimeString()}] ${e}`);
     });
   }, [addErrorMessage, listenAddress, messageData, messageDataAnalysis, resetData, updateTick]);
 

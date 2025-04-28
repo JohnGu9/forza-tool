@@ -15,7 +15,7 @@ export default function PowerVerification() {
   const { unitSystem } = React.useContext(ReactAppContext);
   const data = getTargetData(messageData, messageDataAnalysis, unitSystem);
 
-  const ref = useEcharts<HTMLDivElement>((style) => {
+  const ref0 = useEcharts<HTMLDivElement>((style) => {
     return {
       grid: {
         left: 64,
@@ -80,7 +80,7 @@ export default function PowerVerification() {
     };
   });
 
-  const ref0 = useEcharts<HTMLDivElement>((style) => {
+  const ref1 = useEcharts<HTMLDivElement>((style) => {
     return {
       grid: {
         left: 64,
@@ -126,10 +126,10 @@ export default function PowerVerification() {
 
   return <div className="fill-parent flex-column" style={{ padding, gap: 16 }}>
     <Card className="flex-child" style={{ flex: "3 3", paddingTop: 8 }}>
-      <div ref={ref} className="fill-parent" />
+      <div ref={ref0} className="fill-parent" />
     </Card>
     <Card className="flex-child">
-      <div ref={ref0} className="fill-parent" />
+      <div ref={ref1} className="fill-parent" />
     </Card>
   </div>;
 }

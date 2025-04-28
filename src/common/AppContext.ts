@@ -35,6 +35,8 @@ export type AppContext = {
     setDataBufferLength: (v: number) => unknown,
     errorMessage: string[],
     setErrorMessage: (v: string[]) => unknown,
+    alwaysOnTop: boolean;
+    setAlwaysOnTop: (v: boolean) => unknown,
     socketStats: SocketState,
 
     lastOpenedPage: Page,

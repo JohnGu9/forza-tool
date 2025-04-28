@@ -119,20 +119,22 @@ export default function Tachometer() {
           type: "bar",
           coordinateSystem: "polar",
           polarIndex: 0,
-          data: [{
-            value: lastData.currentEngineRpm,
-            itemStyle: {
-              color: style.getPropertyValue("--md-sys-color-primary"),
-              borderColor: style.getPropertyValue("--md-sys-color-tertiary"),
-              borderWidth: isInRange ? 8 : 0,
-              borderRadius: "2%",
-            },
-            tooltip: {
-              valueFormatter: (currentEngineRpm: number) => {
-                return currentEngineRpm.toFixed(1);
+          data: [
+            {
+              value: lastData.currentEngineRpm,
+              itemStyle: {
+                color: style.getPropertyValue("--md-sys-color-primary"),
+                borderColor: style.getPropertyValue("--md-sys-color-tertiary"),
+                borderWidth: isInRange ? 8 : 0,
+                borderRadius: "2%",
+              },
+              tooltip: {
+                valueFormatter: (currentEngineRpm: number) => {
+                  return currentEngineRpm.toFixed(1);
+                },
               },
             },
-          }],
+          ],
         },
         {
           type: "bar",

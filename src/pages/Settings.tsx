@@ -12,7 +12,8 @@ export default function Settings({ opened, close }: {
   const { resetData, errorMessage,
     enableDarkTheme, setEnableDarkTheme,
     unitSystem, setUnitSystem,
-    appWindowMode, setAppWindowMode } = React.useContext(ReactAppContext);
+    appWindowMode, setAppWindowMode,
+    alwaysOnTop, setAlwaysOnTop, } = React.useContext(ReactAppContext);
 
   const [isOpenErrorMessage, setOpenErrorMessage] = React.useState(false);
   const closeErrorMessage = React.useCallback(() => setOpenErrorMessage(false), []);
@@ -36,7 +37,10 @@ export default function Settings({ opened, close }: {
         <Button icon={<Icon>contrast</Icon>} onClick={() => setEnableDarkTheme(getNextThemeStats(enableDarkTheme))}>Theme: {getThemeName(enableDarkTheme)}</Button>
         <div style={{ height: 16 }} aria-hidden />
         <Button icon={<Icon>straighten</Icon>} onClick={() => setUnitSystem(getNextUnitSystem(unitSystem))}>UnitSystem: {getUnitSystemName(unitSystem)}</Button>
+        <div style={{ height: 16 }} aria-hidden />
+        <Button icon={<Icon>vertical_align_top</Icon>} onClick={() => setAlwaysOnTop(!alwaysOnTop)}>AlwaysOnTop: {alwaysOnTop ? "On" : "Off"}</Button>
         <div style={{ height: 32 }} aria-hidden />
+
         <Button icon={<Icon>error</Icon>} onClick={() => setOpenErrorMessage(true)}>Error ({errorMessage.length})</Button>
         {/* <div style={{ height: 16 }} aria-hidden />
          <Button onClick={() => log("Test")}>Test</Button> */}

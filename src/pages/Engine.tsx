@@ -215,7 +215,6 @@ function colorToNumbers(color: string) {
 // color: string (hex format like #ffffff)
 // factor: number (0~1, 0 mean 1000% color0, 1 mean 100% color1)
 function mergeColor(color0: string, color1: string, factor: number) {
-
   const color0Value = colorToNumbers(color0);
   const color1Value = colorToNumbers(color1);
   const r = Math.round(color0Value.r * (1 - factor) + color1Value.r * factor);
