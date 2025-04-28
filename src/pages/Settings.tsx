@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, Dialog, Icon } from "rmcw/dist/components3";
 
-import { AppWindowMode, ReactAppContext } from "../common/AppContext";
+import { AppWindowMode, ReactAppContext, WindowZIndex } from "../common/AppContext";
 import { getUnitSystemName, UnitSystem } from "../common/UnitConvert";
 import ErrorMessage from "./ErrorMessage";
 
@@ -13,7 +13,7 @@ export default function Settings({ opened, close }: {
     enableDarkTheme, setEnableDarkTheme,
     unitSystem, setUnitSystem,
     appWindowMode, setAppWindowMode,
-    alwaysOnTop, setAlwaysOnTop, } = React.useContext(ReactAppContext);
+    windowZIndex, setWindowZIndex, } = React.useContext(ReactAppContext);
 
   const [isOpenErrorMessage, setOpenErrorMessage] = React.useState(false);
   const closeErrorMessage = React.useCallback(() => setOpenErrorMessage(false), []);
@@ -38,7 +38,7 @@ export default function Settings({ opened, close }: {
         <div style={{ height: 16 }} aria-hidden />
         <Button icon={<Icon>straighten</Icon>} onClick={() => setUnitSystem(getNextUnitSystem(unitSystem))}>UnitSystem: {getUnitSystemName(unitSystem)}</Button>
         <div style={{ height: 16 }} aria-hidden />
-        <Button icon={<Icon>vertical_align_top</Icon>} onClick={() => setAlwaysOnTop(!alwaysOnTop)}>AlwaysOnTop: {alwaysOnTop ? "On" : "Off"}</Button>
+        <Button icon={<Icon>vertical_align_top</Icon>} onClick={() => setWindowZIndex(getNextWindowZIndex(windowZIndex))}>Window Z Index: {windowZIndex}</Button>
         <div style={{ height: 32 }} aria-hidden />
 
         <Button icon={<Icon>error</Icon>} onClick={() => setOpenErrorMessage(true)}>Error ({errorMessage.length})</Button>
@@ -96,5 +96,16 @@ function getNextThemeStats(enableDarkTheme: boolean | undefined) {
       return true;
     case true:
       return undefined;
+  }
+}
+
+function getNextWindowZIndex(windowZIndex: WindowZIndex) {
+  switch (windowZIndex) {
+    case WindowZIndex.None:
+      return WindowZIndex.Top;
+    case WindowZIndex.Top:
+      return WindowZIndex.Bottom;
+    case WindowZIndex.Bottom:
+      return WindowZIndex.None;
   }
 }

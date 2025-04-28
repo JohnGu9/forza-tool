@@ -6,7 +6,7 @@ import { MaterialDesignTransformContext, MaterialDesignTransformContextType, Sha
 import React from "react";
 import { Theme } from "rmcw/dist/components3";
 
-import { AppContext, AppWindowMode, ListenAddress, ReactAppContext, StreamAppContext } from "./common/AppContext";
+import { AppContext, AppWindowMode, ListenAddress, ReactAppContext, StreamAppContext, WindowZIndex } from "./common/AppContext";
 import CircularBuffer from "./common/CircularBuffer";
 import { listenData } from "./common/Ipc";
 import { MessageData, parseMessageData } from "./common/MessageData";
@@ -126,18 +126,31 @@ export default function App() {
     localStorage.setItem("last-opened-page", value);
   }, []);
 
-  const [alwaysOnTop, _setAlwaysOnTop] = React.useState(() => {
-    const alwaysOnTop = localStorage.getItem("always-on-top");
-    if (alwaysOnTop === "true") {
-      getCurrentWindow().setAlwaysOnTop(true);
-      return true;
+  const [windowZIndex, _setWindowZIndex] = React.useState(() => {
+    const windowZIndex = localStorage.getItem("window-z-index");
+    switch (windowZIndex) {
+      case WindowZIndex.Top:
+        getCurrentWindow().setAlwaysOnTop(true);
+        return WindowZIndex.Top;
+      case WindowZIndex.Bottom:
+        getCurrentWindow().setAlwaysOnBottom(true);
+        return WindowZIndex.Bottom;
     }
-    return false;
+    return WindowZIndex.None;
   });
-  const setAlwaysOnTop = React.useCallback((v: boolean) => {
-    getCurrentWindow().setAlwaysOnTop(v);
-    localStorage.setItem("always-on-top", v ? "true" : "false");
-    _setAlwaysOnTop(v);
+  const setWindowZIndex = React.useCallback((v: WindowZIndex) => {
+    getCurrentWindow().setAlwaysOnTop(false);
+    getCurrentWindow().setAlwaysOnBottom(false);
+    switch (v) {
+      case WindowZIndex.Top:
+        getCurrentWindow().setAlwaysOnTop(true);
+        break;
+      case WindowZIndex.Bottom:
+        getCurrentWindow().setAlwaysOnBottom(true);
+        break;
+    }
+    localStorage.setItem("always-on-top", v);
+    _setWindowZIndex(v);
   }, []);
 
   const appContext = React.useMemo<AppContext>(() => {
@@ -151,9 +164,9 @@ export default function App() {
       errorMessage, setErrorMessage,
       lastOpenedPage, setLastOpenedPage,
       appWindowMode, setAppWindowMode,
-      alwaysOnTop, setAlwaysOnTop,
+      windowZIndex, setWindowZIndex,
     };
-  }, [openNetwork, openSettings, resetData, socketStats, listenAddress, setListenAddress, enableDarkTheme, unitSystem, dataBufferLength, setDataBufferLength, errorMessage, lastOpenedPage, setLastOpenedPage, appWindowMode, setAppWindowMode, alwaysOnTop, setAlwaysOnTop]);
+  }, [openNetwork, openSettings, resetData, socketStats, listenAddress, setListenAddress, enableDarkTheme, unitSystem, dataBufferLength, setDataBufferLength, errorMessage, lastOpenedPage, setLastOpenedPage, appWindowMode, setAppWindowMode, windowZIndex, setWindowZIndex]);
 
   const streamAppContext = React.useMemo<StreamAppContext>(() => {
     return { messageData, messageDataAnalysis, isPaused, tick };
@@ -217,7 +230,7 @@ export default function App() {
       setSocketStats(SocketState.error);
       addErrorMessage(`[${new Date().toTimeString()}] ${e}`);
     });
-  }, [addErrorMessage, listenAddress, messageData, messageDataAnalysis, resetData, updateTick]);
+  }, [addErrorMessage, listenAddress, resetData, updateTick]);
 
   return (
     <MaterialDesignTransformContext.Provider value={materialDesignTransformContext}>

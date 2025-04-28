@@ -21,6 +21,12 @@ export enum AppWindowMode {
     Multi,
 };
 
+export enum WindowZIndex {
+    None = "none",
+    Top = "top",
+    Bottom = "bottom",
+};
+
 export type AppContext = {
     openNetwork: () => unknown,
     openSettings: () => unknown,
@@ -35,8 +41,8 @@ export type AppContext = {
     setDataBufferLength: (v: number) => unknown,
     errorMessage: string[],
     setErrorMessage: (v: string[]) => unknown,
-    alwaysOnTop: boolean;
-    setAlwaysOnTop: (v: boolean) => unknown,
+    windowZIndex: WindowZIndex;
+    setWindowZIndex: (v: WindowZIndex) => unknown,
     socketStats: SocketState,
 
     lastOpenedPage: Page,
