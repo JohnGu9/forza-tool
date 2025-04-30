@@ -7,8 +7,8 @@
   ],
   "permissions": [
     "core:default",
-    "window-state:default",
     "core:window:allow-set-always-on-top",
-    "core:window:allow-set-always-on-bottom"
+    "core:window:allow-set-always-on-bottom",
+    "window-state:default"
   ]
 }

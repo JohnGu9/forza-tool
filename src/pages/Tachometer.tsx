@@ -124,8 +124,8 @@ export default function Tachometer() {
               value: lastData.currentEngineRpm,
               itemStyle: {
                 color: style.getPropertyValue("--md-sys-color-primary"),
-                borderColor: style.getPropertyValue("--md-sys-color-tertiary"),
-                borderWidth: isInRange ? 8 : 0,
+                borderColor: style.getPropertyValue("--md-sys-color-primary"),
+                borderWidth: isInRange ? 4 : 0,
                 borderRadius: "2%",
               },
               tooltip: {
@@ -143,9 +143,9 @@ export default function Tachometer() {
             {
               value: powerLevel,
               itemStyle: {
-                color: style.getPropertyValue("--md-sys-color-tertiary"),
-                borderColor: style.getPropertyValue("--md-sys-color-tertiary"),
-                borderWidth: isInRange ? 8 : 0,
+                color: style.getPropertyValue(colors.graphColor.slice(4, -1)),
+                borderColor: style.getPropertyValue(colors.graphColor.slice(4, -1)),
+                borderWidth: isInRange ? 4 : 0,
                 borderRadius: "2%",
               },
               tooltip: {
@@ -177,6 +177,11 @@ export default function Tachometer() {
             {
               name: "High Power RPM Range",
               value: 1,
+              labelLine: {
+                lineStyle: {
+                  color: style.getPropertyValue("--md-sys-color-tertiary"),
+                },
+              },
               itemStyle: {
                 color: "rgba(0, 0, 0, 0)",
                 borderColor: style.getPropertyValue("--md-sys-color-tertiary"),
@@ -187,6 +192,33 @@ export default function Tachometer() {
                 valueFormatter: () => {
                   return `${lower.toFixed(0)} - ${upper.toFixed(0)}`;
                 },
+              },
+            },
+          ]
+        },
+        {
+          type: "pie",
+          silent: true,
+          z: 2,
+          radius: ["75%", "90%"],
+          center: ["50%", "50%"],
+          // adjust the start and end angle
+          startAngle: getAngle(225, -45, lower / lastData.engineMaxRpm),
+          endAngle: getAngle(225, -45, Math.max(lower, lastData.currentEngineRpm) / lastData.engineMaxRpm),
+          data: [
+            {
+              value: 1,
+              label: {
+                show: false,
+              },
+              labelLine: {
+                show: false,
+              },
+              itemStyle: {
+                color: style.getPropertyValue("--md-sys-color-tertiary"),
+                borderColor: style.getPropertyValue("--md-sys-color-tertiary"),
+                borderWidth: 4,
+                borderRadius: "2%",
               },
             },
           ]
@@ -340,7 +372,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
   const ref = useEcharts<HTMLDivElement>((style) => {
     return {
       grid: {
-        left: 32,
+        left: 40,
         top: 8,
         right: 0,
         bottom: 8
@@ -360,6 +392,11 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
         type: "value",
         min: 0,
         max: 100,
+        axisLabel: {
+          formatter: (value) => {
+            return `${value}%`;
+          },
+        },
       },
       series: [
         {

@@ -17,7 +17,7 @@ export default function ErrorMessage({ opened, close }: {
       <Button buttonStyle="text" onClick={close}>Close</Button>
     </>}>
     {errorMessage.length === 0 ?
-      <div>No Error Message Yet. </div> :
+      <div>No error message yet. </div> :
       errorMessage.map((errorMessage, index) => <div key={index}>{errorMessage}</div>)}
   </Dialog>;
 }

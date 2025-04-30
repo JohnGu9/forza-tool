@@ -101,16 +101,13 @@ export default function App() {
   const setAppWindowMode = React.useCallback((newState: AppWindowMode) => {
     localStorage.setItem("app-window-mode", JSON.stringify(newState));
     _setAppWindowMode(newState);
-  }, []);
-  React.useEffect(() => {
-    switch (appWindowMode) {
+    switch (newState) {
       case AppWindowMode.Single: {
         localStorage.removeItem("multi-page");
         break;
       }
-      case AppWindowMode.Multi:
     }
-  }, [appWindowMode]);
+  }, []);
 
   function recoverLastOpenedPage() {
     const lastOpenedPage = localStorage.getItem("last-opened-page");
@@ -132,21 +129,19 @@ export default function App() {
       case WindowZIndex.Top:
         getCurrentWindow().setAlwaysOnTop(true);
         return WindowZIndex.Top;
-      case WindowZIndex.Bottom:
-        getCurrentWindow().setAlwaysOnBottom(true);
-        return WindowZIndex.Bottom;
+      // always-on-bottom not allow to enable at app launch
     }
     return WindowZIndex.None;
   });
-  const setWindowZIndex = React.useCallback(async (v: WindowZIndex) => {
-    localStorage.setItem("always-on-top", v);
-    _setWindowZIndex(v);
+  const setWindowZIndex = React.useCallback(async (windowZIndex: WindowZIndex) => {
+    localStorage.setItem("window-z-index", windowZIndex);
+    _setWindowZIndex(windowZIndex);
     const window = getCurrentWindow();
     await Promise.all([
       window.setAlwaysOnTop(false),
       window.setAlwaysOnBottom(false),
     ]);
-    switch (v) {
+    switch (windowZIndex) {
       case WindowZIndex.Top:
         await window.setAlwaysOnTop(true);
         break;
@@ -181,9 +176,10 @@ export default function App() {
   }), []);
 
   React.useEffect(() => {
-    const onData = (event: { event: "rawData"; data: { data: number[]; }; }) => {
+    type RawDataEvent = { event: "rawData"; data: { data: number[]; }; };
+    const unlisten = listen<RawDataEvent>("on-data", event => {
       try {
-        const data = parseMessageData(event.data.data);
+        const data = parseMessageData(event.payload.data.data);
         if (data.isRaceOn === 0) {
           setPaused(true);
           return;
@@ -198,8 +194,7 @@ export default function App() {
         addErrorMessage(`[${new Date().toTimeString()}] ${error}`);
       }
       updateTick();
-    };
-    const unlisten = listen<{ event: "rawData"; data: { data: number[]; }; }>("on-data", event => onData(event.payload));
+    });
     return () => { unlisten.then(unlisten => unlisten()); };
   });
 
