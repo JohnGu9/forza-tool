@@ -172,7 +172,7 @@ export default function Tachometer() {
           center: ["50%", "50%"],
           // adjust the start and end angle
           startAngle: getAngle(225, -45, lower / lastData.engineMaxRpm),
-          endAngle: getAngle(225, -45, upper / lastData.engineMaxRpm),
+          endAngle: getAngle(225, -45, Math.max(upper, lower + Number.MIN_VALUE) / lastData.engineMaxRpm),
           data: [
             {
               name: "High Power RPM Range",
@@ -204,7 +204,7 @@ export default function Tachometer() {
           center: ["50%", "50%"],
           // adjust the start and end angle
           startAngle: getAngle(225, -45, lower / lastData.engineMaxRpm),
-          endAngle: getAngle(225, -45, Math.max(lower, lastData.currentEngineRpm) / lastData.engineMaxRpm),
+          endAngle: getAngle(225, -45, Math.max(Math.min(lastData.currentEngineRpm, upper), lower + Number.MIN_VALUE) / lastData.engineMaxRpm),
           data: [
             {
               value: 1,
@@ -217,6 +217,33 @@ export default function Tachometer() {
               itemStyle: {
                 color: style.getPropertyValue("--md-sys-color-tertiary"),
                 borderColor: style.getPropertyValue("--md-sys-color-tertiary"),
+                borderWidth: 4,
+                borderRadius: "2%",
+              },
+            },
+          ]
+        },
+        {
+          type: "pie",
+          silent: true,
+          z: 2,
+          radius: ["75%", "90%"],
+          center: ["50%", "50%"],
+          // adjust the start and end angle
+          startAngle: getAngle(225, -45, upper / lastData.engineMaxRpm),
+          endAngle: getAngle(225, -45, Math.max(lastData.currentEngineRpm, upper + Number.MIN_VALUE) / lastData.engineMaxRpm),
+          data: [
+            {
+              value: 1,
+              label: {
+                show: false,
+              },
+              labelLine: {
+                show: false,
+              },
+              itemStyle: {
+                color: style.getPropertyValue("--md-sys-color-error"),
+                borderColor: style.getPropertyValue("--md-sys-color-error"),
                 borderWidth: 4,
                 borderRadius: "2%",
               },
