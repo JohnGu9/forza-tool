@@ -264,6 +264,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
       },
       series: [
         {
+          type: "bar",
           data: messageData.map((data, index) => {
             const powerLevel = Math.max(data.power / messageDataAnalysis.maxPower.value, 0) * 100;
             return {
@@ -273,7 +274,6 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
               },
             };
           }),
-          type: "bar",
           large: true,
           markLine: {
             data: [

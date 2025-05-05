@@ -202,6 +202,8 @@ export default function App() {
     setSocketStats(SocketState.opening);
     const [address, port, forwardSwitch, forwardAddress, forwardPort] = listenAddress;
     const forward = forwardSwitch ? `${forwardAddress}:${forwardPort}` : null;
+    // @TODO: remove onMessage callback
+    // Tauri channel isn't reliable that randomly drop messages for no reason
     listenData(`${address}:${port}`, forward, (event) => {
       switch (event.event) {
         case "error":

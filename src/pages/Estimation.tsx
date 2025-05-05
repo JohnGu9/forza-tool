@@ -29,6 +29,7 @@ export default function Estimation() {
     }
     return "estimation-circular-progress";
   }
+  // @TODO: FM8 lap time unit seem to have changed that "Per 10/20 Minute" estimation is incorrect for now
   return <div className="fill-parent" style={{ padding, overflowY: "auto" }}>
     <Card className="flex-column" style={{ width: "100%" }}>
       <ListItem

@@ -172,7 +172,7 @@ export default function Tachometer() {
           center: ["50%", "50%"],
           // adjust the start and end angle
           startAngle: getAngle(225, -45, lower / lastData.engineMaxRpm),
-          endAngle: getAngle(225, -45, Math.max(upper, lower + Number.MIN_VALUE) / lastData.engineMaxRpm),
+          endAngle: getAngle(225, -45, Math.max(upper, lower + 0.001) / lastData.engineMaxRpm),
           data: [
             {
               name: "High Power RPM Range",
@@ -204,7 +204,7 @@ export default function Tachometer() {
           center: ["50%", "50%"],
           // adjust the start and end angle
           startAngle: getAngle(225, -45, lower / lastData.engineMaxRpm),
-          endAngle: getAngle(225, -45, Math.max(Math.min(lastData.currentEngineRpm, upper), lower + Number.MIN_VALUE) / lastData.engineMaxRpm),
+          endAngle: getAngle(225, -45, Math.max(Math.min(lastData.currentEngineRpm, upper), lower + 0.001) / lastData.engineMaxRpm),
           data: [
             {
               value: 1,
@@ -231,7 +231,7 @@ export default function Tachometer() {
           center: ["50%", "50%"],
           // adjust the start and end angle
           startAngle: getAngle(225, -45, upper / lastData.engineMaxRpm),
-          endAngle: getAngle(225, -45, Math.max(lastData.currentEngineRpm, upper + Number.MIN_VALUE) / lastData.engineMaxRpm),
+          endAngle: getAngle(225, -45, Math.max(lastData.currentEngineRpm, upper + 0.001) / lastData.engineMaxRpm),
           data: [
             {
               value: 1,
@@ -432,7 +432,9 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
             const powerLevel = Math.max(data.power / messageDataAnalysis.maxPower.value, 0) * 100;
             return {
               value: [index, powerLevel],
-              itemStyle: { color: style.getPropertyValue(getColor(powerLevel)) },
+              itemStyle: {
+                color: style.getPropertyValue(getColor(powerLevel)),
+              },
             };
           }),
           large: true,
