@@ -18,7 +18,7 @@ export default function Tire() {
   const validKeys = getValidKeys(lastData?.dataType);
   return <div className="fill-parent flex-column flex-space-between" style={{ alignItems: "stretch", padding }}>
     <Select label="option" displayText={displayText}>
-      {Object.values(TireOption).map(key => <SelectOption key={key} headline={key} disabled={!validKeys.has(`${key}FrontLeft`)} selected={tireOption === key} onClick={() => setTireOption(key)} style={{ textTransform: "capitalize" }} />)}
+      {Object.values(TireOption).map(key => <SelectOption key={key} headline={key} selected={tireOption === key} onClick={() => setTireOption(key)} style={{ textTransform: "capitalize", opacity: validKeys.has(`${key}FrontLeft`) ? undefined : 0.5 }} />)}
     </Select>
     <div className="flex-child" style={{ display: "grid", gridTemplateColumns: "50% 50%", gridTemplateRows: "50% 50%", gap: "16px", padding: "16px 16px 16px 0" }}>
       <SimpleCard title="FrontLeft" data={frontLeft} option={tireOption} />

@@ -1,6 +1,5 @@
 import "./App.scss";
 
-import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow, UserAttentionType } from '@tauri-apps/api/window';
 import { MaterialDesignTransformContext, MaterialDesignTransformContextType, SharedAxisTransform } from "material-design-transform";
 import React from "react";
@@ -176,35 +175,10 @@ export default function App() {
   }), []);
 
   React.useEffect(() => {
-    type RawDataEvent = { event: "rawData"; data: { data: number[]; }; };
-    const unlisten = listen<RawDataEvent>("on-data", event => {
-      try {
-        const data = parseMessageData(event.payload.data.data);
-        if (data.isRaceOn === 0) {
-          setPaused(true);
-          return;
-        }
-        setPaused(false);
-        if (isNeedToReset(messageData, data)) { // car changed
-          resetData();
-        }
-        messageData.push(data);
-        messageDataAnalysis.analyze(messageData);
-      } catch (error) {
-        addErrorMessage(`[${new Date().toTimeString()}] ${error}`);
-      }
-      updateTick();
-    });
-    return () => { unlisten.then(unlisten => unlisten()); };
-  });
-
-  React.useEffect(() => {
     setSocketStats(SocketState.opening);
     const [address, port, forwardSwitch, forwardAddress, forwardPort] = listenAddress;
     const forward = forwardSwitch ? `${forwardAddress}:${forwardPort}` : null;
-    // @TODO: remove onMessage callback
-    // Tauri channel isn't reliable that randomly drop messages for no reason
-    listenData(`${address}:${port}`, forward, (event) => {
+    const unlisten = listenData(`${address}:${port}`, forward, (event) => {
       switch (event.event) {
         case "error":
           setSocketStats(SocketState.error);
@@ -214,8 +188,24 @@ export default function App() {
         case "messageError":
           addErrorMessage(`[${new Date().toTimeString()}] ${event.data.reason}`);
           break;
-        case "rawData":
-          addErrorMessage(`[${new Date().toTimeString()}] Received unexpected message`);
+        case "rawData": {
+          try {
+            const data = parseMessageData(event.data.data);
+            if (data.isRaceOn === 0) {
+              setPaused(true);
+              return;
+            }
+            setPaused(false);
+            if (isNeedToReset(messageData, data)) { // car changed
+              resetData();
+            }
+            messageData.push(data);
+            messageDataAnalysis.analyze(messageData);
+          } catch (error) {
+            addErrorMessage(`[${new Date().toTimeString()}] ${error}`);
+          }
+          updateTick();
+        }
           break;
         case "opened":
           setSocketStats(SocketState.opened);
@@ -225,14 +215,14 @@ export default function App() {
           break;
       }
       updateTick();
-    }).then(() => {
-      setSocketStats(SocketState.opened);
     }).catch((e) => {
       setSocketStats(SocketState.error);
       addErrorMessage(`[${new Date().toTimeString()}] ${e}`);
       getCurrentWindow().requestUserAttention(UserAttentionType.Informational);
+      return () => { };
     });
-  }, [addErrorMessage, listenAddress, resetData, updateTick]);
+    return () => { unlisten.then(unlisten => unlisten()); };
+  }, [addErrorMessage, listenAddress, messageData, messageDataAnalysis, resetData, updateTick]);
 
   return (
     <MaterialDesignTransformContext.Provider value={materialDesignTransformContext}>
