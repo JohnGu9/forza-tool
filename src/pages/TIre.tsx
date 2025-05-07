@@ -67,7 +67,6 @@ function SimpleCard({ title, data, option }: { title: string, data: DataType[]; 
       bottom: 8
     },
     tooltip: {
-      show: true,
       trigger: "axis",
       valueFormatter: formatter as (value: OptionDataValue | OptionDataValue[]) => string,
     },

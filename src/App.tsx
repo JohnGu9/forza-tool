@@ -36,17 +36,17 @@ export default function App() {
     const forwardSwitch = localStorage.getItem("forward-switch") === "true";
     const forwardAddress = localStorage.getItem("forward-address") ?? "127.0.0.1";
     const forwardPort = localStorage.getItem("forward-port") ?? "5400";
-    return [address, port, forwardSwitch, forwardAddress, forwardPort, 0];
+    return { address, port, forwardSwitch, forwardAddress, forwardPort, stamp: 0 };
   });
   const setListenAddress = React.useCallback((newValue: ListenAddress) => {
-    for (const [index, value] of newValue.entries()) {
-      if (listenAddress[index] !== value) {
+    for (const key of Object.keys(listenAddress)) {
+      if (newValue[key as keyof ListenAddress] !== listenAddress[key as keyof ListenAddress]) {
         _setListenAddress(newValue);
-        localStorage.setItem("address", newValue[0]);
-        localStorage.setItem("port", newValue[1]);
-        localStorage.setItem("forward-switch", newValue[2] ? "true" : "false");
-        localStorage.setItem("forward-address", newValue[3]);
-        localStorage.setItem("forward-port", newValue[4]);
+        localStorage.setItem("address", newValue.address);
+        localStorage.setItem("port", newValue.port);
+        localStorage.setItem("forward-switch", newValue.forwardSwitch ? "true" : "false");
+        localStorage.setItem("forward-address", newValue.forwardAddress);
+        localStorage.setItem("forward-port", newValue.forwardPort);
         break;
       }
     }
@@ -90,12 +90,11 @@ export default function App() {
     }
     const mode = JSON.parse(record);
     switch (mode) {
-      case AppWindowMode.Single:
-        return AppWindowMode.Single;
       case AppWindowMode.Multi:
         return AppWindowMode.Multi;
+      default:
+        return AppWindowMode.Single;
     }
-    return AppWindowMode.Single;
   });
   const setAppWindowMode = React.useCallback((newState: AppWindowMode) => {
     localStorage.setItem("app-window-mode", JSON.stringify(newState));
@@ -129,8 +128,9 @@ export default function App() {
         getCurrentWindow().setAlwaysOnTop(true);
         return WindowZIndex.Top;
       // always-on-bottom not allow to enable at app launch
+      default:
+        return WindowZIndex.None;
     }
-    return WindowZIndex.None;
   });
   const setWindowZIndex = React.useCallback(async (windowZIndex: WindowZIndex) => {
     localStorage.setItem("window-z-index", windowZIndex);
@@ -176,7 +176,7 @@ export default function App() {
 
   React.useEffect(() => {
     setSocketStats(SocketState.opening);
-    const [address, port, forwardSwitch, forwardAddress, forwardPort] = listenAddress;
+    const { address, port, forwardSwitch, forwardAddress, forwardPort } = listenAddress;
     const forward = forwardSwitch ? `${forwardAddress}:${forwardPort}` : null;
     const unlisten = listenData(`${address}:${port}`, forward, (event) => {
       switch (event.event) {

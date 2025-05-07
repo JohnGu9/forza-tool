@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, Dialog, ListItem, Switch, TextField } from "rmcw/dist/components3";
 
-import { ListenAddress, ReactAppContext } from "../common/AppContext";
+import { ReactAppContext } from "../common/AppContext";
 import { SocketState } from "../common/SocketState";
 
 export default function Network({ opened, close }: {
@@ -9,7 +9,7 @@ export default function Network({ opened, close }: {
   close: () => unknown;
 }) {
   const { listenAddress, setListenAddress, dataBufferLength, setDataBufferLength, socketStats } = React.useContext(ReactAppContext);
-  const [address, port, forwardSwitch, forwardAddress, forwardPort, stamp] = listenAddress;
+  const { address, port, forwardSwitch, forwardAddress, forwardPort, stamp } = listenAddress;
   const [newAddress, setNewAddress] = React.useState(address);
   const [newPort, setNewPort] = React.useState(port);
   const [forward, setForward] = React.useState(forwardSwitch);
@@ -32,7 +32,7 @@ export default function Network({ opened, close }: {
       <Button buttonStyle="text" onClick={close}>Cancel</Button>
       <Button buttonStyle="text" onClick={() => {
         close();
-        setListenAddress([newAddress, newPort, forward, newForwardAddress, newForwardPort, stamp]);
+        setListenAddress({ address: newAddress, port: newPort, forwardSwitch: forward, forwardAddress: newForwardAddress, forwardPort: newForwardPort, stamp });
         setDataBufferLength(parseInt(newDataBufferLength));
       }}>Submit</Button>
     </>}>
@@ -46,16 +46,14 @@ export default function Network({ opened, close }: {
       <div style={{ height: 16 }} aria-hidden />
       <TextField disabled={!forward} type="text" label="Forward Address" value={newForwardAddress} onChange={e => setNewForwardAddress(e.target.value)} />
       <div style={{ height: 16 }} aria-hidden />
-      <TextField disabled={!forward} type="number" label="Forward Port" value={newForwardPort} onChange={e => setNewForwardPort(e.target.value)}
+      <TextField disabled={!forward} type="number" min="1" max="65535" label="Forward Port" value={newForwardPort} onChange={e => setNewForwardPort(e.target.value)}
         supportingText={`Current forwarding: ${currentForwarding}`} />
       <div style={{ height: 16 }} aria-hidden />
       <TextField type="number" min="1" label="Data Buffer Length" value={newDataBufferLength} onChange={e => setNewDataBufferLength(e.target.value)}
         supportingText={`Determines how much data is displayed in the charts. More data will consume more compute resource. Current: ${dataBufferLength}. (Recommend: 200 ~ 500)`} />
       <div style={{ height: 32 }} aria-hidden />
       <Button onClick={() => {
-        const newValue = [...listenAddress] as ListenAddress;
-        newValue[5] += 1;
-        setListenAddress(newValue);
+        setListenAddress({ ...listenAddress, stamp: listenAddress.stamp + 1 });
       }}>Reset Socket</Button>
     </div>
   </Dialog>;

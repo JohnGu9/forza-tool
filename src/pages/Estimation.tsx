@@ -85,7 +85,5 @@ function getTireWearStats(data: MessageData) {
   const sorted = transform.sort((a, b) => a[1] - b[1]);
   const min = sorted[0];
   const max = sorted[sorted.length - 1];
-  return {
-    max, min,
-  };
+  return { max, min };
 }

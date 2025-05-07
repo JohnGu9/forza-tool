@@ -88,7 +88,6 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
       },
       legend: {},
       tooltip: {
-        show: true,
         trigger: "axis",
         valueFormatter: (value) => {
           return (value as number).toFixed(3);
@@ -96,7 +95,6 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
       },
       xAxis: [
         {
-          show: true,
           type: "value",
           min: lastMessageData.engineIdleRpm,
           max: lastMessageData.engineMaxRpm,
@@ -109,7 +107,6 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
       ],
       yAxis: [
         {
-          show: true,
           type: "value",
           min: 0,
           max: (value) => { return value.max * 1.05; },
@@ -127,7 +124,6 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
           },
         },
         {
-          show: true,
           type: "value",
           min: 0,
           max: (value) => { return value.max * 1.05; },
@@ -242,7 +238,6 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
         bottom: 8
       },
       tooltip: {
-        show: true,
         trigger: "axis",
         valueFormatter: (value) => {
           return `${(value as number).toFixed(3)}%`;

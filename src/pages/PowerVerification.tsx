@@ -35,7 +35,6 @@ export default function PowerVerification() {
         },
       },
       tooltip: {
-        show: true,
         trigger: "axis",
         formatter: (params) => {
           if (Array.isArray(params)) {
@@ -89,7 +88,6 @@ export default function PowerVerification() {
         bottom: 24
       },
       tooltip: {
-        show: true,
         trigger: "axis",
         valueFormatter: (value) => {
           return `${(value as number * 100).toFixed(3)}%`;

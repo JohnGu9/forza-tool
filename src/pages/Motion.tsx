@@ -1,3 +1,4 @@
+import { YAXisOption } from "echarts/types/dist/shared";
 import React from "react";
 import { Card, Select, SelectOption } from "rmcw/dist/components3";
 
@@ -14,21 +15,37 @@ export default function Motion() {
   const { messageData } = React.useContext(ReactStreamAppContext);
   const { x, y, z, scalar } = getTargetData(messageData, motionOption);
   const displayText = React.useMemo(() => capitalizeFirstLetter(motionOption), [motionOption]);
+  const { AxisX, AxisY, AxisZ } = (() => {
+    switch (motionOption) {
+      case MotionOption.Rotation:
+        return {
+          AxisX: "Yaw",
+          AxisY: "Pitch",
+          AxisZ: "Roll",
+        };
+      default:
+        return {
+          AxisX: "Axis X",
+          AxisY: "Axis Y",
+          AxisZ: "Axis Z",
+        };
+    }
+  })();
   return <div className="fill-parent flex-column flex-space-between" style={{ alignItems: "stretch", padding, gap: 16 }}>
     <Select label="option" displayText={displayText}>
       {Object.values(MotionOption).map(key => <SelectOption key={key} headline={key} selected={motionOption === key} onClick={() => setMotionOption(key as MotionOption)} style={{ textTransform: "capitalize" }} />)}
     </Select>
     <div className="flex-child flex-column" style={{ gap: 16 }}>
-      <SimpleCard title={motionOption === MotionOption.Rotation ? "Yaw" : "Axis X"} data={x} type={motionOption} />
-      <SimpleCard title={motionOption === MotionOption.Rotation ? "Pitch" : "Axis Y"} data={y} type={motionOption} />
-      <SimpleCard title={motionOption === MotionOption.Rotation ? "Roll" : "Axis Z"} data={z} type={motionOption} />
+      <SimpleCard title={AxisX} data={x} type={motionOption} />
+      <SimpleCard title={AxisY} data={y} type={motionOption} />
+      <SimpleCard title={AxisZ} data={z} type={motionOption} />
       <SimpleCard title="Scalar" data={scalar} type={motionOption} yAxis={{
         type: "value",
         min: 0,
-        max: (value: { max: number; }) => { return value.max * 1.05; },
+        max: ({ max }) => { return max * 1.05; },
         axisLabel: {
-          formatter: (value: number) => {
-            return (value as number).toFixed(0);
+          formatter: (value) => {
+            return value.toFixed(0);
           },
         },
       }} />
@@ -66,7 +83,7 @@ function getTargetData(messageData: CircularBuffer<MessageData>, type: MotionOpt
   return { x, y, z, scalar };
 }
 
-function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataType[], type: MotionOption, yAxis?: unknown, }) {
+function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataType[], type: MotionOption, yAxis?: YAXisOption, }) {
   const value = data.length === 0 ? 0 : data[data.length - 1][1];
   const { unitSystem } = React.useContext(ReactAppContext);
 
@@ -92,7 +109,6 @@ function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataTyp
       bottom: 8
     },
     tooltip: {
-      show: true,
       trigger: "axis",
       valueFormatter: formatter
     },
@@ -102,7 +118,7 @@ function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataTyp
       max: "dataMax",
       axisLabel: {
         formatter: (value) => {
-          return (value as number).toFixed(1);
+          return value.toFixed(1);
         },
       },
     },

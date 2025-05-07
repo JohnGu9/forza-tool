@@ -2,8 +2,8 @@ use std::sync::LazyLock;
 
 use futures::FutureExt;
 use serde::Serialize;
+use tauri::AppHandle;
 use tauri::Emitter;
-use tauri::{App, AppHandle};
 use tokio::net::UdpSocket;
 use tokio::sync::{oneshot, Mutex};
 
@@ -11,9 +11,12 @@ use tokio::sync::{oneshot, Mutex};
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_window_state::Builder::default().build())
-        .setup(|app| {
-            if cfg!(debug_assertions) {
-                open_devtools(app);
+        .setup(|_app| {
+            #[cfg(debug_assertions)]
+            {
+                use tauri::Manager;
+                let window = _app.get_webview_window("main").unwrap();
+                window.open_devtools();
             }
             Ok(())
         })
@@ -21,16 +24,6 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-
-#[cfg(debug_assertions)]
-fn open_devtools(app: &mut App) {
-    use tauri::Manager;
-    let window = app.get_webview_window("main").unwrap();
-    window.open_devtools();
-}
-
-#[cfg(not(debug_assertions))]
-fn open_devtools(_: &mut App) {}
 
 #[tauri::command]
 fn my_custom_command(message: String) {

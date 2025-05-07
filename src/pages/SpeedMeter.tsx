@@ -84,7 +84,6 @@ export default function SpeedMeter() {
     },
     legend: {},
     tooltip: {
-      show: true,
       trigger: "axis",
       valueFormatter: (value) => {
         return `${(value as number).toFixed(6)} ${getSpeedUnit(unitSystem)}`;

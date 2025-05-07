@@ -190,7 +190,7 @@ export default function Tachometer() {
               },
               tooltip: {
                 valueFormatter: () => {
-                  return `${lower.toFixed(0)} - ${upper.toFixed(0)}`;
+                  return `${lower.toFixed(0)} - ${upper.toFixed(0)} (${(upper - lower).toFixed(0)})`;
                 },
               },
             },
@@ -405,7 +405,6 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
         bottom: 8
       },
       tooltip: {
-        show: true,
         trigger: "axis",
         formatter: (params) => {
           if (Array.isArray(params)) {
@@ -415,7 +414,6 @@ function PowerLevelChart({ messageDataAnalysis, messageData, onClick }: { messag
         },
       },
       yAxis: {
-        show: true,
         type: "value",
         min: 0,
         max: 100,

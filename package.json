@@ -15,29 +15,29 @@
     "tauri-build": "tauri build"
   },
   "dependencies": {
-    "@fontsource/roboto": "5.2.5",
+    "@fontsource/roboto": "^5.2.5",
     "@tauri-apps/api": "^2.3.0",
     "echarts": "^5.6.0",
     "material-design-transform": "^3.0.0",
-    "material-symbols": "0.29.3",
+    "material-symbols": "^0.31.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "rmcw": "^0.4.3"
+    "rmcw": "^0.4.4"
   },
   "devDependencies": {
-    "@eslint/js": "9.24.0",
-    "@tauri-apps/cli": "2.3.1",
+    "@eslint/js": "^9.24.0",
+    "@tauri-apps/cli": "^2.3.1",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "@vitejs/plugin-react": "^4.3.4",
-    "eslint": "9.24.0",
-    "eslint-plugin-react-hooks": "5.2.0",
+    "@vitejs/plugin-react": "^4.4.1",
+    "eslint": "^9.24.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.18",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "globals": "^16.0.0",
     "sass": "1.77.5",
     "typescript": "~5.7.2",
-    "typescript-eslint": "8.29.1",
-    "vite": "6.2.5"
+    "typescript-eslint": "^8.29.1",
+    "vite": "^6.3.5"
   }
 }

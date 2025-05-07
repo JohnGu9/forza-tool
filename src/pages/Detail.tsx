@@ -30,8 +30,8 @@ export default function Detail() {
     },
     series: [
       {
-        data: data.map(v => [v.index, v.value]),
         type: "line",
+        data: data.map(v => [v.index, v.value]),
         symbolSize: 0,
       }
     ]

@@ -32,11 +32,11 @@ let id = 0;
 export async function listenData(url: string, forward: string | null, onMessage: (event: ListenDataEvent) => unknown) {
     const thisId = id;
     id++;
-    const unmount = await listen<ListenDataEvent>("on-data", event => {
+    const unlisten = await listen<ListenDataEvent>("on-data", event => {
         if (event.payload.data.id === thisId) {
             onMessage(event.payload);
         }
     });
     await invoke("listen_data", { id: thisId, url, forward });
-    return unmount;
+    return unlisten;
 }

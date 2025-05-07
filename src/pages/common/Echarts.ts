@@ -58,8 +58,8 @@ export function useEcharts<T extends HTMLElement>(
                     show: true // include tooltip component for the feature
                 },
                 xAxis: {
-                    show: false,
                     type: "value",
+                    show: false,
                     min: "dataMin",
                     max: "dataMax",
                 },
