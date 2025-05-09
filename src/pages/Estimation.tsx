@@ -8,6 +8,8 @@ import { dummyMessageData, MessageData } from "../common/MessageData";
 import { ConsumptionEstimation } from "../common/MessageDataAnalysis";
 import { ReactWindowContext } from "./common/Context";
 
+const timeScale = 100;
+
 export default function Estimation() {
   const { padding } = React.useContext(ReactWindowContext);
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
@@ -43,7 +45,7 @@ export default function Estimation() {
         </div>}
         supportingText={<span title="Max"><span>{toPercentage(tireWearStats.max[1])}</span> / <span title="Min">{toPercentage(tireWearStats.min[1])}</span></span>}>Tire Wear</ListItem>
       <Item trailingSupportingText={toPercentage(perLapConsumption.tireWear)} emphasize>Per Lap</Item>
-      <Item trailingSupportingText={`${toPercentage(unitTimeConsumption.tireWear * 600)} / ${toPercentage(unitTimeConsumption.tireWear * 1200)}`} emphasize>Per 10/20 Minute</Item>
+      <Item trailingSupportingText={`${toPercentage(unitTimeConsumption.tireWear * 600 * timeScale)} / ${toPercentage(unitTimeConsumption.tireWear * 1200 * timeScale)}`} emphasize>Per 10/20 Minute</Item>
       <Item trailingSupportingText={(lapsEstimation.tireWear * 0.5).toFixed(1)}>Laps of 50% Tire Wear</Item>
       <Item trailingSupportingText={(lapsEstimation.tireWear * 0.65).toFixed(1)}>Laps of 65% Tire Wear</Item>
       <Item trailingSupportingText={(remainEstimation.tireWear50).toFixed(1)} emphasize>Laps of Until 50% Tire Wear</Item>
@@ -57,7 +59,7 @@ export default function Estimation() {
         trailingSupportingText={<span title={toPercentage(lastData.fuel)}><CircularProgress className="estimation-circular-progress" value={lastData.fuel} /></span>}
         supportingText={toPercentage(lastData.fuel)}>Fuel</ListItem>
       <Item trailingSupportingText={toPercentage(perLapConsumption.fuel)} emphasize>Per Lap</Item>
-      <Item trailingSupportingText={`${toPercentage(unitTimeConsumption.fuel * 600)} / ${toPercentage(unitTimeConsumption.fuel * 1200)}`} emphasize>Per 10/20 Minute</Item>
+      <Item trailingSupportingText={`${toPercentage(unitTimeConsumption.fuel * 600 * timeScale)} / ${toPercentage(unitTimeConsumption.fuel * 1200)}`} emphasize>Per 10/20 Minute</Item>
       <Item trailingSupportingText={(lapsEstimation.fuel).toFixed(1)}>Laps of Full Fuel</Item>
       <Item trailingSupportingText={(remainEstimation.fuel).toFixed(1)} emphasize>Laps of Remain Fuel</Item>
       <Typography.Label.Small tag="div" style={{ padding: "8px 16px", opacity: 0.5 }}>* Only work for Dash</Typography.Label.Small>

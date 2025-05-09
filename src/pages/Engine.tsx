@@ -100,7 +100,7 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
           max: lastMessageData.engineMaxRpm,
           axisLabel: {
             formatter: (value) => {
-              return (value as number).toFixed(0);
+              return value.toFixed(0);
             },
           },
         },
@@ -112,7 +112,7 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
           max: (value) => { return value.max * 1.05; },
           axisLabel: {
             formatter: (value) => {
-              const result = `${(value as number).toFixed(0)} ${getTorqueUnit(unitSystem)}`;
+              const result = `${value.toFixed(0)} ${getTorqueUnit(unitSystem)}`;
               if (result.length > 8) {
                 return `${result.slice(0, 6)} ...`;
               }
@@ -129,7 +129,7 @@ function PowerCurveChart({ messageDataAnalysis, messageData }: { messageDataAnal
           max: (value) => { return value.max * 1.05; },
           axisLabel: {
             formatter: (value) => {
-              return `${(value as number).toFixed(0)} ${getPowerUnit(unitSystem)}`;
+              return `${value.toFixed(0)} ${getPowerUnit(unitSystem)}`;
             },
           },
         }
@@ -249,7 +249,7 @@ function PowerLevelChart({ messageDataAnalysis, messageData }: { messageDataAnal
         max: 100,
         axisLabel: {
           formatter: (value) => {
-            return `${(value as number).toFixed(0)}%`;
+            return `${value.toFixed(0)}%`;
           },
         },
         splitLine: {

@@ -95,7 +95,7 @@ export default function SpeedMeter() {
       max: (value) => { return value.max * 1.05; },
       axisLabel: {
         formatter: (value) => {
-          return (value as number).toFixed(0);
+          return value.toFixed(0);
         },
       },
     },

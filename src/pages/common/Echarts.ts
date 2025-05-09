@@ -39,7 +39,7 @@ export function useEcharts<T extends HTMLElement>(
     option: ECOption | ((style: CSSStyleDeclaration, element: T, chart: echarts.ECharts) => ECOption),
     notMerge?: boolean, lazyUpdate?: boolean) {
     const ref = React.useRef<T>(null);
-    const [chart, setChart] = React.useState(null as echarts.ECharts | null);
+    const [chart, setChart] = React.useState<echarts.ECharts | null>(null);
     React.useEffect(() => {
         const chart = echarts.init(ref.current!);
         const observer = new ResizeObserver(() => chart.resize());

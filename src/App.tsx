@@ -193,7 +193,7 @@ export default function App() {
             const data = parseMessageData(event.data.data);
             if (data.isRaceOn === 0) {
               setPaused(true);
-              return;
+              break;
             }
             setPaused(false);
             if (isNeedToReset(messageData, data)) { // car changed
@@ -204,9 +204,8 @@ export default function App() {
           } catch (error) {
             addErrorMessage(`[${new Date().toTimeString()}] ${error}`);
           }
-          updateTick();
-        }
           break;
+        }
         case "opened":
           setSocketStats(SocketState.opened);
           break;

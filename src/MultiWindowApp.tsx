@@ -113,7 +113,6 @@ export default function MultiWindowApp({ streamAppContext }: { streamAppContext:
             <IconButton onClick={openSettings}><Icon>settings</Icon></IconButton>
           </span>
         </div>
-
         <ReactDragContext.Provider value={dragContext}>
           <ReactStreamAppContext.Provider value={streamAppContext}>
             <FadeThrough keyId={windows.length} className="flex-row flex-child">
@@ -134,14 +133,12 @@ export default function MultiWindowApp({ streamAppContext }: { streamAppContext:
             </FadeThrough>
           </ReactStreamAppContext.Provider>
         </ReactDragContext.Provider>
-
       </div>
     </ReactMultiWindowAppContext.Provider>
   </MaterialDesignTransformContext.Provider>;
 }
 
 const materialDesignTransformContext: MaterialDesignTransformContextType = { transitionStyle: "M3", sharedAxis: { transform: SharedAxisTransform.fromBottomToTop, unit: "px" } };
-
 
 function getUnusedPage(windows: WindowTag[]) {
   const used = new Set(windows.map(v => v.page));

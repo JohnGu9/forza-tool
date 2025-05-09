@@ -87,18 +87,18 @@ function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataTyp
   const value = data.length === 0 ? 0 : data[data.length - 1][1];
   const { unitSystem } = React.useContext(ReactAppContext);
 
-  function formatter(value: OptionDataValue | OptionDataValue[]) {
+  function formatter(value: number) {
     switch (type) {
       case MotionOption.Acceleration:
-        return `${(value as number).toFixed(3)} m/s²`;
+        return `${value.toFixed(3)} m/s²`;
       case MotionOption.Velocity:
-        return `${msTo(value as number, unitSystem).toFixed(3)} ${getSpeedUnit(unitSystem)}`;
+        return `${msTo(value, unitSystem).toFixed(3)} ${getSpeedUnit(unitSystem)}`;
       case MotionOption.AngularVelocity:
-        return `${(value as number).toFixed(3)} RPS`;
+        return `${value.toFixed(3)} RPS`;
       case MotionOption.Rotation:
-        return `${(value as number).toFixed(3)}`;
+        return `${value.toFixed(3)}`;
       case MotionOption.Position:
-        return `${(value as number).toFixed(3)} m`;
+        return `${value.toFixed(3)} m`;
     }
   }
   const ref = useEcharts<HTMLDivElement>({
@@ -110,7 +110,7 @@ function SimpleCard({ title, data, type, yAxis }: { title: string, data: DataTyp
     },
     tooltip: {
       trigger: "axis",
-      valueFormatter: formatter
+      valueFormatter: formatter as (value: OptionDataValue | OptionDataValue[]) => string,
     },
     yAxis: yAxis ?? {
       type: "value",

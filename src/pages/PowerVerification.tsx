@@ -99,7 +99,7 @@ export default function PowerVerification() {
         max: ({ max }) => { return max + 0.001; },
         axisLabel: {
           formatter: (value) => {
-            return `${(value as number * 100).toFixed(1)}%`;
+            return `${(value * 100).toFixed(1)}%`;
           },
         },
         splitLine: {
