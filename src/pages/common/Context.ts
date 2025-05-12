@@ -31,11 +31,11 @@ export enum SpeedMeterOption {
 };
 
 export enum TimeCalibration {
-    X1 = 1,
+    X1 = 1.0,
     X10 = 10,
     X100 = 100,
-    X1000 = 1000,
-    X10000 = 10000,
+    X01 = 0.1,
+    X001 = 0.01,
 };
 
 export type WindowContext = {
@@ -52,8 +52,8 @@ export type WindowContext = {
     setDetailOption: (v: MessageDataKey) => unknown,
     showDetailDelta: boolean,
     setShowDetailDelta: (v: boolean) => unknown,
-    timeCalibration: TimeCalibration,
-    setTimeCalibration: (v: TimeCalibration) => unknown,
+    timeCalibration: number,
+    setTimeCalibration: (v: number) => unknown,
 };
 
 export const ReactWindowContext = React.createContext(undefined as unknown as WindowContext);

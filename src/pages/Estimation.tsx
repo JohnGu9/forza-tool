@@ -1,7 +1,7 @@
 import "./Estimation.scss";
 
 import React from "react";
-import { Card, CircularProgress, Icon, ListItem, Typography } from "rmcw/dist/components3";
+import { Button, Card, CircularProgress, Dialog, Icon, IconButton, ListItem, TextField, Typography } from "rmcw/dist/components3";
 
 import { ReactStreamAppContext } from "../common/AppContext";
 import { dummyMessageData, MessageData } from "../common/MessageData";
@@ -17,6 +17,10 @@ export default function Estimation() {
   const lapsEstimation = messageDataAnalysis.consumptionEstimation.estimateLaps();
   const remainEstimation = ConsumptionEstimation.estimateRemainLaps(perLapConsumption, lastData);
   const tireWearStats = getTireWearStats(lastData);
+  const [isOpenDialog, setIsOpenDialog] = React.useState(false);
+  const closeDialog = () => setIsOpenDialog(false);
+  const [newTimeCalibration, setNewTimeCalibration] = React.useState(`${timeCalibration}`);
+  const [errorText, setErrorText] = React.useState<string | undefined>(undefined);
   function getCircularProgressClassName(name: string) {
     if (tireWearStats.max[1] === 0) {
       return "estimation-circular-progress";
@@ -36,21 +40,49 @@ export default function Estimation() {
         className="fill-parent fit-elevated-card-container-shape"
         type="button"
         start={<Icon>schedule</Icon>}
-        trailingSupportingText={<span title={toPercentage(lastData.fuel)}>X {timeCalibration.toFixed(1)}</span>}
+        end={<IconButton onClick={e => {
+          e.stopPropagation();
+          setNewTimeCalibration(`${timeCalibration}`);
+          setIsOpenDialog(true);
+        }}><Icon>tune</Icon></IconButton>}
+        supportingText={`x ${timeCalibration}`}
         onClick={() => {
           function getNext(timeCalibration: TimeCalibration) {
             switch (timeCalibration) {
               case TimeCalibration.X1: return TimeCalibration.X10;
               case TimeCalibration.X10: return TimeCalibration.X100;
-              case TimeCalibration.X100: return TimeCalibration.X1000;
-              case TimeCalibration.X1000: return TimeCalibration.X10000;
-              case TimeCalibration.X10000: return TimeCalibration.X1;
+              case TimeCalibration.X100: return TimeCalibration.X01;
+              case TimeCalibration.X01: return TimeCalibration.X001;
+              case TimeCalibration.X001: return TimeCalibration.X1;
+              default: return TimeCalibration.X1;
             }
           }
           setTimeCalibration(getNext(timeCalibration));
         }}>
         Time Calibration
       </ListItem>
+      <Dialog open={isOpenDialog}
+        headline="Time Calibration"
+        onScrimClick={closeDialog}
+        onEscapeKey={closeDialog}
+        actions={<>
+          <Button buttonStyle="text" onClick={() => {
+            const newValue = parseFloat(newTimeCalibration);
+            if (Number.isNaN(newValue)) {
+              setErrorText("Wrong input value. Please input number value. ");
+              return;
+            }
+            setTimeCalibration(newValue);
+            setErrorText(undefined);
+            closeDialog();
+          }}>Submit</Button>
+          <Button buttonStyle="text" onClick={closeDialog}>Close</Button>
+        </>}>
+        <div className="flex-column" style={{ width: 360 }}>
+          <TextField type="text" label="Custom Number Value" value={newTimeCalibration} onChange={e => setNewTimeCalibration(e.target.value)}
+            error={errorText !== undefined} errorText={errorText} />
+        </div>
+      </Dialog>
     </Card>
     <div style={{ height: 16 }} aria-hidden />
     <Card className="flex-column" style={{ width: "100%" }}>

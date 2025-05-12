@@ -20,9 +20,9 @@ export default function Settings({ opened, close }: {
 
   return <>
     <Dialog open={opened && !isOpenErrorMessage}
+      headline="Settings"
       onScrimClick={close}
       onEscapeKey={close}
-      headline="Settings"
       actions={<Button buttonStyle="text" onClick={close}>Close</Button>}>
       <div className="flex-column" style={{ width: 360 }}>
         <div style={{ height: 8 }} aria-hidden />
