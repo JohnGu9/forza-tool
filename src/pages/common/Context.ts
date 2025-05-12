@@ -30,6 +30,14 @@ export enum SpeedMeterOption {
     VelocityPredictionVsSpeed,
 };
 
+export enum TimeCalibration {
+    X1 = 1,
+    X10 = 10,
+    X100 = 100,
+    X1000 = 1000,
+    X10000 = 10000,
+};
+
 export type WindowContext = {
     padding: string,
     showEnginePowerCurve: boolean,
@@ -44,6 +52,8 @@ export type WindowContext = {
     setDetailOption: (v: MessageDataKey) => unknown,
     showDetailDelta: boolean,
     setShowDetailDelta: (v: boolean) => unknown,
+    timeCalibration: TimeCalibration,
+    setTimeCalibration: (v: TimeCalibration) => unknown,
 };
 
 export const ReactWindowContext = React.createContext(undefined as unknown as WindowContext);
@@ -55,6 +65,7 @@ export function useWindowContext(padding: string) {
     const [speedMeterOption, setSpeedMeterOption] = React.useState(SpeedMeterOption.VelocityVsSpeed);
     const [detailOption, setDetailOption] = React.useState<MessageDataKey>("timestampMs");
     const [showDetailDelta, setShowDetailDelta] = React.useState(false);
+    const [timeCalibration, setTimeCalibration] = React.useState(TimeCalibration.X1);
     const windowContext = React.useMemo<WindowContext>(() => {
         return {
             padding,
@@ -63,8 +74,9 @@ export function useWindowContext(padding: string) {
             speedMeterOption, setSpeedMeterOption,
             showEnginePowerCurve, setShowEnginePowerCurve,
             detailOption, setDetailOption,
-            showDetailDelta, setShowDetailDelta
+            showDetailDelta, setShowDetailDelta,
+            timeCalibration, setTimeCalibration,
         };
-    }, [detailOption, motionOption, padding, showDetailDelta, showEnginePowerCurve, speedMeterOption, tireOption]);
+    }, [detailOption, motionOption, padding, showDetailDelta, showEnginePowerCurve, speedMeterOption, timeCalibration, tireOption]);
     return windowContext;
 }

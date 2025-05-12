@@ -6,12 +6,10 @@ import { Card, CircularProgress, Icon, ListItem, Typography } from "rmcw/dist/co
 import { ReactStreamAppContext } from "../common/AppContext";
 import { dummyMessageData, MessageData } from "../common/MessageData";
 import { ConsumptionEstimation } from "../common/MessageDataAnalysis";
-import { ReactWindowContext } from "./common/Context";
-
-const timeScale = 100;
+import { ReactWindowContext, TimeCalibration } from "./common/Context";
 
 export default function Estimation() {
-  const { padding } = React.useContext(ReactWindowContext);
+  const { padding, timeCalibration, setTimeCalibration } = React.useContext(ReactWindowContext);
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const lastData = messageData.getLast() ?? dummyMessageData;
   const perLapConsumption = messageDataAnalysis.consumptionEstimation.getPerLapConsumption();
@@ -35,6 +33,28 @@ export default function Estimation() {
   return <div className="fill-parent" style={{ padding, overflowY: "auto" }}>
     <Card className="flex-column" style={{ width: "100%" }}>
       <ListItem
+        className="fill-parent fit-elevated-card-container-shape"
+        type="button"
+        start={<Icon>schedule</Icon>}
+        trailingSupportingText={<span title={toPercentage(lastData.fuel)}>X {timeCalibration.toFixed(1)}</span>}
+        onClick={() => {
+          function getNext(timeCalibration: TimeCalibration) {
+            switch (timeCalibration) {
+              case TimeCalibration.X1: return TimeCalibration.X10;
+              case TimeCalibration.X10: return TimeCalibration.X100;
+              case TimeCalibration.X100: return TimeCalibration.X1000;
+              case TimeCalibration.X1000: return TimeCalibration.X10000;
+              case TimeCalibration.X10000: return TimeCalibration.X1;
+            }
+          }
+          setTimeCalibration(getNext(timeCalibration));
+        }}>
+        Time Calibration
+      </ListItem>
+    </Card>
+    <div style={{ height: 16 }} aria-hidden />
+    <Card className="flex-column" style={{ width: "100%" }}>
+      <ListItem
         start={<Icon>tire_repair</Icon>}
         trailingSupportingText={<div className="flex-row" style={{ gap: 8, alignItems: "center" }}>
           <span title={`FrontLeft: ${toPercentage(lastData.tireWearFrontLeft)}`}><CircularProgress className={getCircularProgressClassName("tireWearFrontLeft")} value={1 - lastData.tireWearFrontLeft} /></span>
@@ -45,7 +65,7 @@ export default function Estimation() {
         </div>}
         supportingText={<span title="Max"><span>{toPercentage(tireWearStats.max[1])}</span> / <span title="Min">{toPercentage(tireWearStats.min[1])}</span></span>}>Tire Wear</ListItem>
       <Item trailingSupportingText={toPercentage(perLapConsumption.tireWear)} emphasize>Per Lap</Item>
-      <Item trailingSupportingText={`${toPercentage(unitTimeConsumption.tireWear * 600 * timeScale)} / ${toPercentage(unitTimeConsumption.tireWear * 1200 * timeScale)}`} emphasize>Per 10/20 Minute</Item>
+      <Item trailingSupportingText={`${toPercentage(unitTimeConsumption.tireWear * 600 * timeCalibration)} / ${toPercentage(unitTimeConsumption.tireWear * 1200 * timeCalibration)}`} emphasize>Per 10/20 Minute</Item>
       <Item trailingSupportingText={(lapsEstimation.tireWear * 0.5).toFixed(1)}>Laps of 50% Tire Wear</Item>
       <Item trailingSupportingText={(lapsEstimation.tireWear * 0.65).toFixed(1)}>Laps of 65% Tire Wear</Item>
       <Item trailingSupportingText={(remainEstimation.tireWear50).toFixed(1)} emphasize>Laps of Until 50% Tire Wear</Item>
@@ -59,7 +79,7 @@ export default function Estimation() {
         trailingSupportingText={<span title={toPercentage(lastData.fuel)}><CircularProgress className="estimation-circular-progress" value={lastData.fuel} /></span>}
         supportingText={toPercentage(lastData.fuel)}>Fuel</ListItem>
       <Item trailingSupportingText={toPercentage(perLapConsumption.fuel)} emphasize>Per Lap</Item>
-      <Item trailingSupportingText={`${toPercentage(unitTimeConsumption.fuel * 600 * timeScale)} / ${toPercentage(unitTimeConsumption.fuel * 1200)}`} emphasize>Per 10/20 Minute</Item>
+      <Item trailingSupportingText={`${toPercentage(unitTimeConsumption.fuel * 600 * timeCalibration)} / ${toPercentage(unitTimeConsumption.fuel * 1200 * timeCalibration)}`} emphasize>Per 10/20 Minute</Item>
       <Item trailingSupportingText={(lapsEstimation.fuel).toFixed(1)}>Laps of Full Fuel</Item>
       <Item trailingSupportingText={(remainEstimation.fuel).toFixed(1)} emphasize>Laps of Remain Fuel</Item>
       <Typography.Label.Small tag="div" style={{ padding: "8px 16px", opacity: 0.5 }}>* Only work for Dash</Typography.Label.Small>
