@@ -66,20 +66,30 @@ export default function Estimation() {
         onScrimClick={closeDialog}
         onEscapeKey={closeDialog}
         actions={<>
-          <Button buttonStyle="text" onClick={() => {
-            const newValue = parseFloat(newTimeCalibration);
-            if (Number.isNaN(newValue)) {
-              setErrorText("Wrong input value. Please input number value. ");
-              return;
-            }
-            setTimeCalibration(newValue);
-            setErrorText(undefined);
-            closeDialog();
-          }}>Submit</Button>
+          <Button buttonStyle="text"
+            disabled={errorText !== undefined}
+            onClick={() => {
+              const newValue = parseFloat(newTimeCalibration);
+              if (Number.isNaN(newValue)) {
+                setErrorText("Wrong input value. Please input number value. ");
+                return;
+              }
+              setTimeCalibration(newValue);
+              setErrorText(undefined);
+              closeDialog();
+            }}>Submit</Button>
           <Button buttonStyle="text" onClick={closeDialog}>Close</Button>
         </>}>
         <div className="flex-column" style={{ width: 360 }}>
-          <TextField type="text" label="Custom Number Value" value={newTimeCalibration} onChange={e => setNewTimeCalibration(e.target.value)}
+          <TextField type="text" label="Custom Number Value" value={newTimeCalibration} onChange={e => {
+            setNewTimeCalibration(e.target.value);
+            const newValue = parseFloat(e.target.value);
+            if (Number.isNaN(newValue)) {
+              setErrorText("Wrong input value. Please input number value. ");
+            } else {
+              setErrorText(undefined);
+            }
+          }}
             error={errorText !== undefined} errorText={errorText} />
         </div>
       </Dialog>
