@@ -17,7 +17,7 @@ export function wTo(value: number/* unit: W */, unit: UnitSystem) {
         case UnitSystem.Metric:
             return value / 1000;// unit: kW
         case UnitSystem.Imperial:
-            return value / 745.699872;// unit: hp
+            return value / 745.699872;// unit: HP
     }
 }
 

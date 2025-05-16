@@ -26,9 +26,11 @@ export default function SingleWindowApp({ streamAppContext }: { streamAppContext
       borderRight: "var(--md-divider-thickness, 1px) solid var(--md-divider-color, var(--md-sys-color-outline-variant, #cac4d0))",
       "--md-navigation-drawer-container-shape": "0 0 0 0",
     } as React.CSSProperties}>
-      <List className="flex-child" style={{ padding: 0 }}>
+      <List style={{ padding: 0 }}>
         <Typography.Headline.Large tag="div" style={{ padding: 16 }}>Forza</Typography.Headline.Large>
         <Divider />
+      </List>
+      <List className="flex-child" style={{ padding: "0 0 32px", overflowY: "auto" }}>
         {Object.values(Page).map(value =>
           <ListItem key={value} type="button" onClick={() => setPage(value)}
             style={page === value ? {

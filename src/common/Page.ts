@@ -7,5 +7,6 @@ export enum Page {
     Control = "Control",
     Motion = "Motion",
     PowerVerification = "Power Verification",
+    WindResistance = "Wind Resistance",
     Detail = "Detail",
 };

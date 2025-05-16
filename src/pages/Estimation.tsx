@@ -37,7 +37,7 @@ export default function Estimation() {
   return <div className="fill-parent" style={{ padding, overflowY: "auto" }}>
     <Card className="flex-column" style={{ width: "100%" }}>
       <ListItem
-        className="fill-parent fit-elevated-card-container-shape"
+        className="fit-elevated-card-container-shape"
         type="button"
         start={<Icon>schedule</Icon>}
         end={<IconButton onClick={e => {
@@ -45,7 +45,7 @@ export default function Estimation() {
           setNewTimeCalibration(`${timeCalibration}`);
           setIsOpenDialog(true);
         }}><Icon>tune</Icon></IconButton>}
-        supportingText={`x ${timeCalibration}`}
+        supportingText={`× ${timeCalibration}`}
         onClick={() => {
           function getNext(timeCalibration: TimeCalibration) {
             switch (timeCalibration) {
@@ -71,17 +71,15 @@ export default function Estimation() {
             onClick={() => {
               const newValue = parseFloat(newTimeCalibration);
               if (Number.isNaN(newValue)) {
-                setErrorText("Wrong input value. Please input number value. ");
                 return;
               }
               setTimeCalibration(newValue);
-              setErrorText(undefined);
               closeDialog();
             }}>Submit</Button>
           <Button buttonStyle="text" onClick={closeDialog}>Close</Button>
         </>}>
         <div className="flex-column" style={{ width: 360 }}>
-          <TextField type="text" label="Custom Number Value" value={newTimeCalibration} onChange={e => {
+          <TextField type="text" label="Scale Factor" value={newTimeCalibration} onChange={e => {
             setNewTimeCalibration(e.target.value);
             const newValue = parseFloat(e.target.value);
             if (Number.isNaN(newValue)) {
@@ -105,7 +103,7 @@ export default function Estimation() {
           <span title={`RearLeft: ${toPercentage(lastData.tireWearRearLeft)}`}><CircularProgress className={getCircularProgressClassName("tireWearRearLeft")} value={1 - lastData.tireWearRearLeft} /></span>
           <span title={`RearRight: ${toPercentage(lastData.tireWearRearRight)}`}><CircularProgress className={getCircularProgressClassName("tireWearRearRight")} value={1 - lastData.tireWearRearRight} /></span>
         </div>}
-        supportingText={<span title="Max"><span>{toPercentage(tireWearStats.max[1])}</span> / <span title="Min">{toPercentage(tireWearStats.min[1])}</span></span>}>Tire Wear</ListItem>
+        supportingText={<span><span title="Max">{toPercentage(tireWearStats.max[1])}</span> / <span title="Min">{toPercentage(tireWearStats.min[1])}</span></span>}>Tire Wear</ListItem>
       <Item trailingSupportingText={toPercentage(perLapConsumption.tireWear)} emphasize>Per Lap</Item>
       <Item trailingSupportingText={`${toPercentage(unitTimeConsumption.tireWear * 600 * timeCalibration)} / ${toPercentage(unitTimeConsumption.tireWear * 1200 * timeCalibration)}`} emphasize>Per 10/20 Minute</Item>
       <Item trailingSupportingText={(lapsEstimation.tireWear * 0.5).toFixed(1)}>Laps of 50% Tire Wear</Item>

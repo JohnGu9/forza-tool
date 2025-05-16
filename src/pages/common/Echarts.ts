@@ -55,7 +55,8 @@ export function useEcharts<T extends HTMLElement>(
             const style = getComputedStyle(ref.current!);
             const mergeOption: ECOption = {
                 tooltip: {
-                    show: true // include tooltip component for the feature
+                    show: true, // include tooltip component for the feature
+                    trigger: "axis",
                 },
                 xAxis: {
                     type: "value",
@@ -77,6 +78,10 @@ export function useEcharts<T extends HTMLElement>(
                     style.getPropertyValue("--md-sys-color-primary"),
                     style.getPropertyValue("--md-sys-color-tertiary"),
                     style.getPropertyValue("--md-sys-color-error"),
+                    style.getPropertyValue("--md-sys-color-secondary"),
+                    style.getPropertyValue("--md-sys-color-on-primary-fixed-variant"),
+                    style.getPropertyValue("--md-sys-color-on-tertiary-fixed-variant"),
+                    style.getPropertyValue("--md-sys-color-on-secondary-fixed-variant"),
                 ],
                 textStyle: {
                     fontFamily: "Roboto"

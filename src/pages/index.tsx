@@ -8,6 +8,7 @@ import PowerVerification from "./PowerVerification";
 import SpeedMeter from "./SpeedMeter";
 import Tachometer from "./Tachometer";
 import Tire from "./TIre";
+import WindResistance from "./WindResistance";
 
 export default function getPage(page: Page) {
     switch (page) {
@@ -29,5 +30,7 @@ export default function getPage(page: Page) {
             return <Estimation />;
         case Page.PowerVerification:
             return <PowerVerification />;
+        case Page.WindResistance:
+            return <WindResistance />;
     }
 }
