@@ -62,7 +62,7 @@ export type MessageData = {
     suspensionTravelMetersFrontRight: number,
     suspensionTravelMetersRearLeft: number,
     suspensionTravelMetersRearRight: number,
-    carOrdinal: number,           // Unique ID of the car make/model
+    carOrdinal: number, // Unique ID of the car make/model
     carClass: number, // Between 0 (D -- worst cars) and 7 (X class -- best cars) inclusive
     carPerformanceIndex: number, // Between 100 (slowest car) and 999 (fastest car) inclusive
     drivetrainType: number, // Corresponds to EDrivetrainType; 0 = FWD, 1 = RWD, 2 = AWD

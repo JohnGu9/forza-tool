@@ -20,6 +20,7 @@
     "echarts": "^5.6.0",
     "material-design-transform": "^3.0.0",
     "material-symbols": "^0.31.2",
+    "ml-matrix": "^6.12.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rmcw": "^0.4.4"

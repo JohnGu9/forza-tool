@@ -7,6 +7,6 @@ export enum Page {
     Control = "Control",
     Motion = "Motion",
     PowerVerification = "Power Verification",
-    WindResistance = "Wind Resistance",
+    AirDragCoefficient = "Air Drag Coefficient",
     Detail = "Detail",
 };
