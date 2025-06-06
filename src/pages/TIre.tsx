@@ -61,7 +61,7 @@ function SimpleCard({ title, data, option }: { title: string, data: DataType[]; 
 
   const ref = useEcharts<HTMLDivElement>({
     grid: {
-      left: 56,
+      left: 52,
       top: 8,
       right: 0,
       bottom: 8

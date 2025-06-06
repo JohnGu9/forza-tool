@@ -14,7 +14,9 @@ export default function PowerVerification() {
   const { messageData, messageDataAnalysis } = React.useContext(ReactStreamAppContext);
   const { unitSystem } = React.useContext(ReactAppContext);
   const data = getTargetData(messageData, messageDataAnalysis, unitSystem);
-
+  function absMax(value: { min: number; max: number; }) {
+    return Math.max(Math.abs(value.max), Math.abs(value.min));
+  }
   const ref0 = useEcharts<HTMLDivElement>((style) => {
     return {
       grid: {
@@ -90,20 +92,23 @@ export default function PowerVerification() {
       tooltip: {
         trigger: "axis",
         valueFormatter: (value) => {
-          return `${(value as number * 100).toFixed(3)}%`;
+          return `${((value as number + 1) * 100).toFixed(3)}% (${(value as number) < 0 ? '' : '+'}${((value as number) * 100).toFixed(3)}%)`;
         },
       },
       yAxis: {
         type: "value",
-        min: ({ min }) => { return min - 0.001; },
-        max: ({ max }) => { return max + 0.001; },
+        min: (value) => { return -absMax(value); },
+        max: (value) => { return absMax(value); },
         axisLabel: {
           formatter: (value) => {
+            if (value >= 0) {
+              return `+${(value * 100).toFixed(1)}%`;
+            }
             return `${(value * 100).toFixed(1)}%`;
           },
         },
         splitLine: {
-          show: false,
+          show: true,
         },
       },
       series: [
@@ -112,7 +117,7 @@ export default function PowerVerification() {
           name: "Power Diff",
           data: data.map(v => {
             return {
-              value: [v.index, v.diff],
+              value: [v.index, v.diff - 1],
               itemStyle: { color: style.getPropertyValue(isValidPowerDiff(v.diff) ? "--md-sys-color-tertiary" : "--md-sys-color-error") },
             };
           }),
